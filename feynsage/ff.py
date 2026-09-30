@@ -431,24 +431,33 @@ class _Recon:
         return all(self.ok.get(k, 0) >= self.agree for k in keys)
 
 
-def _univariate(sampler, F, keys_hint=None, maxpts=400):
-    """sampler(x) -> {key: value}.  Rebuild all keys as rational functions of x."""
+def _univariate(mapper, F, keys_hint=None, maxpts=400, batch=1):
+    """mapper([points]) -> [{key: value}].  Rebuild all keys as rational functions of x.
+    Points are asked for in batches (for parallel sampling) and fed in order."""
     rec = _Recon(F)
     keys = set(keys_hint or [])
     n = 0
     while n < maxpts:
-        x = F.random_element()
-        vals = sampler(x)
-        if vals is None:
-            continue
-        keys.update(vals)
-        full = {k: vals.get(k, F(0)) for k in keys}
-        rec.feed(x, full)
-        n += 1
-        if rec.done(keys):
-            Rx = PolynomialRing(F, 'x')
-            return {k: rec.T[k].rational(Rx) for k in keys}
+        xs = [F.random_element() for _ in range(batch)]
+        for x, vals in zip(xs, mapper([[x] for x in xs])):
+            if vals is None:
+                continue
+            keys.update(vals)
+            full = {k: vals.get(k, F(0)) for k in keys}
+            rec.feed(x, full)
+            n += 1
+            if rec.done(keys):
+                Rx = PolynomialRing(F, 'x')
+                return {k: rec.T[k].rational(Rx) for k in keys}
     raise RuntimeError("reconstruction did not converge")
+
+
+_POOL_SYS = None
+
+
+def _pool_sample(args):
+    targets, p, point = args
+    return _POOL_SYS.sample(targets, p, point)
 
 
 # ---------------------------------------------------------------------- driver
@@ -459,11 +468,13 @@ def _primes(start=2**62):
         yield p
 
 
-def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False):
+def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1):
     r"""
     Reduce the targets with finite fields.  The reducer's kinematics may have the
     variable d and at most one invariant.  Returns {target: {master: coefficient}}
     with coefficients in the fraction field of the family's polynomial ring.
+    nproc > 1 evaluates the sample points in parallel worker processes (fork); the
+    first probe, which trims the system, runs before the workers start.
     """
     import time
     t0 = time.time()
@@ -481,14 +492,26 @@ def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False):
     residues = []          # per prime: {key: (num, den) over GF(p)[vars]}
     results_prev = None
     # univariate: 62-bit primes (plain Python ints); two variables: Singular gcd needs p < 2^29
+    pool = None
+    if nproc and nproc > 1:
+        import multiprocessing as mproc
+        global _POOL_SYS
+        p0 = next(_primes(2**62 if nv == 1 else 2**29))
+        sysm.sample(targets, p0, [GF(p0).random_element() for _ in range(nv)])   # trim first
+        _POOL_SYS = sysm
+        pool = mproc.get_context('fork').Pool(nproc)
     for p in _primes(2**62 if nv == 1 else 2**29):
         F = GF(p)
         Rp = PolynomialRing(F, [str(g) for g in R.gens()])
+        if pool is not None:
+            mapper = lambda pts, p=p: pool.map(_pool_sample, [(targets, p, pt) for pt in pts])
+        else:
+            mapper = lambda pts, p=p: [sysm.sample(targets, p, pt) for pt in pts]
         if nv == 1:
-            fx = _univariate(lambda x: sysm.sample(targets, p, [x]), F)
+            fx = _univariate(mapper, F, batch=max(1, nproc or 1))
             recon = {k: (Rp(n.change_ring(F)(Rp.gen(0))), Rp(d.change_ring(F)(Rp.gen(0)))) for k, (n, d) in fx.items()}
         else:
-            recon = _bivariate(sysm, targets, p, F, Rp)
+            recon = _bivariate(sysm, targets, p, F, Rp, mapper)
         residues.append((p, recon))
         res = _lift(residues, R, K)
         if res is not None and res == results_prev:
@@ -498,17 +521,21 @@ def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False):
     for (t, m), val in res.items():
         if val != 0:
             out.setdefault(t, {})[m] = val
+    if pool is not None:
+        pool.close()
+        pool.join()
     if verbose:
         print("primes used: %d, total %.1fs" % (len(residues), time.time() - t0))
     return out
 
 
-def _bivariate(sysm, targets, p, F, Rp):
+def _bivariate(sysm, targets, p, F, Rp, mapper=None):
     """Reconstruct f(d, y): in d at fixed y, then every normalised coefficient in y."""
     x0, y0 = Rp.gens()
     # 1. degrees at one random y
     y1 = F.random_element()
-    base = _univariate(lambda x: sysm.sample(targets, p, [x, y1]), F)
+    mapper = mapper or (lambda pts: [sysm.sample(targets, p, pt) for pt in pts])
+    base = _univariate(lambda pts: mapper([[x[0], y1] for x in pts]), F)
     shape = {k: (n.degree(), d.degree()) for k, (n, d) in base.items()}
     npts = max(a + b for a, b in shape.values()) + 4
     # 2. for each new y, rebuild in d with a fixed number of points, feed coefficients to Thiele in y
@@ -518,7 +545,7 @@ def _bivariate(sysm, targets, p, F, Rp):
     for _ in range(400):
         y = F.random_element()
         xs = [F.random_element() for _ in range(npts + 2)]
-        samples = [sysm.sample(targets, p, [x, y]) for x in xs]
+        samples = mapper([[x, y] for x in xs])
         if any(s is None for s in samples):
             continue
         cvals = {}

@@ -80,9 +80,15 @@ class FeynmanGraph:
 
     # ------------------------------------------------------------------ polynomials
     def U(self):
+        """First Symanzik polynomial U: the sum over spanning trees of the product of the x_i
+        of the lines that were removed.  Output: a polynomial in x1, x2, ... (one per line, in
+        the order the lines were given); it is homogeneous of degree L (the number of loops)."""
         return sum(prod(self.x[i] for i in rem) for rem in self.spanning_trees())
 
     def F0(self):
+        """The massless part F_0 of the second Symanzik polynomial: the sum over 2-forests of
+        (product of the removed x_i) * P^2, where P is the external momentum flowing into one
+        of the two trees.  Output: a polynomial in the x_i and the invariants, degree L + 1."""
         tot = self.R(0)
         for rem, comp in self.two_forests():
             P = {}
@@ -94,8 +100,9 @@ class FeynmanGraph:
         return tot
 
     def F(self):
-        """Euclidean F = F_0 + U sum x m^2.  (Minkowski: F = -F_0 + U sum x m^2, with
-        Minkowski invariants; see IntegralFamily.UF.)"""
+        """Second Symanzik polynomial.  Output: F = F_0 + U sum_i x_i m_i^2 (Euclidean), or
+        F = -F_0 + U sum_i x_i m_i^2 with Minkowski invariants.  With U it gives the parametric
+        integral  Gamma(a - L d/2) Int dx delta(1 - sum x) prod x^(a_i - 1) U^(a - (L+1) d/2) / F^(a - L d/2)."""
         U = self.U()
         mass = sum(self.x[i] * self.kin.R(m2) for i, (_, _, m2) in enumerate(self.lines))
         if self.kin.euclidean:

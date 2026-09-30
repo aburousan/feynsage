@@ -13,6 +13,7 @@ from itertools import permutations
 from math import atan2, cos, pi, sin, sqrt
 
 import matplotlib as mpl
+from sage.all import latex
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch
@@ -312,5 +313,84 @@ def draw_sectors(g, sectors, titles=None, ncols=5, size=1.9, **kw):
                 draw_graph(h, ax=ax, names=kept, title=titles[k] if titles else str(tuple(sectors[k])), **kw)
             else:
                 ax.axis("off")
+        fig.tight_layout()
+    return fig
+
+
+# ---------------------------------------------------------------------- one-line plots
+def _eval_point(args):
+    f, var, x = args
+    try:
+        if callable(f) and not hasattr(f, 'variables'):
+            return complex(f(x))
+        return complex(f.subs({var: x}).n())
+    except (ZeroDivisionError, ValueError, TypeError, OverflowError):
+        return complex('nan')
+
+
+def quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=None, ylim=None,
+               nproc=1, figsize=None, mu_value=1, explain=False):
+    r"""
+    Plot one or more expressions over a range, with no set-up.
+
+        s = var('s')
+        quick_plot(B0(s, 1, 1), (s, -2, 10))                   # real and imaginary parts of B0
+        quick_plot([B0(s, 1, 1), B0(s, 1, 2)], (s, 0, 12), labels=["m1=m2=1", "m2=2"])
+
+    exprs: a Sage expression (it may contain DiscB, LogM, C0, D0: they are evaluated with the
+    +i0 prescription), a Python function, or a list of these.  var_range = (variable, a, b).
+    Expressions with a 1/eps pole are plotted through their eps^0 part at mu = mu_value.
+    parts: "auto" draws the imaginary part in a second panel only if it is not zero;
+    "real" or "both" force it.  nproc > 1 evaluates the points in parallel.
+    Returns the matplotlib Figure (save it with fig.savefig("name.svg")).
+    """
+    if explain:
+        print(quick_plot.__doc__)
+    if not isinstance(exprs, (list, tuple)):
+        exprs = [exprs]
+    from .pv import eps as _eps, mu as _mu, finite_part
+    used_finite = False
+    clean = []
+    for f in exprs:
+        if hasattr(f, 'variables') and _eps in f.variables():
+            f = finite_part(f, mu_value)
+            used_finite = True
+        elif hasattr(f, 'variables') and _mu in f.variables():
+            f = f.subs({_mu: mu_value})
+        clean.append(f)
+    exprs = clean
+    if used_finite and title is None:
+        title = "finite part ($\\epsilon^0$) at $\\mu = %s$" % mu_value
+    var, a, b = var_range
+    xs = np.linspace(float(a), float(b), points)
+    tasks = [(f, var, float(x)) for f in exprs for x in xs]
+    if nproc and nproc > 1:
+        import multiprocessing as mproc
+        with mproc.get_context('fork').Pool(nproc) as pool:
+            vals = pool.map(_eval_point, tasks)
+    else:
+        vals = [_eval_point(t) for t in tasks]
+    vals = np.array(vals).reshape(len(exprs), points)
+    has_imag = np.nanmax(np.abs(vals.imag)) > 1e-12 if np.isfinite(vals.imag).any() else False
+    two = parts == "both" or (parts == "auto" and has_imag)
+    with mpl.rc_context(STYLE):
+        fig, axes = plt.subplots(1, 2 if two else 1, figsize=figsize or ((8.4, 3.0) if two else (4.4, 3.0)), squeeze=False)
+        axes = axes[0]
+        for k in range(len(exprs)):
+            lab = labels[k] if labels else None
+            axes[0].plot(xs, vals[k].real, color=PALETTE[k % len(PALETTE)], label=lab)
+            if two:
+                axes[1].plot(xs, vals[k].imag, color=PALETTE[k % len(PALETTE)], label=lab)
+        axes[0].set_title("real part" if two else (title or ""), loc="left")
+        if two:
+            axes[1].set_title("imaginary part", loc="left")
+        for ax in axes:
+            ax.set_xlabel("$%s$" % latex(var))
+            if ylim:
+                ax.set_ylim(*ylim)
+        if labels:
+            axes[0].legend(fontsize=8)
+        if title and two:
+            fig.suptitle(title, fontsize=10)
         fig.tight_layout()
     return fig

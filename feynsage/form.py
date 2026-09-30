@@ -129,3 +129,12 @@ def dirac_trace(factors, vectors, dim=4):
     for n in set(re.findall(r'[A-Za-z_]\w*', body)) - set(names):
         names[n] = SR.var(n)
     return SR(eval(body.replace('^', '**'), {}, names))
+
+
+def to_loop(expr):
+    """Turn a dirac_trace result into a numerator string for pv.loop():
+    comp(l, mu) -> l^mu, dot(a, b) -> a.b, g(mu, nu) -> g(mu,nu)."""
+    t = str(expr)
+    t = re.sub(r'comp\((\w+),\s*(\w+)\)', r'\1^\2', t)
+    t = re.sub(r'dot\((\w+),\s*(\w+)\)', r'\1.\2', t)
+    return t

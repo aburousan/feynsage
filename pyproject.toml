@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "feynsage"
+version = "0.1.0"
+description = "Feynman integrals in SageMath: graph polynomials, IBP reduction (exact and finite-field), one-loop formulas, FORM traces and plots"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Kazi Abu Rousan" }]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[tool.setuptools]
+packages = ["feynsage"]
+
+[tool.setuptools.package-data]
+feynsage = ["csrc/*.c"]

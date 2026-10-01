@@ -3,7 +3,7 @@
    (or the Wolfram kernel with -script) from the repository root.                              *)
 $LoadAddOns = {};
 Get["FeynCalc`"];
-outfile = FileNameJoin[{Directory[], "slides", "out", "chluba_feyncalc.txt"}];
+outfile = FileNameJoin[{Directory[], "examples", "chluba", "out", "chluba_feyncalc.txt"}];
 str = OpenWrite[outfile];
 say[x_] := (WriteString[str, x <> "\n"]; Print[x]);
 

@@ -503,6 +503,8 @@ def _primes(start=2**62):
 def _auto_relations(once, reducer, *args, **kw):
     """Run a reduction; with numerator_relations="auto", repeat it with the momentum-shift
     relations if a master with numerators sits in a sector where they could matter."""
+    if getattr(reducer, 'top', 0) is None and args:      # top sector from the targets
+        reducer.set_top([tuple(t) for t in args[0]])
     out = once(reducer, *args, **kw)
     if getattr(reducer, 'numerator_relations', False) == "auto" and not reducer._use_relations:
         masters = {m for row in out.values() for m in row}
@@ -592,7 +594,9 @@ def _bivariate(sysm, targets, p, F, Rp, mapper=None):
     mapper = mapper or (lambda pts: [sysm.sample(targets, p, pt) for pt in pts])
     base = _univariate(lambda pts: mapper([[x[0], y1] for x in pts]), F)
     shape = {k: (n.degree(), d.degree()) for k, (n, d) in base.items()}
-    npts = max(a + b for a, b in shape.values()) + 4
+    # Thiele's continued fraction needs 2 max(deg num, deg den) + 1 points (a polynomial of degree
+    # 6 needs 13, not 7); two more points check every reconstruction
+    npts = max(2 * max(a, b) + 1 for a, b in shape.values()) + 2
     # 2. for each new y, rebuild in d with a fixed number of points, feed coefficients to Thiele in y
     coef_rec = _Recon(F)
     coef_keys = set()
@@ -623,6 +627,8 @@ def _bivariate(sysm, targets, p, F, Rp, mapper=None):
         coef_rec.feed(y, cvals)
         if coef_rec.done(coef_keys):
             break
+    if not coef_rec.done(coef_keys) or any((k, 'n', 0) not in coef_rec.T for k in shape):
+        raise RuntimeError("reconstruction in the invariant did not converge")
     Ry = PolynomialRing(F, 'y')
     out = {}
     for k, (dn, dd) in shape.items():

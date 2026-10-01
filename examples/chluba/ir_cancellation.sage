@@ -10,7 +10,7 @@
 import sys, json, time; sys.path.insert(0, '.')
 from feynsage import form, loop, eps, mu
 import mpmath as mp
-O = 'slides/out/'
+O = 'examples/chluba/out/'
 D_ = SR.var('D')
 m = var('m')
 

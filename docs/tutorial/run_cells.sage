@@ -41,6 +41,7 @@ for n, (cid, code, opts) in enumerate(CELLS, 1):
             # matrices as pmatrix (Sage writes \left(\begin{array}{rr..}...\end{array}\right))
             tex = re.sub(r'\\left\(\\begin\{array\}\{[lcr]+\}', r'\\begin{pmatrix}', tex)
             tex = tex.replace('\\end{array}\\right)', '\\end{pmatrix}')
+            tex = tex.replace('\\[6pt]', '\\')         # mitex does not read the optional spacing
             rec["latex"] = tex
         else:
             rec["text"] = repr(value)

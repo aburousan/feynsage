@@ -6,7 +6,7 @@
 import sys, json, time, itertools, random; sys.path.insert(0, '.')
 from feynsage import form
 random.seed(7r)
-O = 'slides/out/'
+O = 'examples/chluba/out/'
 dot_ = function('dot')
 m = var('m')
 

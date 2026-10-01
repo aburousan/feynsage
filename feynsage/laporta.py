@@ -36,7 +36,7 @@ def weight(a):
 
 class Reducer:
 
-    def __init__(self, family, symmetries=(), sector_symmetries=True, numerator_relations="auto"):
+    def __init__(self, family, symmetries=(), sector_symmetries=True, numerator_relations="auto", top=None):
         self.fam = family
         self.t = family.t
         self.syms = _closure([tuple(s) for s in symmetries], self.t)
@@ -45,6 +45,9 @@ class Reducer:
         self.seen = set()
         self.K = family.kin.K
         self.sector_symmetries = sector_symmetries
+        # top sector (0/1 per line): seeds stay inside it and representatives are chosen inside it
+        # when a symmetry allows, as Kira does with its top-level sectors.  None: no restriction.
+        self.top = tuple(top) if top is not None else None
         # "auto": reduce without the momentum-shift relations first and add them only if a
         # master with numerators sits in a sector where they could relate it to others
         self.numerator_relations = numerator_relations
@@ -68,6 +71,21 @@ class Reducer:
             self._zero[s] = self.fam.is_zero_sector(s)
         return self._zero[s]
 
+    def set_top(self, integrals):
+        """Make the union of the sectors of these integrals the top sector (and forget every
+        choice of representative made so far)."""
+        self.top = tuple(1 if any(b[i] > 0 for b in integrals) else 0 for i in range(self.t))
+        self._canon_cache, self._rep, self._relmaps = {}, {}, {}
+
+    def _outside(self, a):
+        """How many lines outside the top sector carry a propagator in a."""
+        if self.top is None:
+            return 0
+        return sum(1 for i in range(self.t) if a[i] > 0 and not self.top[i])
+
+    def _key(self, a):
+        return (self._outside(a), weight(a))
+
     def canon(self, a):
         """The representative of a: for an integral without numerators the smallest image
         (by weight) inside its representative sector (sector symmetries); otherwise the
@@ -78,7 +96,7 @@ class Reducer:
         if self.sector_symmetries and min(a) >= 0 and max(a) > 0:
             b = self._sector_canon(a)
         else:
-            b = min((tuple(a[s[i]] for i in range(self.t)) for s in self.syms), key=weight)
+            b = min((tuple(a[s[i]] for i in range(self.t)) for s in self.syms), key=self._key)
         self._canon_cache[a] = b
         return b
 
@@ -154,7 +172,7 @@ class Reducer:
         if key not in self._rep:
             cands = self._bycheap[self._cheap(sec0)] if sec0 is not None else \
                 [sec for group in self._bycheap.values() for sec in group if sum(sec) == k]
-            best = min((sec for sec in cands if self._info(sec)[0] == key), key=weight)
+            best = min((sec for sec in cands if self._info(sec)[0] == key), key=self._key)
             gr, part, _ = self._sector_graph(best)
             A = gr.automorphism_group(partition=part, edge_labels=True)
             perm_of = lambda g: {i: g(('x', i))[1] for i in range(self.t) if best[i]}
@@ -385,7 +403,7 @@ class Reducer:
             for i, j in perm.items():
                 img[j] = a0[i]
             imgs.append(tuple(img))
-        return min(imgs, key=weight)
+        return min(imgs, key=self._key)
 
     def clean(self, expr):
         out = {}
@@ -436,6 +454,8 @@ class Reducer:
         sectors.sort(key=lambda s: (sum(s), s))
         out = []
         for s in sectors:
+            if self.top is not None and any(s[i] and not self.top[i] for i in range(self.t)):
+                continue                               # outside the top sector
             if self.fam.is_zero_sector(s):
                 continue
             pos = [i for i in range(self.t) if s[i]]

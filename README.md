@@ -15,7 +15,7 @@ Feynman integrals in SageMath, written from scratch.
 I wrote feynsage in 2024 for my MSc project. After the talk "Feynman integrals at one loop" by
 Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
 talk and published.
-A short talk with real computations is in [`slides/feynsage_talk.pdf`](slides/feynsage_talk.pdf).
+A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf).
 
 ## Who it is for
 
@@ -57,14 +57,11 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
 
 ## Notebooks
 
-- [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial as a PDF, in the
-  style of the lecture note: every step with its code and its real output, install instructions, and
-  a careful explanation of everything that goes beyond the lecture (sectors, zero sectors, sector
-  symmetries, Kirchhoff's theorem, infrared poles, finite fields, FORM).
-- `tutorials/`: five short step-by-step notebooks for a first contact, each with exercises and
-  solutions: first steps (A0, B0, numbers, plots), one-loop tensors, graph polynomials at one, two
-  and three loops, families, IBP and master integrals (the kite as 6 zeta(3)), Dirac traces with FORM.
-  Start with [`tutorials/README.md`](tutorials/README.md).
+- [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial, in the
+  style of the lecture note. It follows the topics of the talk (the tadpole, IBP, the bubble and its
+  differential equation solved with its boundary condition, Feynman parameters, graph polynomials) and
+  ends with a real prediction, the neutral pion lifetime. Every step has its code, its real output and
+  an explanation of each function used. Reductions can be drawn as equations of diagrams (`r.draw`).
 - `examples/feynsage_walkthrough.ipynb`: the whole package step by step, with a picture for every
   step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact),
   one-loop integrals with IR poles, a real prediction (the neutral pion lifetime, 8.35e-17 s against

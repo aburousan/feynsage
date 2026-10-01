@@ -3,7 +3,7 @@
    F1 changes with t exactly like the soft-photon angular integral I(t); F2 -> alpha/2pi as t -> 0. *)
 $LoadAddOns = {"FeynHelpers"};
 Get["FeynCalc`"];
-outfile = FileNameJoin[{Directory[], "slides", "out", "chluba_ir_feyncalc.txt"}];
+outfile = FileNameJoin[{Directory[], "examples", "chluba", "out", "chluba_ir_feyncalc.txt"}];
 str = OpenWrite[outfile];
 say[x_] := (WriteString[str, x <> "\n"]; Print[x]);
 
@@ -33,6 +33,6 @@ Do[say["t = " <> ToString[tv] <> ":  pole(t) - pole(-1/2) = " <> ToString[N[(tv 
      "   I(t) - I(-1/2) = " <> ToString[N[Iang[tv] - Iang[-1/2], 15]]], {tv, {-1, -3, -8}}];
 say["F2 at t = -1/10^6 in units alpha/(4 pi): " <> ToString[N[ffactors[-1/10^6][[2]], 12]] <> "  (expected 2)"];
 say["time " <> ToString[Round[tF, 0.1]] <> " s"];
-Export[FileNameJoin[{Directory[], "slides", "out", "chluba_ir_feyncalc.json"}],
+Export[FileNameJoin[{Directory[], "examples", "chluba", "out", "chluba_ir_feyncalc.json"}],
   <|"lines" -> Table[{ToString[tv], N[(tv /. res)[[1]] - p0, 15], N[Iang[tv] - Iang[-1/2], 15]}, {tv, {-1, -3, -8}}]|>, "RawJSON"];
 Close[str];

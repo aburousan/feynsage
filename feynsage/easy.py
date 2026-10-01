@@ -74,7 +74,8 @@ class Family(IntegralFamily):
             mom_text = " + ".join("%s*%s" % (c, a) if c != 1 else a for a, c in q.items()).replace("+ -", "- ")
             mass_text = "" if m2 == 0 else " %s %s" % ("+" if self.kin.euclidean else "-", m2)
             print("  D%d = (%s)^2%s" % (i + 1, mom_text, mass_text))
-        print("  An integral F(a1,...,at) is  Int prod_r d^d l_r  prod_i D_i^(-a_i); a_i <= 0 are numerators.")
+        print("  An integral %s(a1,...,at) is  Int prod_r d^d l_r  prod_i D_i^(-a_i); a_i <= 0 are numerators."
+              % self.name)
 
 
 def family(props, kin=None, loops=None, euclidean=False, name="F", explain=False):
@@ -189,7 +190,8 @@ def symmetries(fam):
         v = ('m', j)
         gr.add_vertex(v)
         colours.setdefault(str(c), []).append(v)
-        for i, e in enumerate(m.exponents()[0]):
+        exps = m.exponents()[0]
+        for i, e in enumerate(exps if hasattr(exps, '__iter__') else (exps,)):   # one line: an int
             if e:
                 gr.add_edge(v, ('x', i), e)
     partition = [xs] + list(colours.values())
@@ -212,11 +214,22 @@ class Reduction:
     def __getitem__(self, target):
         return self.table[tuple(target)]
 
+    def _lab(self, a):
+        """An integral as the family's name with its powers, e.g. T(2) or J(1,1)."""
+        return "%s(%s)" % (getattr(self.fam, 'name', 'F'), ",".join(str(x) for x in a))
+
+    def draw(self, graph, targets=None, rename=None, size=1.5):
+        """The reductions as equations of diagrams (see plotting.draw_reduction): `graph` is a
+        FeynmanGraph whose lines are this family's propagators in the same order."""
+        from .plotting import draw_reduction
+        return draw_reduction(self.table, graph, targets=targets, rename=rename, size=size)
+
     def info(self):
         print("Reduction of %d integrals of family %r with the %s reducer (%.1f s)."
               % (len(self.table), self.fam.name, self.method, self.seconds))
-        print("Each target F(a) is written as sum_M c_M(d, invariants) M over the master integrals")
-        print("M = %s; d is the space-time dimension." % ", ".join("F%s" % (m,) for m in self.masters))
+        print("Each target %s is written as sum_M c_M(d, invariants) M over the master integrals"
+              % self._lab(["a1", "a2", "..."][:max(1, min(3, getattr(self.fam, 't', 3)))]))
+        print("M = %s; d is the space-time dimension." % ", ".join(self._lab(m) for m in self.masters))
 
     def _repr_latex_(self):
         from sage.all import latex
@@ -227,8 +240,8 @@ class Reduction:
                 c = c if not hasattr(c, 'numerator') else c
                 cl = (r'\frac{%s}{%s}' % (latex(c.numerator().factor()), latex(c.denominator().factor()))
                       if hasattr(c, 'denominator') and c.denominator() != 1 else latex(c.factor() if hasattr(c, 'factor') else c))
-                terms.append(r'%s\; F%s' % (cl, str(tuple(mm)).replace(' ', '')))
-            rows.append(r'F%s &= %s' % (str(tuple(t)).replace(' ', ''), r' \\ &\quad + '.join(terms) if terms else '0'))
+                terms.append(r'%s\; %s' % (cl, self._lab(mm)))
+            rows.append(r'%s &= %s' % (self._lab(t), r' \\ &\quad + '.join(terms) if terms else '0'))
         return r'$$\begin{aligned} %s \end{aligned}$$' % r' \\[6pt] '.join(rows)
 
     def _latex_(self):
@@ -238,14 +251,16 @@ class Reduction:
     def __repr__(self):
         lines = []
         for t, row in self.table.items():
-            terms = ["[%s] F%s" % (c.factor() if hasattr(c, 'factor') else c, m) for m, c in row.items()]
-            lines.append("F%s = %s" % (t, " + ".join(terms) if terms else "0"))
+            terms = ["[%s] %s" % (c.factor() if hasattr(c, 'factor') else c, self._lab(m)) for m, c in row.items()]
+            lines.append("%s = %s" % (self._lab(t), " + ".join(terms) if terms else "0"))
         return "\n".join(lines)
 
 
 def _target(t):
+    """'T(2,1)' or 'F(2,1)' (any family name) or (2, 1) -> (2, 1)."""
     if isinstance(t, str):
-        return tuple(int(x) for x in re.findall(r'-?\d+', t))
+        inside = re.search(r'\(([^)]*)\)', t)
+        return tuple(int(x) for x in re.findall(r'-?\d+', inside.group(1) if inside else t))
     return tuple(t)
 
 
@@ -273,6 +288,7 @@ def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain
         smax = max(smax, 1)
     syms = symmetries(fam) if symmetries_ == "auto" else (symmetries_ or [])
     red = Reducer(fam, symmetries=syms)
+    red.set_top(ts)                                    # seeds and masters inside the targets' sectors
     if method == "auto":
         method = "ff" if fam.kin.R.ngens() <= 2 else "exact"
     t0 = time.time()

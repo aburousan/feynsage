@@ -72,9 +72,13 @@
 #let board(title: "Correction to the board", body) = dbox(title, c-orange, body)
 #let derivation(title: "Derivation, step by step", body) = dbox(title, c-pink, body)
 #let note(title: "Remark", body) = dbox(title, c-grey, body)
-// topics that go beyond sir's lecture: explained from the start
-#let c-amber = rgb("#c06a00")   // topics beyond the lecture
-#let beyond(title, body) = dbox("Beyond the lecture: " + title, c-amber, body)
+// a feynsage (or Sage) function, explained where it is first used
+#let func(sig, body, what: "feynsage") = block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 5pt, breakable: true,
+  stroke: (paint: c-violet, thickness: 0.9pt, dash: "dashed"), fill: c-violet.lighten(96%), above: 1em, below: 1em)[
+  #block(sticky: true, below: 0.55em)[#text(weight: "semibold", fill: c-violet.darken(10%), size: 9pt)[#upper(what) FUNCTION] #h(0.5em) #text(size: 9pt)[#raw(sig, lang: "python")]]
+  #set par(justify: false)
+  #body
+]
 
 
 // ------------------------------------------------------------------ notebook cells

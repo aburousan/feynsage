@@ -23,4 +23,4 @@ is computed from the Feynman diagrams twice: with feynsage + FORM (`*.sage`) and
 So the thesis's |M|^2 = e^6 X is the average over the 2 x 2 initial states, and its lowest-frequency
 cutoff is what dimensional regularisation (or a photon mass) turns into a log of the energy resolution:
 the infrared divergence cancels against the one-loop virtual correction (Bloch-Nordsieck).
-The outputs go to `slides/out/` and appear in the talk (`slides/feynsage_talk.pdf`).
+The outputs go to `examples/chluba/out/`.

@@ -141,7 +141,8 @@ class IntegralFamily:
         if G == 0:
             return True
         idx = [i for i in range(self.t) if sector[i]]
-        rows = [[e[i] for i in idx] for e in G.exponents()]
+        exps = [e if hasattr(e, '__iter__') else (e,) for e in G.exponents()]   # one line: ints
+        rows = [[e[i] for i in idx] for e in exps]
         Mx = matrix(QQ, rows)
         rhs = vector(QQ, [1] * len(rows))
         try:

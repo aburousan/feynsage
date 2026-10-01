@@ -1,425 +1,455 @@
-# The code cells of the feynsage tutorial, in order.  Each is (id, code, options); the cells
+# The code cells of the feynsage tutorial, in order.  They follow sir's two lectures "Feynman
+# integral calculus" (NISER, 2026), part 1 and part 2.  Each is (id, code, options); the cells
 # share one namespace, like a notebook.  Options: fig=<name> saves that matplotlib figure,
 # text=True shows the value as plain text.
 CELLS = [
 
-# ------------------------------------------------------------------ 1. first steps
+# ------------------------------------------------------------------ the tadpole
 ("import", """
 from feynsage import *
+from feynsage.oneloop import tadpole, bubble_equal_mass, expand_eps, D
 """, {}),
 
-("info", """
-info(A0)
+("solidangle", """
+n = var('n')
+Omega = 2*pi^(n/2)/gamma(n/2)            # from the Gaussian integral
+[Omega.subs(n=k) for k in [2, 3, 4]]
 """, {}),
 
-("a0", """
-m = var('m')
-a = A0(m)
-a
+("In", """
+m2 = var('m2')
+tadpole(n, m2)                           # Int d^Dk/pi^(D/2) 1/(k^2 + m^2)^n
 """, {}),
 
-("a0parts", """
-print("pole:           ", uv_part(a))
-print("finite part:    ", finite_part(a))
-print("finite, mu = m: ", finite_part(a, m))
+("derivrel", """
+for k in [2, 3, 4]:
+    lhs = tadpole(k, m2)
+    rhs = (-1)^(k - 1)/factorial(k - 1) * diff(tadpole(1, m2), m2, k - 1)
+    print("n = %d:  I_n - (-1)^(n-1)/(n-1)! (d/dm^2)^(n-1) I_1 =" % k, (lhs - rhs).simplify_full())
 """, {}),
 
-("b0", """
-s = var('s')
-B0(s, m, m)
+("pole", """
+expand_eps(tadpole(1, m2), 0)
 """, {}),
 
-("b0numbers", """
-for sv in [1, 3, 5, 10]:
+("phi4", """
+lam = var('lam', latex_name=r'\\lambda'); mu2 = var('mu2', latex_name=r'\\mu^2'); w, e = var('omega e')
+# (1/2)(-lambda)(mu^2)^(2-w) Int d^(2w)l/(2 pi)^(2w) 1/(l^2 + m^2), the integral done as above
+T = 1/2*(-lam)*mu2^(2 - w) * pi^w*gamma(1 - w)*m2^(w - 1)/(2*pi)^(2*w)
+Texp = T.subs({w: 2 - e}).series(e, 1).truncate()                          # e = 2 - omega
+lecture = lam*m2/(32*pi^2)*(1/e + psi(2) + log(4*pi*mu2/m2))
+print("minus the lecture's result:", (Texp - lecture).canonicalize_radical().simplify_full())
+Texp.collect(e)
+""", {}),
+
+("psi2", """
+psi(2), psi(2).n()
+""", {}),
+
+# ------------------------------------------------------------------ IBP for the tadpole
+("tadfam", """
+tad = family([("k", "m")], euclidean=True, name="T")
+tad.info()
+""", {}),
+
+("tadibp", """
+for k in [1, 2, 3]:
+    print("seed T(%d):" % k, tad.ibp((k,)))      # {(n,): c} means c T(n)
+""", {}),
+
+("tadred", """
+r = ibp_reduce(tad, ["T(2)", "T(3)", "T(4)"])
+r
+""", {}),
+
+("taddraw", """
+fig = r.draw(graph("A-A:m", {}), size=1.0)      # the tadpole: one line from A back to A
+""", {"fig": "fig"}),
+
+("tadcheck", """
+mm = var('m')
+for k in [2, 3, 4]:
+    c = SR(str(r[(k,)][(1,)])).subs({SR.var('d'): D})
+    print("T(%d)/T(1) from IBP equals the Gamma-function ratio:" % k,
+          bool((c - tadpole(k, mm^2)/tadpole(1, mm^2)).simplify_full() == 0))
+""", {}),
+
+("diffeq", """
+Uformula = lambda n: gamma(n - D/2)/(gamma(1 - D/2)*gamma(n))      # times U(1)
+(-(n - D/2)*Uformula(n) + n*Uformula(n + 1)).simplify_full()
+""", {}),
+
+("factorial", """
+t = var('t')
+v = function('v')(t)
+sol = desolve(diff(v, t) == (D/2 - t)/(t*(t - 1))*v, v, ivar=t)
+print("v(t) =", sol)
+Dv, nv = 2.6, 3
+num = numerical_integral(t^(nv - 1) * t^(-Dv/2)*(1 - t)^(Dv/2 - 1) / gamma(Dv/2), 0, 1)[0]
+print("Int_0^1 t^(n-1) v(t) dt with v0 = 1/Gamma(D/2):", num)
+print("U(n) = Gamma(n - D/2)/Gamma(n):                ", tadpole(nv, 1).subs(D=Dv).n())
+""", {}),
+
+# ------------------------------------------------------------------ the basis
+("basis", """
+print("A0(1)                     =", A0(1))
+print("B0(5; 1, 1), finite part  =", finite_part(B0(5, 1, 1), 1).n(digits=12))
+print("C0(1, 2, 3; 1, 2, 3)      =", C0(1, 2, 3, 1, 2, 3).n(digits=12))
+print("D0(1,2,3,4; -5,-6; 1,...) =", D0(1, 2, 3, 4, -5, -6, 1, 1, 1, 1).n(digits=12))
+""", {}),
+
+# ------------------------------------------------------------------ the bubble
+("bubfam", """
+bub = family([("p", "m"), ("p - k", "m")], kin={"k^2": "kk"}, loops=["p"], euclidean=True, name="J")
+bub.info()
+""", {}),
+
+("bubibp", """
+for ident in bub.ibp((1, 1)):
+    print(" + ".join("(%s) J(%s)" % (c, ",".join(map(str, a))) for a, c in ident.items()), "= 0")
+""", {}),
+
+("bubred", """
+rb = ibp_reduce(bub, ["J(2,1)", "J(1,2)", "J(0,2)"])
+rb
+""", {}),
+
+("bubcheck", """
+d_, kk_, m_ = rb[(2, 1)][(1, 1)].parent().gens()
+print("dotted bubble:  ", rb[(2, 1)][(1, 1)] == -(d_ - 3)/(kk_ + 4*m_^2),
+      "  tadpole part:", rb[(2, 1)][(0, 1)] == 1/(kk_ + 4*m_^2) * (-(d_ - 2)/(2*m_^2)))
+print("dotted tadpole: ", rb[(0, 2)][(0, 1)] == -(d_ - 2)/(2*m_^2))
+""", {}),
+
+("bubdraw", """
+gb = graph("A-B:m, A-B:m", {"A": "k", "B": "-k"}, kin={"k^2": "kk"}, euclidean=True)
+fig = rb.draw(gb, targets=[(2, 1), (0, 2)], rename={"kk": "k^2"}, size=1.0)
+""", {"fig": "fig"}),
+
+("bubde", """
+# k.dJ/dk = J(0,2) - J(1,1) - k^2 J(1,2) and dJ/dk^2 = (k.dJ/dk)/(2 k^2); reduce the right side
+kk = SR.var('kk'); dd = SR.var('d'); m = SR.var('m')
+c = lambda a, mm_: SR(str(rb[a].get(mm_, 0)))
+A = (c((0, 2), (1, 1)) - 1 - kk*c((1, 2), (1, 1)))/(2*kk)        # coefficient of J(1,1)
+B = (c((0, 2), (0, 1)) - kk*c((1, 2), (0, 1)))/(2*kk)            # coefficient of T(1)
+print("dJ/dk^2 = A J + B T(1) with")
+print("  A =", A.factor())
+print("  B =", B.factor())
+print("as in the notes:", bool((A + (1/kk - (dd - 3)/(kk + 4*m^2))/2).simplify_full() == 0),
+      bool((B + (dd - 2)/(4*m^2)*(1/kk - 1/(kk + 4*m^2))).simplify_full() == 0))
+""", {}),
+
+("dex", """
+x = var('x')
+# write k^2 = 4 m^2 x; then dJ/dx = 4 m^2 dJ/dk^2
+Ax = (4*m^2*A).subs(kk=4*m^2*x).subs({dd: D}).simplify_full()
+Bx = (4*m^2*B).subs(kk=4*m^2*x).subs({dd: D}).simplify_full()
+print("dJ/dx = (%s) J + (%s) T(1)" % (Ax.partial_fraction(x), Bx.partial_fraction(x)))
+""", {}),
+
+("dehom", """
+J0 = function('J0')(x)
+hom = desolve(diff(J0, x) == Ax*J0, J0, ivar=x)       # the homogeneous equation
+hom.canonicalize_radical()                             # write e^(a log u) as u^a
+""", {}),
+
+("deseries", """
+N = 6
+cs = [var('c%d' % i) for i in range(N + 1)]
+T1 = var('T1')                                                  # the master T(1)
+Js = sum(cs[i]*x^i for i in range(N + 1))                       # J as a power series in x
+eq = (x*(1 + x)*(diff(Js, x) - Ax*Js - Bx*T1)).simplify_rational().expand()
+eqs = [eq.coefficient(x, k) == 0 for k in range(N)]
+print("the x^0 equation:", eqs[0])
+sol = solve(eqs, cs[:N], solution_dict=True)[0]
+is_T2 = bool((sol[cs[0]] + (D - 2)/(2*m^2)*T1).simplify_full() == 0)
+print("so J(D, 0) = c0 =", sol[cs[0]].factor(), "   equal to T(2):", is_T2)
+for n in range(4):
+    ratio = (sol[cs[n + 1]]/sol[cs[n]]).factor()
+    hyp = -(2 - D/2 + n)*(1 + n)/((3/2 + n)*(1 + n))   # term ratio of the 2F1
+    print("c%d/c%d =" % (n + 1, n), ratio, "   same as 2F1:", bool((ratio - hyp).simplify_full() == 0))
+""", {}),
+
+("denum", """
+from scipy.integrate import solve_ivp
+Dv, mv = 3.3, 1
+T1v = float(tadpole(1, mv^2).subs(D=Dv))
+fA = fast_callable(Ax.subs(m=mv, D=Dv), vars=[x])
+fB = fast_callable(Bx.subs(m=mv, D=Dv), vars=[x])
+x0 = 1e-6                                                       # start next to the boundary x = 0
+J_start = float(sum(sol[cs[i]].subs(D=Dv, m=mv, T1=T1v)*x0^i for i in range(N)))
+num = solve_ivp(lambda t, y: [fA(t)*y[0] + fB(t)*T1v], [x0, 2.0], [J_start],
+                rtol=1e-11, atol=1e-13, dense_output=True)
+for xv in [0.125, 0.5, 2.0]:
+    exact = bubble_equal_mass(4*mv^2*xv, mv^2).subs(D=Dv).n()     # Gamma(2-D/2) m^(D-4) 2F1
+    print("x = %.3f   solved numerically: %.10f    closed form: %.10f" % (xv, num.sol(xv)[0], exact))
+""", {}),
+
+("hyp", """
+a, b, c, z = 7/20, 1, 3/2, -1/2           # 2F1(2 - D/2, 1; 3/2; -x) at D = 3.3, x = 1/2
+h = hypergeometric([a, b], [c], z)
+print("Sage:          ", h.n(digits=25))
+term = lambda n: rising_factorial(a, n)*rising_factorial(b, n)/rising_factorial(c, n)*z^n/factorial(n)
+print("the series:    ", sum(term(n) for n in range(80)).n(digits=25))
+import mpmath; mpmath.mp.dps = 25
+print("mpmath.hyp2f1: ", mpmath.hyp2f1(a, b, c, z))
+assume(x > 0)
+h3 = hypergeometric([1/2, 1], [3/2], -x)                # D = 3
+print("D = 3 in closed form:", h3.simplify_hypergeometric(algorithm='maxima'))
+""", {}),
+
+# ------------------------------------------------------------------ the fish and Feynman parameters
+("feyntrick", """
+A_, B_, x = var('A B x')
+assume(A_ > 0, B_ > 0, B_ - A_ > 0)          # any order of A and B gives the same
+integrate(1/(x*A_ + (1 - x)*B_)^2, x, 0, 1).factor()
+""", {}),
+
+("fishfp", """
+Dv, mv, pv = 3.3, 1, 3
+# after the shift l -> l + p(1 - x) the loop integral is a tadpole with mass^2 = m^2 + p^2 x(1 - x)
+fp = numerical_integral(lambda xx: tadpole(2, mv^2 + pv*xx*(1 - xx)).subs(D=Dv).n(), 0, 1)[0]
+print("Feynman parameter integral:", fp)
+print("bubble from the DE (2F1):  ", bubble_equal_mass(pv, mv^2).subs(D=Dv).n())
+""", {}),
+
+("ramond", """
+p2v = 3
+finite = -numerical_integral(lambda xx: log(1 + xx*(1 - xx)*p2v), 0, 1)[0]
+b = sqrt(1 + 4/p2v)
+print("finite part, integral over x:    ", finite)
+print("Ramond: 2 - b ln((b + 1)/(b - 1)):", (2 - b*log((b + 1)/(b - 1))).n())
+""", {}),
+
+("continuation", """
+print("ln(-2) =", log(-2).n(), "   ln 2 + i pi =", (log(2) + I*pi).n())
+for sv in [3, 5, 10]:
     val = finite_part(B0(sv, 1, 1), 1).n(digits=12)
     beta = sqrt(1 - 4/sv) if sv > 4 else 0
-    print("s = %2d   B0 finite = %-38s pi*beta = %.12f" % (sv, val, (pi*beta).n()))
+    print("s = %2d (m = 1):  Im of the bubble = %.10f    pi*beta = %.10f" % (sv, imag(val), (pi*beta).n()))
 """, {}),
 
 ("b0plot", """
 from feynsage.plotting import quick_plot, set_theme
 set_theme()
-fig = quick_plot([B0(s, 1, 1), B0(s, 1, 2)], (s, -2, 14),
-                 labels=["$m_1 = m_2 = 1$", "$m_1 = 1,\\\\ m_2 = 2$"])
+s = var('s')
+fig = quick_plot([B0(s, 1, 1)], (s, -2, 14), labels=["bubble, $m = 1$"])
 """, {"fig": "fig"}),
 
-("a0b0", """
-(A0(m) - m^2*(B0(0, m, m) + 1)).simplify_full()
-""", {}),
-
-("norm", """
-from feynsage.oneloop import tadpole, expand_eps, D
-note = expand_eps(tadpole(1, 1), 0)        # the note: e^(eps gamma_E) Int [dl] 1/(l^2 + 1), Euclidean
-px = A0(1).subs(mu=1)                       # Package-X normalisation, Minkowski, m = mu = 1
-print("note's tadpole:", note)
-print("A0(1):         ", px)
-print("sum:           ", (note + px).simplify_full())
-""", {}),
-
-# ------------------------------------------------------------------ 2. one loop with numerators
-("loop1", """
-loop("1", ["l", "m1"], ["l + p", "m2"], kin={"p^2": "s"})
-""", {}),
-
-("loopmu", """
-loop("l^mu", ["l", "m1"], ["l + p", "m2"], kin={"p^2": "s"})
-""", {}),
-
-("b1check", """
-sv, a1, a2 = 10, 1, 2
-hand = (A0(a1) - A0(a2) - (sv + a1^2 - a2^2)*B0(sv, a1, a2))/(2*sv)
-pv = PVB(0, 1, sv, a1, a2)                      # Package-X's PVB[0, 1, ...] = B1
-print("poles:        ", uv_part(hand), uv_part(pv))
-print("finite parts: ", finite_part(hand, 1).n(), "   ", finite_part(pv, 1).n())
-""", {}),
-
-("loopmunu", """
-loop("l^mu l^nu", ["l", "m"], ["l + p", "m"], kin={"p^2": "s"})
-""", {}),
-
-("gram", """
-s1, s2, s12 = var('s1 s2 s12')
-p1p2 = (s1 + s2 - s12)/2                    # p1.p2 from s12 = (p1 - p2)^2
-Gram = matrix([[s1, p1p2], [p1p2, s2]])
-print("det Gram =", Gram.det().expand())
-print("at the g-2 point s1 = s2 = m^2, q^2 = s12 = 0:", Gram.det().subs(s1=m^2, s2=m^2, s12=0))
-""", {}),
-
-("c0", """
-c = C0(1, 2, 3, 1, 2, 3)
-print(c, "=", c.n(digits=30))
-print("direct numerical integration:", c0_numeric(1, 2, 3, 1, 2, 3))
-print("as logs and dilogs:", len(str(explicit(c))), "characters, value", explicit(c).n(digits=20).real())
-""", {}),
-
-("c0hand", """
-from scipy.integrate import dblquad
-s1v, s12v, s2v, m0, m1, m2 = -1.0, -2.0, -3.0, 1.0, 2.0, 3.0      # all invariants spacelike: F > 0
-def Fpar(x1, x2):
-    x0 = 1 - x1 - x2                         # x0, x1, x2 on the lines (l, m0), (l + p1, m1), (l + p2, m2)
-    return x0*m0**2 + x1*m1**2 + x2*m2**2 - x0*x1*s1v - x0*x2*s2v - x1*x2*s12v
-by_hand = -dblquad(lambda x2, x1: 1/Fpar(x1, x2), 0, 1, 0, lambda x1: 1 - x1, epsabs=1e-13)[0]
-print("by hand:  ", by_hand)
-print("feynsage: ", C0(-1, -2, -3, 1, 2, 3).n(digits=16))
-""", {}),
-
-("d0", """
-d = D0(-1, -2, -3, -4, -5, -6, 1, 2, 3, 4)
-print(d.n(digits=25))
-print(d0_numeric(-1, -2, -3, -4, -5, -6, 1, 2, 3, 4))
-""", {}),
-
-("cir", """
-pole_parts(C0(0, s, 0, 0, 0, 0))
-""", {}),
-
-("irgraph", """
-tri = graph("A-B, B-C, C-A", {"A": "p1 + p2", "B": "-p1", "C": "-p2"},
-            kin={"p1^2": 0, "p2^2": 0, "p1.p2": "Q2/2"}, euclidean=True)
-print("U =", tri.U(), "     F =", tri.F())
-ep = var('eps')
-dirichlet = gamma(1 + ep)*gamma(-ep)^2/gamma(1 - 2*ep)
-(exp(ep*euler_gamma)*dirichlet).series(ep, 1).truncate()
-""", {}),
-
-("gramc", """
-print("C1  =", PVC(0, 1, 0, m^2, 0, m^2, 0, m, m))
-print("C00 =", PVC(1, 0, 0, m^2, 0, m^2, 0, m, m).log_expand().expand())
-""", {}),
-
-# ------------------------------------------------------------------ 3. graphs
-("graphbub", """
-bub = graph("A-B:ma, A-B:mb", {"A": "p", "B": "-p"}, kin={"p^2": "pp"}, euclidean=True)
-print("lines N =", bub.N, "  vertices V =", bub.V, "  loops L = N - V + 1 =", bub.L)
-fig = bub.plot(figsize=(2.6, 2.6))
+# ------------------------------------------------------------------ part 2: graph polynomials
+("bub2", """
+from feynsage.plotting import draw_panels
+xs = lambda rem: "$" + "".join("\\\\alpha_{%d}" % (i + 1) for i in rem) + "$"
+g2 = graph("A-B:m1, A-B:m2", {"A": "p", "B": "-p"}, kin={"p^2": "pp"}, euclidean=True)
+trees = g2.spanning_trees(); forests = [r for r, c in g2.two_forests()]
+fig = draw_panels(g2, trees + forests, titles=["1-tree: " + xs(r) for r in trees] + ["2-tree: " + xs(r) for r in forests],
+                  momenta=False, ncols=3, size=1.9)
+print("U =", g2.U())
+print("V =", g2.F0())
+print("F = V + (m1^2 x1 + m2^2 x2) U =", g2.F())
 """, {"fig": "fig"}),
 
-("kiteplot", """
-from feynsage.plotting import draw_panels, draw_sectors, draw_graph
-kite = diagram("kite")
-print(kite.lines)
+("box", """
+# Smirnov Fig. 3.6 as drawn in the lecture: line 1 on top, 2 on the left, 3 on the right, 4 at the
+# bottom; p1 and p2 enter on the left, p3 and p4 on the right, s = (p1 + p2)^2, t = (p1 + p3)^2
+box = graph("TL-TR, TL-BL, TR-BR, BL-BR", {"TL": "p1", "BL": "p2", "TR": "p3", "BR": "-p1-p2-p3"},
+            kin={"p1^2": 0, "p2^2": 0, "p3^2": 0, "p1.p2": "s/2", "p1.p3": "t/2", "p2.p3": "-(s+t)/2"},
+            euclidean=True)
+fig = box.plot(figsize=(2.8, 2.8))
+print("U =", box.U(), "     V =", box.F0())
+""", {"fig": "fig"}),
+
+("box2trees", """
+def momentum_in(g, comp):
+    tot = {}
+    for v in comp:
+        for k, c in g.ext.get(v, {}).items():
+            tot[k] = tot.get(k, 0) + c
+    return {k: c for k, c in tot.items() if c}
+
+ft = box.two_forests()
+titles = []
+for rem, comp in ft:
+    P2 = box.kin.square_external(momentum_in(box, comp))
+    titles.append(xs(rem) + (":  0" if P2 == 0 else "  $%s$" % latex(P2)))
+fig = draw_panels(box, [r for r, c in ft], titles=titles, momenta=False, ncols=3, size=2.0)
+""", {"fig": "fig"}),
+
+("kite", """
+kite = graph("L-B, L-T, B-R, T-R, T-B", {"L": "p", "R": "-p"}, kin={"p^2": "pp"}, euclidean=True)
 fig = kite.plot(figsize=(2.8, 2.8))
 """, {"fig": "fig"}),
 
 ("kitetrees", """
-xs = lambda rem: "$" + "".join("x_{%d}" % (i + 1) for i in rem) + "$"
 trees = kite.spanning_trees()
-print(len(trees), "spanning trees; removed lines (from 0):", trees)
 fig = draw_panels(kite, trees, titles=[xs(r) for r in trees], momenta=False, ncols=8, size=1.5)
+print(len(trees), "1-trees:  U =", kite.U())
 """, {"fig": "fig"}),
 
-("kiteU", """
-kite.U()
-""", {}),
-
-("kiteforests", """
-def entering(comp):
-    tot = {}
-    for v in comp:
-        for k, c in kite.ext.get(v, {}).items():
-            tot[k] = tot.get(k, 0) + c
-    return {k: c for k, c in tot.items() if c}
-
-forests = kite.two_forests()
-carry = [(r, c) for r, c in forests if entering(c)]
-print(len(forests), "2-forests,", len(carry), "of them carry the momentum p")
-fig = draw_panels(kite, [r for r, c in carry], titles=[xs(r) + "$\\\\,p^2$" for r, c in carry],
-                  momenta=False, ncols=8, size=1.5)
+("kite2trees", """
+carry = [r for r, c in kite.two_forests() if momentum_in(kite, c)]
+fig = draw_panels(kite, carry, titles=[xs(r) + "$\\\\,p^2$" for r in carry], momenta=False, ncols=8, size=1.5)
+print(len(carry), "2-trees with p^2:  F =", kite.F())
 """, {"fig": "fig"}),
 
-("kiteF", """
-kite.F()
+("fpformula", """
+# the massless bubble from U and F with the general formula: N = 2 lines, L = 1 loop, powers 1
+from feynsage.oneloop import bubble_massless
+g0 = graph("A-B, A-B", {"A": "p", "B": "-p"}, kin={"p^2": 1}, euclidean=True)
+U0, F0 = g0.U(), g0.F()
+Dv, N, L = 3.3, 2, 1
+xx = var('xx')
+u = SR(str(U0)).subs(x1=xx, x2=1 - xx); f = SR(str(F0)).subs(x1=xx, x2=1 - xx)
+val = gamma(N - L*Dv/2) * numerical_integral(u^(N - (L + 1)*Dv/2)/f^(N - L*Dv/2), 0, 1)[0]
+print("U =", U0, "   F =", F0)
+print("from U and F:", val, "    closed form:", bubble_massless(1, 1, 1).subs(D=Dv).n())
 """, {}),
 
-("threeways", """
-import time
-def three_ways(g, name):
-    t0 = time.time()
-    U, F = g.U(), g.F()
-    t1 = time.time()
-    props, loops = g.family()
-    Um, Fm = IntegralFamily(name, loops, g.kin, props).UF()
-    same = g.U_kirchhoff() == U and g.R(str(Um)) == U and g.R(str(Fm)) == F
-    print("%-10s L = %d, %2d lines, %3d trees, %3d 2-forests (%.3f s); trees = Kirchhoff = det M: %s"
-          % (name, g.L, g.N, len(g.spanning_trees()), len(g.two_forests()), t1 - t0, same))
-
-for name in ["bubble_mass", "kite", "vertex2", "banana3", "ladder3", "triplebox"]:
-    three_ways(diagram(name), name)
+("square", """
+# the two-mass bubble, Euclidean: D1 = k^2 + m1^2, D2 = (k + p)^2 + m2^2
+# write the scalar products as symbols: kk = k.k, kp = k.p, pp = p.p
+x1, x2, m1, m2, kk, kp, pp = var('x1 x2 m1 m2 kk kp pp')
+S = (x1*(kk + m1^2) + x2*(kk + 2*kp + pp + m2^2)).expand()       # sum_i x_i D_i
+M = S.coefficient(kk)                                           # the coefficient of k.k
+Qc = -S.coefficient(kp)/2                                        # -2 Q.k: Q = Qc * p
+J = S.subs(kk=0, kp=0)                                          # what has no loop momentum
+print("sum x_i D_i =", S)
+print("M =", M, "    Q = (%s) p" % Qc, "    J =", J)
+U_sq = M
+F_sq = (M*(J - Qc^2*pp/M)).simplify_rational().expand()          # det M (J - Q.M^-1.Q), with Q.Q = Qc^2 p.p
+print("U = det M =", U_sq)
+print("F = det M (J - Q M^-1 Q) =", F_sq.collect(pp))
 """, {}),
 
-("kirchhoff", """
-X = [SR.var('x%d' % (i + 1)) for i in range(kite.N)]
-idx = {v: n for n, v in enumerate(kite.vertices)}
-Lap = matrix(SR, kite.V, kite.V)
-for i, (u, v, _) in enumerate(kite.lines):     # line i between u and v, weight 1/x_i
-    a, b = idx[u], idx[v]
-    Lap[a, a] += 1/X[i]; Lap[b, b] += 1/X[i]; Lap[a, b] -= 1/X[i]; Lap[b, a] -= 1/X[i]
-print("vertices in this order:", kite.vertices)
-Lap
+("squarecheck", """
+fam2 = family([("k", "m1"), ("k + p", "m2")], kin={"p^2": "pp"}, euclidean=True)
+U_f, F_f = fam2.UF()
+print("fam.UF() gives the same:      ", bool(SR(str(U_f)) == U_sq), bool((SR(str(F_f)) - F_sq).expand() == 0))
+print("and the 2-trees gave the same:", bool((SR(str(g2.F())) - F_sq).expand() == 0))
 """, {}),
 
-("kirchhoff2", """
-reduced = Lap[1:, 1:]                           # strike out one row and column
-U_from_det = (prod(X) * reduced.det()).expand()
-print("prod(x) * det(reduced Laplacian) =", U_from_det)
-print("equal to U from the trees:", bool(U_from_det == SR(str(kite.U())).expand()))
+("sirnb", """
+# sir's notebook completes the square, sum x_i D_i = l.M.l - 2 Q.l + J: U = det M, F = det M (J - Q.M^-1.Q)
+tri = family(["k", "k + p1", "k + p1 + p2"], kin={"p1^2": "P1Sq", "p2^2": "P2Sq", "p1.p2": "(QSq - P1Sq - P2Sq)/2"})
+bb = family([("k", "m1"), ("k + p1", "m2")], kin={"p1^2": "p1sq"})
+bx = family(["k", "k + p1", "k + p1 + p2", "k - p3"],
+            kin={"p1^2": 0, "p2^2": 0, "p3^2": 0, "p1.p2": "s/2", "p1.p3": "t/2", "p2.p3": "-(s+t)/2"})
+for name, fam in [("triangle", tri), ("bubble", bb), ("box", bx)]:
+    U_, F_ = fam.UF()
+    print("%-9s U = %-18s F = %s" % (name, U_, F_))
 """, {}),
 
-("vertex2", """
-v2 = diagram("vertex2")
-fig = v2.plot(figsize=(3.0, 3.0))
+]
+
+# ------------------------------------------------------------------ a real calculation: pi0 -> gamma gamma
+CELLS += [
+
+("piongraph", """
+# the quark triangle: P = pion vertex, A and B = photon vertices; all three lines are quarks of mass mq
+# line 1 = P-A (Feynman parameter x), 2 = B-P (y), 3 = A-B (1 - x - y); Minkowski signs
+tri = graph("P-A:mq, B-P:mq, A-B:mq", {"P": "k1 + k2", "A": "-k1", "B": "-k2"},
+            kin={"k1^2": 0, "k2^2": 0, "k1.k2": "mpi2/2"})
+fig = tri.plot(figsize=(2.6, 2.6))
+print("U =", tri.U())
+print("F =", tri.F())
 """, {"fig": "fig"}),
 
-("vertex2UF", """
-R = v2.R
-x1, x2, x3, x4, x5, x6 = R.gens()
-q2 = R.base_ring()('q2')
-U_note = (x2 + x3)*(x1 + x4 + x5) + (x1 + x2 + x3 + x4 + x5)*x6
-F_note = -q2*(x1*x3*x4 + x1*x2*(x3 + x4) + x2*x3*(x4 + x5) + (x1 + x2)*(x3 + x4)*x6)
-print("U as in the note:", v2.U() == U_note, "   F as in the note:", v2.F() == F_note)
-""", {}),
-
-# ------------------------------------------------------------------ 4. sectors
-("kitefam", """
-props, loops = kite.family()
-kfam = IntegralFamily("kite", loops, kite.kin, props)
-for i, (q, m2) in enumerate(props):
-    print("line %d (x%d):  D%d = (%s)^2" % (i + 1, i + 1, i + 1,
-          " + ".join(("" if c == 1 else "-" if c == -1 else str(c)) + k for k, c in q.items()).replace("+ -", "- ")))
-""", {}),
-
-("sectorof", """
-def sector(a):
-    return tuple(1 if x > 0 else 0 for x in a)
-
-for a in [(1, 1, 1, 1, 1), (2, 1, 1, 1, 3), (1, 1, 1, 1, -2), (1, 1, 1, 1, 0), (0, 1, 1, 0, 1), (0, 2, 1, -1, 1)]:
-    print("F%s  is in sector %s" % (a, sector(a)))
-""", {}),
-
-("contract", """
-import matplotlib.pyplot as plt
-h, kept = kite.contract([5])           # the kite without line 5
-print("lines kept:", kept, "   vertices:", h.vertices)
-fig, axes = plt.subplots(1, 2, figsize=(5.2, 2.5))
-draw_graph(kite, ax=axes[0], momenta=False, removed=[5], title="line 5 removed (dashed)")
-draw_graph(h, ax=axes[1], names=kept, momenta=False, title="line 5 shrunk to a point")
+("piontrees", """
+trees = tri.spanning_trees(); two = tri.two_forests()
+lab = lambda rem: "$" + "".join("x_{%d}" % (i + 1) for i in rem) + "$"
+def term(rem, comp):
+    P2 = tri.kin.square_external(momentum_in(tri, comp))
+    return lab(rem) + ("$\\;m_\\pi^2$" if P2 != 0 else ":  0")
+fig = draw_panels(tri, trees + [r for r, c in two],
+                  titles=["1-tree " + lab(r) for r in trees] + ["2-tree " + term(r, c) for r, c in two],
+                  momenta=False, ncols=3, size=2.0)
 """, {"fig": "fig"}),
 
-("contractUF", """
-to_kite = h.R.hom([kite.R.gen(k - 1) for k in kept], kite.R)    # x_k of h -> x_kept[k] of the kite
-x5 = kite.R.gen(4)
-print("U(kite) at x5 = 0  =  U(kite with line 5 shrunk):", kite.U().subs({x5: 0}) == to_kite(h.U()))
-print("F(kite) at x5 = 0  =  F(kite with line 5 shrunk):", kite.F().subs({x5: 0}) == to_kite(h.F()))
-print("the same graph with line 5 deleted instead has", len(kite._graph([0, 1, 2, 3]).connected_components()),
-      "component(s) and only", kite.L - 1, "loop: not the same integral")
+("piondelta", """
+x, y = var('x y')
+m, m_pi = var('m m_pi')
+Delta = SR(str(tri.F())).subs(x1=x, x2=y, x3=1 - x - y).expand()      # U = 1 on the simplex
+Delta = Delta.subs({SR.var('mq'): m, SR.var('mpi2'): m_pi^2})
+Delta
 """, {}),
 
-("allsectors", """
-from itertools import product as cartesian
-secs = [s for s in cartesian([1, 0], repeat=5) if sum(s) in (4, 3)]
-titles = [str(s).replace(" ", "") + ("  zero" if kfam.is_zero_sector(s) else "") for s in secs]
-print(sum(kfam.is_zero_sector(s) for s in secs), "of", len(secs), "are zero")
-fig = draw_sectors(kite, secs, titles=titles, momenta=False, ncols=5, size=2.0)
-""", {"fig": "fig"}),
-
-("zerosector", """
-s0 = (1, 1, 1, 0, 0)
-fig = draw_sectors(kite, [s0, (1, 0, 1, 0, 1)], titles=[str(s0), "(1,0,1,0,1)"], momenta=True, ncols=2, size=2.4)
-U0, F0 = kfam.UF(s0)
-print("U =", U0, "    F =", F0)
-print("zero sector (Lee's criterion):", kfam.is_zero_sector(s0))
-""", {"fig": "fig"}),
-
-("leecrit", """
-for s in [(1, 1, 1, 0, 0), (0, 1, 1, 0, 1), (1, 1, 1, 1, 0), (1, 1, 1, 1, 1)]:
-    U0, F0 = kfam.UF(s)
-    print(s, " U + F =", U0 + F0, "   zero:", kfam.is_zero_sector(s))
+("pionUF", """
+# the general formula with N = 3 lines (powers 1), L = 1 loop, D = 4, Minkowski:
+# Int d^4l/(i pi^2) 1/(D1 D2 D3) = (-1)^N Gamma(N - L D/2) Int dx delta(1 - sum x) U^(N-(L+1)D/2) / F^(N-L D/2)
+N, L, Dv = 3, 1, 4
+print("prefactor (-1)^N Gamma(N - L D/2) =", (-1)^N*gamma(N - L*Dv/2),
+      "   power of U:", N - (L + 1)*Dv/2, "   power of F:", -(N - L*Dv/2))
+Ux, Fx = SR(str(tri.U())), SR(str(tri.F()))
+integrand = ((-1)^N*gamma(N - L*Dv/2) * Ux^(N - (L + 1)*Dv/2) / Fx^(N - L*Dv/2)).subs(x3=1 - x1 - x2)
+integrand = integrand.subs({SR.var('mq'): m, SR.var('mpi2'): m_pi^2}).simplify_full()
+print("integrand on the simplex x1 + x2 + x3 = 1:", integrand)
 """, {}),
 
-("count", """
-from collections import Counter
-allsec = [s for s in cartesian([0, 1], repeat=5) if sum(s) > 0]
-nz = Counter(sum(s) for s in allsec if not kfam.is_zero_sector(s))
-tot = Counter(sum(s) for s in allsec)
-for k in sorted(tot):
-    print("%d lines: %2d sectors, %2d non-zero" % (k, tot[k], nz.get(k, 0)))
+("pionnum", """
+from scipy.integrate import dblquad
+mv, rv = 1.0, 0.5                                 # m = 1 and m_pi^2 = r m^2 with r = 0.5
+f_num = fast_callable(integrand.subs(m=mv, m_pi=sqrt(rv)), vars=[SR.var('x1'), SR.var('x2')])
+val = dblquad(lambda b, a: f_num(a, b), 0, 1, 0, lambda a: 1 - a)[0]
+print("Int d^4l/(i pi^2) 1/(D1 D2 D3) from U and F:  ", val)
+print("-I(r)/m^2 with I(r) = (2/r) arcsin^2(sqrt(r)/2):", -(2/rv*arcsin(sqrt(rv)/2)^2)/mv^2)
 """, {}),
 
-("kitemasters", """
-red = ibp_reduce(kfam, ["F(1,1,1,1,1)"])
-print("masters:", red.masters)
-fig = draw_sectors(kite, [tuple(1 if x > 0 else 0 for x in m) for m in red.masters],
-                   titles=["master " + str(m).replace(" ", "") for m in red.masters], momenta=False, ncols=2, size=2.4)
-""", {"fig": "fig"}),
-
-("kitered", """
-red
+("pionnorm", """
+Ir = var('I_r')
+# the loop measure of the amplitude is d^4l/(2 pi)^4 = (i pi^2/(2 pi)^4) d^4l/(i pi^2)
+(I*pi^2/(2*pi)^4 * (-Ir/m^2)).simplify_full()
 """, {}),
 
-("sectorsym", """
-from feynsage.laporta import Reducer
-r = Reducer(kfam, symmetries=symmetries(kfam))
-for a in [(1, 0, 0, 1, 1), (2, 0, 0, 1, 1), (1, 0, 0, 1, 3), (0, 1, 1, 0, 1)]:
-    print("F%s  ->  F%s" % (a, r.canon(a)))
-fig = draw_sectors(kite, [(0, 1, 1, 0, 1), (1, 0, 0, 1, 1)], titles=["(0,1,1,0,1)", "(1,0,0,1,1)"],
-                   momenta=True, ncols=2, size=2.4)
-""", {"fig": "fig"}),
-
-("pak", """
-for sec in [(0, 1, 1, 0, 1), (1, 0, 0, 1, 1)]:
-    U0, F0 = kfam.UF(sec)
-    print(sec, "  U + F =", U0 + F0)
+("pionIr", """
+r = var('r')
+series_I = sum(r^k * integrate(integrate((x*y)^k, y, 0, 1 - x), x, 0, 1) for k in range(10))
+closed = 2/r * arcsin(sqrt(r)/2)^2
+print("I(r) term by term:  ", series_I.series(r, 4).truncate())
+print("closed form, series:", closed.taylor(r, 0, 3))
+print("heavy quark, r -> 0:", limit(closed, r=0))
+print("m = 330 MeV:  2 I(r) =", (2*closed.subs(r=(134.9768/330)^2)).n(digits=5))
 """, {}),
 
-("sunset63", """
-from feynsage.ff import reduce_ff
-sun = family([("k", "1"), ("k - l", "1"), ("l + p", "1"), "k + p", "l"], kin={"p^2": "pp"})
-targets = [(2, 1, 1, 0, 0), (2, 2, 1, 0, 0), (1, 1, 2, 0, 0)]
-for ss in [False, True]:
-    r = Reducer(sun, symmetries=symmetries(sun), sector_symmetries=ss)
-    tab = reduce_ff(r, targets, rmax=2, smax=1)
-    ms = sorted({m for row in tab.values() for m in row})
-    print("sector symmetries %-5s: %d masters %s" % (ss, len(ms), ms))
+("piontrace", """
+# Tr[ g5 (q - x k1 - (1-y) k2 + m) g^nu (q - x k1 + y k2 + m) g^mu (q + (1-x) k1 + y k2 + m) ],
+# each momentum combination standing for gamma.(that momentum); answer with the usual epsilon
+form.dirac_trace(['g5', 'q - x*k1 - (1-y)*k2 + m', 'nu', 'q - x*k1 + y*k2 + m', 'mu',
+                  'q + (1-x)*k1 + y*k2 + m'], vectors=['q', 'k1', 'k2'], levi_civita="usual")
 """, {}),
 
-("numrel", """
-r = Reducer(sun, symmetries=symmetries(sun), numerator_relations=True)
-for rel in r.symmetry_relations((1, 1, 1, -1, 0)):
-    print(" + ".join("(%s) F%s" % (c, a) for a, c in rel.items()).replace("+ (-", "- ("), "= 0")
+("pionamp", """
+Nc, e, Q, g, f, mq_ = var('N_c e Q g f_pi m_q')
+A_one = Nc * e^2 * Q^2 * g / (4*pi^2*mq_) * 2*limit(closed, r=0)    # one quark, both orderings, heavy quark
+print("one quark:             ", A_one)
+print("with g = m_q/f_pi:     ", A_one.subs(g=mq_/f))
+alpha = var('alpha')
+A = (A_one.subs(g=mq_/f, Q=2/3) - A_one.subs(g=mq_/f, Q=-1/3)).subs(e=sqrt(4*pi*alpha))   # u minus d
+print("u and d, e^2 = 4 pi alpha:", A.simplify_full())
 """, {}),
 
-# ------------------------------------------------------------------ 5. IBP and masters
-("bubfam", """
-bubf = family([("l", "1"), ("l - p", "1")], kin={"p^2": "pp"}, euclidean=True)
-bubf.info()
+("pioneps", """
+# Sage-style input; feynsage writes the FORM program, runs it and reads the answer back
+form.compute("eps(mu,nu,rho,sigma)*eps(mu,nu,al,be)*k1(rho)*k2(sigma)*k1(al)*k2(be)",
+             vectors=["k1", "k2"], rules={"k1.k1": 0, "k2.k2": 0}, levi_civita="usual", show_code=True)
 """, {}),
 
-("bubibp", """
-for k, ident in enumerate(bubf.ibp((1, 1))):
-    print("identity %d:" % (k + 1), " + ".join("(%s) F%s" % (c, a) for a, c in ident.items()), "= 0")
-""", {}),
-
-("bubred", """
-rb = ibp_reduce(bubf, ["F(2,1)", "F(2,2)"])
-rb
-""", {}),
-
-("bubcheck", """
-row = rb[(2, 1)]
-dd, ppp = row[(1, 1)].parent().gens()
-print(row[(1, 1)] == -(dd - 3)/(ppp + 4), row[(0, 1)] == -(dd - 2)/(2*(ppp + 4)))
-""", {}),
-
-("kitevalue", """
-from feynsage.oneloop import G, D, expand_eps
-kq = family(["l1", "l1 + q", "l1 + l2", "l1 + l2 + q", "l2"], kin={"q^2": 1}, euclidean=True)
-rk = ibp_reduce(kq, ["F(1,1,1,1,1)"])
-value = {(0, 1, 1, 0, 1): G(1, 1)*G(1, 2 - D/2), (1, 1, 1, 1, 0): G(1, 1)^2}
-kite_value = sum(SR(str(c)).subs({SR.var('d'): D}) * value[mm] for mm, c in rk[(1, 1, 1, 1, 1)].items())
-expand_eps(kite_value, 0, loops=2)
-""", {}),
-
-("methods", """
-res = {meth: ibp_reduce(kq, ["F(2,2,1,2,2)"], method=meth) for meth in ["ff", "trimmed", "exact"]}
-for meth, r in res.items():
-    print("%-8s %.2f s" % (meth, r.seconds))
-print("the same coefficients:", res["ff"].table == res["trimmed"].table == res["exact"].table)
-""", {}),
-
-("ffverbose", """
-r = ibp_reduce(kq, ["F(2,2,1,2,2)"], method="ff", verbose=True)
-""", {}),
-
-("lp", """
-def critical_points(fam, sector, numbers):
-    U, F = fam.UF()
-    n = len(sector)
-    R = PolynomialRing(QQ, ['x%d' % (i + 1) for i in range(n)] + ['t'])
-    x, t = R.gens()[:n], R.gens()[n]
-    G = R(str(SR(str(U + F)).subs(numbers)))
-    live = [x[i] for i in range(n) if sector[i]]
-    I = R.ideal([G.derivative(v) for v in live] + [x[i] for i in range(n) if not sector[i]] + [t*prod(live) - 1])
-    return 0 if I.is_one() else I.vector_space_dimension()
-
-pp = var('pp')
-for sec in [(1, 1), (1, 0), (0, 1)]:
-    print(sec, critical_points(bubf, sec, {pp: 7/3}))
-""", {}),
-
-# ------------------------------------------------------------------ 6. FORM
-("tr1", """
-form.trace(['mu', 'nu', 'rho', 'sigma'])
-""", {}),
-
-("tr2", """
-print(form.dirac_trace(['mu', 'mu'], vectors=[], dim='D'))
-print(form.dirac_trace(['g5', 'mu', 'nu', 'rho', 'sigma'], vectors=[]))
-print(form.dirac_trace(['p + m', 'mu', 'k + m', 'nu'], vectors=['p', 'k']))
-""", {}),
-
-("ee", """
-code = '''
-Symbols s, t, u;
-Vectors p, pp, k, kp;
-Indices mu, nu;
-Local M = g_(1, pp, mu, p, nu) * g_(2, k, mu, kp, nu);
-trace4, 1;
-trace4, 2;
-id p.k = -t/2;   id pp.kp = -t/2;
-id p.kp = -u/2;  id pp.k = -u/2;
-Print;
-.end
-'''
-traces = SR(" ".join(form.run_form(code).split("M =")[1].split(";")[0].split()))
-traces
-""", {}),
-
-("eexs", """
-s, t, u, e, th, alpha = var('s t u e theta alpha')
-msq = (e^4/s^2 * traces/4).subs(t=-s/2*(1 - cos(th)), u=-s/2*(1 + cos(th)))
-dsig = (msq/(64*pi^2*s)).subs(e=sqrt(4*pi*alpha))
-print("dsigma/dOmega =", dsig.trig_simplify().factor())
-print("sigma =", integrate(integrate(dsig*sin(th), th, 0, pi), var('phi'), 0, 2*pi))
+("pionrate", """
+mpi = var('m_pi')
+Gamma = (A^2 * mpi^3 / (64*pi)).simplify_full()
+print("Gamma =", Gamma)
+vals = {alpha: 1/137.035999, mpi: 134.9768, f: 130.2/sqrt(2)}          # MeV (PDG values)
+hbar, BR = 6.582119569e-22, 0.98823                                   # MeV s, BR(pi0 -> gamma gamma)
+G3 = (Gamma.subs(vals).subs({Nc: 3}) * 1e6).n()                        # eV
+G1 = (Gamma.subs(vals).subs({Nc: 1}) * 1e6).n()
+tau = lambda G: hbar*1e6*BR/G                                         # s, G in eV
+print("width,    feynsage: %.2f eV          PrimEx-II (2020): 7.80 +- 0.12 eV   -> %.1f sigma" % (G3, abs(G3 - 7.80)/0.12))
+print("lifetime, feynsage: %.3g s     from the PrimEx-II width:  %.3g s" % (tau(G3), tau(7.80)))
+print("                                        PDG world average: (8.43 +- 0.13)e-17 s -> %.1f sigma"
+      % (abs(tau(G3) - 8.43e-17)/0.13e-17))
+print("the PDG lifetime as a width: %.2f eV (it includes older, lower measurements)" % (hbar*1e6*BR/8.43e-17))
+print("with N_c = 1: %.2f eV, nine times too small" % G1)
+vals_f = dict(vals); vals_f[f] = 1.01*130.2/sqrt(2)
+print("f_pi 1%% larger: Gamma = %.2f eV (Gamma ~ 1/f_pi^2: 2%% lower)" % (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n())
 """, {}),
 
 ]

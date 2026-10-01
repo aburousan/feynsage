@@ -9,6 +9,7 @@ Modern fonts, light grid, no top and right frame.
 
 Every function returns a matplotlib Figure; save it with fig.savefig("name.svg").
 """
+import re
 from itertools import permutations
 from math import atan2, cos, pi, sin, sqrt
 
@@ -233,11 +234,11 @@ def draw_graph(g, labels=True, dots=None, momenta=True, figsize=(2.8, 2.8), R=1.
                     col, lw, ls = "#c9c7c2", 1.1, (0, (3, 2))
                 if u == v:                                   # a tadpole loop on one vertex
                     (x0, y0), a = P[u], ang[u] + pi / 2 + s * 0.8
-                    r = 0.45 * R
+                    r = (0.8 if n == 1 else 0.45) * R               # a lone tadpole gets more room
                     cx, cy = x0 + r * cos(a), y0 + r * sin(a)
                     ax.add_patch(Circle((cx, cy), r, fill=False, color=col, lw=lw, ls=ls))
                     lx, ly, mid = cx + 1.45 * r * cos(a), cy + 1.45 * r * sin(a), (cx + r * cos(a), cy + r * sin(a))
-                    tang = a + pi / 2
+                    tang, arc = a + pi / 2, (cx, cy, r, a)
                 else:
                     (x1, y1), (x2, y2) = P[u], P[v]
                     L = sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -255,14 +256,20 @@ def draw_graph(g, labels=True, dots=None, momenta=True, figsize=(2.8, 2.8), R=1.
                         side = 1 if (mx * nx + my * ny) >= 0 else -1
                     lx, ly = mx + side * 0.22 * R * nx, my + side * 0.22 * R * ny
                     mid = (mx, my)
-                    tang = atan2(y2 - y1, x2 - x1)
+                    tang, arc = atan2(y2 - y1, x2 - x1), None
                 if labels:
                     ax.text(lx, ly, "$x_{%d}$" % (names[i] if names else i + 1), ha="center", va="center", fontsize=9,
                             color="#b5b3ae" if (i + 1) in removed else (BLUE if massive else INK2))
                 nd = dots.get(names[i] if names else i + 1, 0)
                 for j in range(nd):
                     off = (j - (nd - 1) / 2) * 0.16 * R
-                    ax.plot([mid[0] + off * cos(tang)], [mid[1] + off * sin(tang)], "o", color=PINK, ms=6, zorder=5)
+                    if arc:                                  # on a tadpole loop the dots follow the circle
+                        acx, acy, ar, aa = arc
+                        da = (j - (nd - 1) / 2) * 0.85
+                        px, py = acx + ar * cos(aa + da), acy + ar * sin(aa + da)
+                    else:
+                        px, py = mid[0] + off * cos(tang), mid[1] + off * sin(tang)
+                    ax.plot([px], [py], "o", color=PINK, ms=6, zorder=5)
         # external legs
         for vtx, q in g.ext.items():
             x0, y0 = P[vtx]
@@ -393,4 +400,67 @@ def quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=No
         if title and two:
             fig.suptitle(title, fontsize=10)
         fig.tight_layout()
+    return fig
+
+
+# ---------------------------------------------------------------------- reductions as pictures
+def _coef_tex(c, rename=None):
+    """A coefficient as matplotlib mathtext: Sage's LaTeX without the commands mathtext lacks."""
+    from sage.all import SR
+    try:
+        t = latex(SR(str(c)).factor())                  # a factored fraction reads best
+    except Exception:
+        t = latex(c)
+    t = t.replace(r'\left', '').replace(r'\right', '').replace(r'\,', ' ').replace(r'\cdot', r'\cdot ')
+    for old, new in (rename or {}).items():
+        t = re.sub(r'\\mathit\{%s\}' % re.escape(old), new, t)
+        t = re.sub(r'(?<![A-Za-z\\])%s(?![A-Za-z])' % re.escape(old), new, t)
+    return t
+
+
+def _integral_panel(ax, g, a, title=None):
+    """One member of the family drawn on the graph g: lines with power 0 or less shrunk to points,
+    a dot for every extra power, numerators written under the picture."""
+    absent = [i + 1 for i, x in enumerate(a) if x <= 0]
+    h, kept = g.contract(absent) if absent else (g, list(range(1, g.N + 1)))
+    dots = {i + 1: x - 1 for i, x in enumerate(a) if x > 1}
+    draw_graph(h, ax=ax, names=kept, dots=dots, momenta=False, labels=False)
+    nums = [r'D_{%d}^{%d}' % (i + 1, -x) if x < -1 else r'D_{%d}' % (i + 1) for i, x in enumerate(a) if x < 0]
+    if nums:
+        ax.text(0, -1.75, r'$\times\ ' + ' '.join(nums) + '$', ha='center', va='top', fontsize=9, color=INK2)
+    if title:
+        ax.set_title(title, fontsize=9)
+
+
+def draw_reduction(table, g, targets=None, rename=None, size=1.5, fontsize=12):
+    r"""
+    Draw IBP reductions as equations of diagrams.
+
+        draw_reduction(ibp_reduce(fam, ["J(2,1)"]).table, graph("A-B:m, A-B:m", ...))
+
+    table   {target: {master: coefficient}} (Reduction.table)
+    g       a FeynmanGraph whose lines are the family's propagators, in the same order
+    rename  {"kk": "k^2"} shows an invariant with another name in the coefficients
+    Each integral is the graph with its absent lines (power <= 0) shrunk to points and a pink dot
+    for every extra power.  Returns a matplotlib Figure, one row per target.
+    """
+    targets = list(targets or table.keys())
+    rows = [(t, list(table[tuple(t)].items())) for t in targets]
+    ncol = 1 + max(1, max(len(r) for _, r in rows)) * 2
+    with mpl.rc_context(STYLE):
+        fig = plt.figure(figsize=(size * (1 + 2.6 * (ncol // 2)), size * len(rows)))
+        widths = [1] + [1.6, 1] * (ncol // 2)
+        gs = fig.add_gridspec(len(rows), ncol, width_ratios=widths, wspace=0.02)
+        for r, (t, terms) in enumerate(rows):
+            ax = fig.add_subplot(gs[r, 0]); ax.axis('off'); _integral_panel(ax, g, tuple(t))
+            for k in range(ncol // 2):
+                axc = fig.add_subplot(gs[r, 1 + 2 * k]); axc.axis('off')
+                axd = fig.add_subplot(gs[r, 2 + 2 * k]); axd.axis('off')
+                if k >= len(terms):
+                    continue
+                m, c = terms[k]
+                sign = '=' if k == 0 else '+'
+                axc.text(0.5, 0.5, r'$%s\ (%s)$' % (sign, _coef_tex(c, rename)),
+                         ha='center', va='center', fontsize=fontsize, transform=axc.transAxes)
+                _integral_panel(axd, g, tuple(m))
     return fig

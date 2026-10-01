@@ -11,24 +11,21 @@
     #v(0.8cm)
     #text(28pt, weight: "semibold", fill: c-blue.darken(15%))[feynsage]
     #v(0.1cm)
-    #text(15pt, fill: ink2, style: "italic")[Feynman integrals in SageMath,\ from graphs to numbers]
+    #text(15pt, fill: ink2, style: "italic")[Feynman integrals in SageMath,\ the lecture in code and a real prediction]
     #v(1.0cm)
     #text(12pt)[Kazi Abu Rousan] \
     #text(10pt, fill: ink2)[School of Physical Sciences, NISER, Bhubaneswar] \
     #v(0.35cm)
-    #text(11pt)[Source code and install: #repo]
+    #text(11pt)[Source code and install instructions at #repo]
   ]
   #v(1.0cm)
-  #dbox("How to read this tutorial", c-pink)[
-    Every grey box marked *In [n]* is real code. It was run, in this order, in one SageMath session (as in a Jupyter notebook) and the box under it marked *Out [n]* is what came out: printed text, the value of the last line (typeset from Sage's own LaTeX) or a figure. Nothing in the output boxes was typed by hand. To run the same code yourself, see Chapter 1.
+  #dbox("What this tutorial is", c-pink)[
+    It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "Feynman integral calculus" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction (the lifetime of the neutral pion) and compares it with experiment.
 
-    The notation is the one of the lecture note _Feynman integrals at one loop_ (sir's lecture at NISER, 2026): $D = 4 - 2 epsilon$, Feynman parameters $x_i$, the graph polynomials $cal(U)$ and $cal(F)$.
-  ]
-  #dbox("Beyond the lecture", c-amber)[
-    The lecture covered the tadpole and the bubble, IBP, differential equations, Feynman parameters, the graph polynomials $cal(U)$ and $cal(F)$, Mellin-Barnes, sector decomposition, expansion by regions and Kira. feynsage also does things the lecture did not cover. Each of them is explained here from the start, in an amber box like this one, before it is used.
+    Every grey box marked *In [n]* is real code. It was run, in this order, in one SageMath session (as in a Jupyter notebook) and the box under it marked *Out [n]* is what came out. Nothing in the output boxes was typed by hand. I am also writing up the lecture itself in full (my notes _Feynman integrals at one loop_). They are not finished yet and will be shared once they are complete.
   ]
   #v(0.2cm)
-  #text(9pt, fill: ink2)[I wrote feynsage in 2024 for my MSc project. After sir's talk it was refined, checked against the lecture note and against Package-X, LoopTools, FeynCalc, LiteRed and Kira, and published at #repo under the MIT licence.]
+  #text(9pt, fill: ink2)[I wrote feynsage in 2024 for my MSc project. After sir's talk it was refined, checked against the calculations of the lecture and published at #repo under the MIT licence.]
 ]
 
 #page(header: none)[
@@ -42,38 +39,20 @@
 
 == What you need
 
-- *SageMath* 10.7 or newer (tested with 10.7 and 10.9). It is free. The install script below finds it or installs it.
-- *FORM*, only for the Dirac traces of Chapter 7. The script installs it too.
-- *A C compiler* (optional). With one, the finite-field reducer compiles a small kernel the first time it runs. Without one it runs in pure Python with the same answers, about ten times slower.
+- *SageMath* 10.7 or newer. It is free. The install script below finds it or installs it.
+- *FORM* for the Dirac traces of the last chapter. The script installs it too.
 - macOS (Apple silicon or Intel), Linux, or Windows through WSL. SageMath does not run on Windows itself.
 
-== Download
+== Download and install
 
-The code is at #repo. Either clone it with git
+The code is at #repo. Either clone it with git or, on the web page, press *Code* and then *Download ZIP* and unpack it. Then, inside the folder:
 ```bash
 git clone https://github.com/aburousan/feynsage.git
 cd feynsage
-```
-or, without git, open the page in a browser, press *Code* and then *Download ZIP*, unpack it and open a terminal in the unpacked folder `feynsage-main`.
-
-== Install
-
-From inside the folder:
-```bash
 ./install.sh            # finds or installs SageMath and FORM, then installs feynsage
-./install.sh --test     # the same, then runs every test (a few minutes)
-./install.sh --no-deps  # installs feynsage only, does not touch SageMath or FORM
+./install.sh --test     # the same, then runs the tests
 ```
-What the script does, step by step:
-+ It looks for SageMath: the `sage` command, a conda environment called `sage`, or the macOS app. If there is none it installs it (with Homebrew on macOS, or as the conda environment `sage` from conda-forge on Linux and WSL). This is a large download.
-+ It looks for FORM and installs it if it is missing (Homebrew on macOS, the official release binary into `~/.local/bin` on Linux).
-+ It installs feynsage into Sage's own Python with `sage -pip`. On the macOS app this is a user install, so the signed app is never changed.
-+ It imports the package once to check it and to compile the C kernel.
-
-If you prefer to do it by hand, the third step alone is
-```bash
-sage -pip install --user --no-deps .
-```
+If SageMath is already there, `sage -pip install --user --no-deps .` does the last step by hand.
 
 == Check and start
 
@@ -81,360 +60,451 @@ sage -pip install --user --no-deps .
 sage -c "import feynsage; print(feynsage.__file__)"     # where it was installed
 sage -n jupyterlab                                       # notebooks, choose the SageMath kernel
 ```
-Then open `tutorials/01_first_steps.ipynb`. To update later: `git pull` and `./install.sh --no-deps`.
-
-== The other material
-
-- `tutorials/`: five short Jupyter notebooks with exercises and solutions, the same steps as this tutorial.
-- `examples/feynsage_walkthrough.ipynb`: a longer tour, with the neutral pion lifetime and the QED of Chluba's thesis.
-- `docs/DETAILS.md`: every module, every check against other programs, speed and limits.
-- `docs/tutorial/`: this tutorial. `sage docs/tutorial/run_cells.sage` runs all its cells again and `typst compile docs/tutorial/feynsage_tutorial.typ` makes the PDF.
+Every cell of this tutorial can be run again with `sage docs/tutorial/run_cells.sage`.
 
 // ======================================================================== 2
-= First steps: the tadpole and the bubble
+= A short tour of feynsage
 
-Load the package. Everything below is in one namespace, like the cells of a notebook.
+feynsage is a Python package that runs inside SageMath, so all of Sage (symbols, exact fractions, calculus, plots) is available next to it. Load it once:
 #cell("import")
+The first line loads everything that is used most. The second loads a few closed formulas from the module `feynsage.oneloop`. The functions used in this tutorial fall into four groups:
 
-== Ask a function what it does
+#table(columns: (24%, 44%, 32%),
+  table.header([*task*], [*functions*], [*lecture*]),
+  [closed formulas], [`tadpole`, `bubble_equal_mass`, `bubble_massless`, `expand_eps`], [tadpole, bubble, the $epsilon$ expansion],
+  [families and IBP], [`family`, `.ibp`, `ibp_reduce`, `.UF`], [IBP identities, reduction, completing the square],
+  [one-loop functions], [`A0`, `B0`, `C0`, `D0`, `finite_part`, `quick_plot`], [the basis $A, B, C, D$],
+  [graphs], [`graph`, `.U`, `.F`, `.spanning_trees`, `.two_forests`, `.plot`, `draw_panels`], [1-trees, 2-trees, $cal(U)$, $cal(F)$],
+  [Dirac traces], [`form.dirac_trace`, `form.compute` (traces and contractions in Sage notation, converted to FORM)], [the pion (last chapter)],
+)
 
-Every public function carries its own explanation. `info(f)` prints it and most functions also take `explain=True`.
-#cell("info")
+Two normalisations appear and each is used in its own place.
+- The closed formulas and the families use the Euclidean measure of the lecture with the $pi^(D\/2)$ taken out, $integral dif^D k\/pi^(D\/2)$ with propagators $k^2 + m^2$.
+- `A0`, `B0`, `C0`, `D0` follow Package-X (Minkowski space, $mu^(2 epsilon) e^(epsilon gamma_E) integral dif^D k\/(i pi^(D\/2))$), so that their numbers can be compared with Package-X and LoopTools.
 
-== The tadpole $A_0$
-
-The simplest loop integral has one propagator. `var` makes a symbol in Sage.
-#cell("a0")
-The $1\/epsilon$ is the ultraviolet pole and $mu$ is the renormalisation scale. Three small functions pull the pieces apart: `uv_part` (the coefficient of $1\/epsilon$), `pole_parts` (the coefficients of $1\/epsilon^2$ and $1\/epsilon$) and `finite_part` (the $epsilon^0$ part, with the value of $mu$ as an optional second argument).
-#cell("a0parts")
-
-#beyond("the normalisation of Package-X")[
-  The note works in Euclidean space with $[dif ell] = dif^D ell\/pi^(D\/2)$ and propagators $1\/(ell^2 + m^2)$. The one-loop functions of feynsage ($A_0$, $B_0$, $C_0$, $D_0$ and `loop`) follow instead Package-X and LoopTools, the two programs most people compare with:
-  $ A_0(m) = mu^(2 epsilon) e^(epsilon gamma_E) integral (dif^D ell_M)/(i pi^(D\/2)) thin 1/(ell_M^2 - m^2 + i 0) $
-  in Minkowski space. The two are the same integral seen two ways. The Wick rotation gives $dif^D ell_M = i thin dif^D ell_E$, which cancels the $1\/i$, and $ell_M^2 - m^2 = -(ell_E^2 + m^2)$, which gives one minus sign for each propagator. The factor $e^(epsilon gamma_E)$ removes the $gamma_E$ that every loop produces. So $A_0$ is minus the note's tadpole times $e^(epsilon gamma_E)$:
-]
-#cell("norm")
-
-== The bubble $B_0$ and its threshold
-
-Two propagators, $(ell, m_1)$ and $(ell + p, m_2)$ with $p^2 = s$. $Lambda$ is the function that Package-X calls `DiscB`, the logarithm that carries the threshold.
-#cell("b0")
-Below the threshold $s = 4 m^2$ the bubble is real. Above it the two particles in the loop can be real, so it gets an imaginary part. The note (Minkowski chapter) finds $"Im" B_0 = pi beta$ with $beta = sqrt(1 - 4 m^2\/s)$. Check it with $m = mu = 1$:
-#cell("b0numbers")
-Below threshold the imaginary part is zero (the $10^(-26)$ is rounding), above it is $pi beta$ to every digit. A plot shows the kink at each threshold, $s = (m_1 + m_2)^2 = 4$ and $9$. `quick_plot` draws the real part as a full line and the imaginary part dashed.
-#cell("b0plot", fig: 78%)
-
-== An exact identity
-
-At $s = 0$ with equal masses the bubble is the derivative of the tadpole with respect to $m^2$, which gives $A_0(m) = m^2 (B_0(0; m, m) + 1)$. Sage checks it exactly:
-#cell("a0b0")
+Every feynsage function explains itself. `info(f)` prints what it computes and what its output means and most functions also take `explain=True`. Sage's own functions are explained with `f?` in a notebook.
 
 // ======================================================================== 3
-= One loop with numerators, the Package-X way
+= Part 1: the tadpole
 
-#beyond("tensor integrals and their reduction")[
-  In a real amplitude the loop momentum also appears upstairs, from the Dirac algebra, as $ell^mu$, $ell^mu ell^nu$, $ell dot p$ and so on. Passarino and Veltman (1979) showed that every such *tensor integral* is a combination of the scalar integrals $A_0, B_0, C_0, D_0$. The recipe:
-  + Write the most general answer allowed by Lorentz symmetry. For the bubble only $p^mu$ and $g^(mu nu)$ exist, so $integral ell^mu\/(D_1 D_2) = p^mu B_1$ and $integral ell^mu ell^nu\/(D_1 D_2) = g^(mu nu) B_(00) + p^mu p^nu B_(11)$.
-  + Contract both sides with every vector and with $g_(mu nu)$. On the left, write each $ell dot p$ and $ell^2$ through the propagators: then a propagator cancels and a simpler integral is left.
-  + Solve the linear system for the coefficients $B_1$, $B_(00)$, $B_(11)$, ...
+The lecture started from the simplest loop integral, the tadpole, in Euclidean signature,
+$ I_1 = integral (dif^D k)/(k^2 + m^2) $
+In $D = 4$ it diverges at large $k$ (ultraviolet). In dimensional regularisation $D = 2 omega$ (Ramond) or $D = 4 - 2 epsilon$ and the angular integral gives the solid angle of $D$ dimensions.
 
-  The matrix of this system is built from the scalar products of the external momenta, the *Gram matrix* $G_(i j) = p_i dot p_j$. Solving it divides by $det G$. `loop(numerator, propagators, kin)` does all of this exactly, with $D = 4 - 2 epsilon$ kept until the end (a $D$ in a coefficient times a $1\/epsilon$ pole leaves a finite *rational term*).
+== The solid angle
+
+From the Gaussian integral, $Omega_n = 2 pi^(n\/2) \/ Gamma(n\/2)$. Sage handles such formulas directly:
+#func("var('n'),  expr.subs(n=4)", what: "Sage")[
+  `var` makes a symbol (here $n$). Formulas built from symbols stay exact. `subs` puts in values. A list in square brackets evaluates the formula several times.
 ]
+For $n = 2, 3, 4$ it must give the circle, the sphere and the 3-sphere:
+#cell("solidangle")
 
-`loop(numerator, propagator, ...)` takes strings. Each propagator is `[momentum, mass]` and `kin` gives the scalar products. The answer is one line per tensor structure:
-#cell("loop1", math-size: 9pt)
+== The tadpole with $n$ powers
 
-== A vector numerator, checked by hand
-
-With $ell^mu$ upstairs the only vector the answer can point along is $p^mu$:
-#cell("loopmu", math-size: 8.5pt)
-#derivation(title: "The same coefficient by hand")[
-  Contract with $p_mu$ and use $2 ell dot p = D_2 - D_1 - (s + m_1^2 - m_2^2)$, where $D_1 = ell^2 - m_1^2$ and $D_2 = (ell + p)^2 - m_2^2$. Each $D_i$ upstairs cancels one propagator and leaves a tadpole:
-  $ B_1 = 1/(2 s) [A_0(m_1) - A_0(m_2) - (s + m_1^2 - m_2^2) B_0(s; m_1, m_2)] $
+With $k = m tan t$ the radial integral is a Beta function and
+$ I_n = integral (dif^D k)/((k^2 + m^2)^n) = (pi^omega Gamma(n - omega))/(Gamma(n) (m^2)^(n - omega)) $
+#func("tadpole(n, m2)")[
+  The one-loop tadpole $integral dif^D k\/pi^(D\/2) thin (k^2 + m^2)^(-n)$ in closed form, $Gamma(n - D\/2) (m^2)^(D\/2 - n)\/Gamma(n)$.
+  - `n`: the power of the propagator (a number or a symbol)
+  - `m2`: the mass squared
+  - returns a Sage expression in the symbol `D` (the dimension). The $pi^(D\/2)$ is taken out of the measure, so the lecture's $I_n$ is this times $pi^omega$.
 ]
-`PVB(0, 1, ...)` is Package-X's `PVB[0, 1, ...]`, that is $B_1$. Compare the two at a point above threshold:
-#cell("b1check")
-Rank two works the same way. The structures are $g^(mu nu)$ and $p^mu p^nu$:
-#cell("loopmunu", math-size: 8.5pt)
-
-== Triangles and boxes
-
-#beyond("$C_0$ and $D_0$ as numbers and as formulas")[
-  The scalar triangle and box are the next functions after $B_0$. With Feynman parameters (as in the note) the triangle is a two-dimensional integral over the simplex $x_0 + x_1 + x_2 = 1$,
-  $ C_0 = -integral dif^3 x thin delta(1 - x_0 - x_1 - x_2) thin 1/(cal(F) - i 0), quad cal(F) = sum_i x_i m_i^2 - sum_(i < j) x_i x_j s_(i j) $
-  where $s_(i j)$ is the square of the momentum flowing between lines $i$ and $j$ (in Minkowski space, so $cal(F)$ carries the minus sign). The minus sign in front is the Wick rotation again. 't Hooft, Veltman and later Denner integrated it in closed form: a sum of logarithms and dilogarithms $"Li"_2$ whose arguments are roots of quadratic equations. The hard part is the $+i 0$: it decides on which side of each branch cut every logarithm sits. feynsage keeps every quantity both as an exact expression and as an 80-digit number with a tiny $+i 0$, lets the number pick the branch and compares the two at the end.
+#cell("In")
+The lecture also showed that $I_n$ follows from $I_1$ by differentiating with respect to $m^2$,
+$ I_n (m^2) = (-1)^(n-1)/((n-1)!) (dif/(dif m^2))^(n-1) I_1 (m^2) $
+#func("diff(f, x, k),  f.simplify_full()", what: "Sage")[
+  `diff` differentiates $k$ times with respect to `x`. `simplify_full` brings an expression to a simple form, so a difference that is zero prints as 0.
 ]
+#cell("derivrel")
 
-A finite triangle stays a symbol until a number is asked for. `c0_numeric` integrates the Feynman-parameter form numerically, a second and independent way. `explicit` writes it in logarithms and dilogarithms:
-#cell("c0")
-To see that nothing is hidden, do the integral of the box above yourself with SciPy at a point where every invariant is spacelike (there $cal(F) > 0$ and no $i 0$ is needed):
-#cell("c0hand")
-A box, in the LoopTools order of arguments $D_0(s_1, s_2, s_3, s_4; s_(12), s_(23); m_0, dots, m_3)$:
-#cell("d0")
+== The pole and the $lambda phi^4$ tadpole
 
-== Soft and collinear poles
-
-#beyond("infrared divergences")[
-  The ultraviolet pole comes from large loop momenta. With massless particles there is a second kind, the *infrared* divergences: a massless line can carry a very small momentum (*soft*) or move exactly along a light-like external leg (*collinear*). Both make propagators vanish inside the integration region. In dimensional regularisation they also show up as poles in $epsilon$, and when soft and collinear meet they give $1\/epsilon^2$. In a physical cross section they cancel against the emission of real soft photons or gluons (the Bloch-Nordsieck and KLN theorems), which is why they must be kept exactly. feynsage has the six divergent triangles and sixteen divergent boxes of Ellis and Zanderighi (2008) built in.
+Near $D = 4$ the Gamma function has a pole.
+#func("expand_eps(expr, order=0, loops=1)")[
+  Puts $D = 4 - 2 epsilon$ into an expression with Gamma functions, multiplies by $e^(L epsilon gamma_E)$ ($L$ = `loops`, the usual convention that removes $gamma_E$) and expands in $epsilon$ up to $epsilon^"order"$. Gamma functions at negative integers are rewritten first, so the poles come out correctly.
 ]
-
-A massless triangle with two light-like legs:
-#cell("cir")
-Where does the $1\/epsilon^2$ come from? Build the same triangle as a graph. Of its three 2-forests only one carries momentum, because the other two cut off a single light-like leg with $p_i^2 = 0$:
-#cell("irgraph")
-So $cal(F) = Q^2 x_1 x_3$ and the parametric integrand contains $(x_1 x_3)^(-1-epsilon)$. Each of $integral_0 dif x_1 thin x_1^(-1-epsilon)$ and $integral_0 dif x_3 thin x_3^(-1-epsilon)$ is $-1\/epsilon$ near its end point: one is the collinear region of one leg, the other of the other leg, and the corner where both vanish is the soft region. Together they give the Dirichlet integral $Gamma(1 + epsilon) Gamma(-epsilon)^2\/Gamma(1 - 2 epsilon)$, whose expansion (with $e^(epsilon gamma_E)$) is the last output: $1\/epsilon^2 - pi^2\/12$, as in the note.
-
-== When the Gram determinant vanishes
-
-#beyond("a zero Gram determinant")[
-  The tensor reduction divides by $det G$. For a triangle with $p_1^2 = s_1$, $p_2^2 = s_2$ and $(p_1 - p_2)^2 = s_(12)$:
+#cell("pole")
+This reads $-m^2\/epsilon - m^2 + m^2 log m^2$, a simple pole as the lecture said. In $lambda phi^4$ theory (Ramond, section A.4) the tadpole diagram is $1/2 (-lambda) (mu^2)^(2 - omega) integral dif^(2 omega) ell\/(2 pi)^(2 omega) thin 1\/(ell^2 + m^2)$. Put in the integral, expand around $omega = 2$ with $e = 2 - omega$ and compare with the lecture's result
+$ (lambda m^2)/(32 pi^2) {1/(2 - omega) + psi(2) + ln((4 pi mu^2)/(m^2)) + O(2 - omega)} $
+#func("expr.series(e, k).truncate()", what: "Sage")[
+  The Laurent series of `expr` in `e` up to (not including) $e^k$, as an ordinary expression.
 ]
-#cell("gram")
-At the $g - 2$ point of QED ($p_1 = p_2$, photon momentum $q^2 = 0$) the determinant is exactly zero, so the textbook reduction fails there. feynsage then does not divide at all: the lines with the same momentum are grouped and the coefficients come straight from the Feynman-parameter integral.
-#cell("gramc")
-Package-X gives $C_1 = 1\/(2 m^2)$ and $C_(00) = 1\/4 + (1\/epsilon + log mu^2\/m^2)\/4$, the same.
+#cell("phi4")
+The difference is exactly zero. The digamma function at 2 is $psi(2) = 1 - gamma_E$:
+#cell("psi2")
 
 // ======================================================================== 4
-= Diagrams as graphs: $cal(U)$ and $cal(F)$
+= Part 1: integration by parts for the tadpole
 
-This chapter follows the second part of the lecture (graph polynomials).
+== Integral families
 
-== A diagram in one line
-
-`graph(edges, legs, kin)`:
-- `edges`: the lines, `"A-B"` between two vertices or `"A-B:m"` for a line with mass $m$. *The order of the lines is the numbering* $x_1, x_2, dots$ of $cal(U)$ and $cal(F)$.
-- `legs`: the momentum *entering* at each vertex. They must add up to zero.
-- `kin`: the scalar products of the external momenta. `euclidean=True` for Euclidean signs.
-
-The number of loops is $L = N - V + 1$ (lines minus vertices plus one).
-#cell("graphbub", fig: 34%)
-In the pictures a massive line is thick and blue and a massless line thin and black. Each line carries its $x_i$.
-
-== The kite: spanning trees
-
-The two-loop kite of the note is ready-made. It has four vertices: `L` and `R` where $p$ enters and leaves, `T` and `B` at the top and the bottom.
-#cell("kiteplot", fig: 36%)
-A *spanning tree* touches every vertex and has no closed loop. For $L$ loops we must remove $L$ lines. `spanning_trees()` lists the removed lines (counted from 0). In the pictures the removed lines are grey and dashed:
-#cell("kitetrees", fig: 100%)
-$cal(U)$ is the sum over spanning trees of the product of the $x_i$ of the *removed* lines:
-#cell("kiteU")
-
-== The kite: 2-forests
-
-Remove one more line, $L + 1$ in all, and the graph falls into two trees. If the momentum $p$ has to flow from one tree to the other, the 2-forest gives (product of the removed $x_i$) $times p^2$. If $L$ and $R$ sit in the same tree, no momentum flows between the trees and the term is zero.
-#cell("kiteforests", fig: 100%)
-In Minkowski space $cal(F) = -cal(F)_0 + cal(U) sum x_i m_i^2$, hence the $-s$:
-#cell("kiteF", math-size: 8.5pt)
-
-== Three independent checks
-
-feynsage finds the same polynomials in two more ways and compares. The matrix method of the lecture ($cal(U) = det M$ after completing the square) needs momenta on the lines. The third way, Kirchhoff's theorem, was not in the lecture.
-
-#beyond("Kirchhoff's matrix-tree theorem")[
-  Kirchhoff (1847, for electric circuits) showed that spanning trees can be counted with a determinant. Give line $i$ the weight $1\/x_i$ and build the *Laplacian* of the graph: on the diagonal, the sum of the weights of the lines at that vertex, and off the diagonal, minus the weight of the line between the two vertices. Strike out one row and the same column. The determinant of what is left is the sum over all spanning trees $T$ of $product_(i in T) 1\/x_i$. Multiplying by $product_i x_i$ turns "lines in the tree" into "lines removed", which is exactly $cal(U)$. For the kite (rows and columns in the order of the vertices printed):
+An *integral family* is a list of propagators $D_1, D_2, dots$ together with all integrals $integral 1\/(D_1^(a_1) D_2^(a_2) dots)$ with integer powers. IBP relates its members. For the tadpole there is one propagator and the members are $T(n) = integral 1\/(k^2 + m^2)^n$.
+#func("family(props, kin=None, loops=None, euclidean=False, name=\"F\")")[
+  Builds an integral family from strings.
+  - `props`: the propagators, each a momentum `"k"` or `("momentum", "mass")` for a massive line
+  - `kin`: the scalar products of the external momenta, for example `{"p^2": "s"}`
+  - `loops`: the loop momenta (guessed from the names if left out)
+  - `name`: the letter used for its members, `"F"` if left out. Here `"T"` for the tadpoles and later `"J"` for the bubbles, as in the lecture. It is only a label.
+  - `euclidean=True`: propagators $q^2 + m^2$ as in the lecture (default Minkowski, $q^2 - m^2$)
+  - returns a `Family`. A member is written with the family's name and the powers of the propagators. For example `T(2)` is $integral dif^D k\/pi^(D\/2) thin 1\/(k^2 + m^2)^2$ and for a family with two lines `J(2,1)` is $integral 1\/(D_1^2 D_2)$. A power 0 means the line is absent and a negative power is a numerator. (This $F$ or $T$ or $J$ has nothing to do with the hypergeometric function.) `.info()` prints the family, `.ibp(a)` gives the IBP identities, `.UF()` the graph polynomials.
 ]
-#cell("kirchhoff", math-size: 8.5pt)
-#cell("kirchhoff2")
+#cell("tadfam")
 
-#beyond("momenta from the graph")[
-  To use the matrix method, or to build an integral family, every line needs a momentum. `family()` does it like this: pick one spanning tree; every line *not* in it (a *chord*) gets its own loop momentum, which flows around the one closed loop that the chord makes with the tree; the external momenta flow through the tree by momentum conservation at each vertex. There are exactly $L$ chords, so there are $L$ loop momenta.
+== The IBP identity
+
+This is Gauss's law in $D$ dimensions. The integral of a total derivative vanishes,
+$ integral dif^D k thin partial/(partial k^mu) (k^mu)/((k^2 + m^2)^n) = 0 quad => quad 2(omega - n) I_n + 2 n m^2 I_(n+1) = 0 $
+#func("fam.ibp(a)")[
+  All IBP identities with the *seed* `a` (a tuple of powers, here `(n,)` for $T(n)$). For every loop momentum $ell$ and every vector $v$ (loop or external) it gives the identity from $integral partial\/partial ell^mu thin (v^mu thin "integrand") = 0$, worked out exactly as in the lecture (derivative, then every scalar product written through the propagators). It returns a list of dictionaries `{powers: coefficient}`. For example `{(1,): d - 2, (2,): 2*m^2}` means $(d - 2) T(1) + 2 m^2 T(2) = 0$. `d` is the dimension.
 ]
-With momenta on the lines, the three ways can be compared on graphs of one, two and three loops:
-#cell("threeways")
+#cell("tadibp")
+The first line reads $(d - 2) T(1) + 2 m^2 T(2) = 0$, the identity of the lecture with $n = 1$. In general $(d - 2n) T(n) + 2 n m^2 T(n+1) = 0$.
 
-== The two-loop vertex of the note
+== Solving the identities: reduction
 
-`vertex2` is the planar two-loop vertex of the sector-decomposition chapter of the note, with the lines numbered as in the note's picture:
-#cell("vertex2", fig: 38%)
-#cell("vertex2UF")
+Used again and again, the identities bring every $T(n)$ down to $T(1)$. That is what a reduction program does.
+#func("ibp_reduce(fam, targets, method=\"auto\")")[
+  Writes every target integral as a combination of *master integrals*, the members that the identities cannot remove.
+  - `targets`: the integrals to reduce, by their powers, for example `["T(2)", "T(3)"]` or the same as tuples `[(2,), (3,)]`
+  - it chooses which seeds to use, finds the symmetries of the family, writes all IBP identities and solves them (Laporta's method). `method` = `"ff"` (finite fields, fast), `"trimmed"` or `"exact"` (exact rational functions). `"auto"` picks one.
+  - returns a `Reduction`. `r[target]` is the dictionary `{master: coefficient}`, `r.masters` the list of masters, `r.info()` a summary. In a notebook it prints as typeset equations.
+]
+#cell("tadred")
+The letters can also be drawn as pictures. `draw` puts the graph of each integral in place of its name. A dot on a line is one extra power of that propagator, so $T(2)$ is the tadpole with one dot.
+#func("r.draw(graph, targets=None, rename=None, size=1.5)")[
+  Draws the reduction `r` as equations between Feynman diagrams, one row for each target.
+  - `graph`: the diagram of the family, made with `graph(...)` (Part 2 explains it). Its lines must be in the same order as the propagators of the family.
+  - `targets`: which rows to draw (all of them by default)
+  - `rename`: a dictionary to print a variable under another name, for example `{"kk": "k^2"}`
+  - a line with power 0 is contracted to a point, so the bubble with one line removed is drawn as a tadpole
+]
+#cell("taddraw", fig: 58%)
+The ratios must be exactly those of the Gamma functions above. The coefficients come back as rational functions of `d`. `SR(str(...))` turns one into an ordinary Sage expression so that it can be compared with `tadpole`:
+#cell("tadcheck")
+
+== The difference equation and its solution
+
+Argeri and Mastrolia write the identity for $U(n) = pi^(-D\/2) integral dif^D k\/(k^2 + 1)^n$ as a difference equation, $-(n - D\/2) U(n) + n U(n+1) = 0$. Mathematica's `RSolve` solves it once $U(1)$ is given. The solution is $U(n) = Gamma(n - D\/2) \/ (Gamma(1 - D\/2) Gamma(n)) thin U(1)$. Put it back:
+#cell("diffeq")
+The lecture also solved it with a *factorial series*, $U(n) = integral_0^1 dif t thin t^(n-1) v(t)$. Putting this into the difference equation and integrating by parts (with $v(1) = 0$) gives a first-order differential equation for $v$,
+$ (v'(t))/(v(t)) = (D\/2 - t)/(t(t - 1)) quad => quad v(t) = v_0 thin t^(-D\/2) (1 - t)^(D\/2 - 1) $
+and the asymptotic estimate fixes $v_0 = 1\/Gamma(D\/2)$.
+#func("desolve(eq, y, ivar=t),  numerical_integral(f, a, b)", what: "Sage")[
+  `desolve` solves an ordinary differential equation for the function `y` of `t` (here `_C` is the free constant $v_0$). `numerical_integral` integrates numerically and returns the value and an error estimate. `[0]` takes the value.
+]
+Sage solves the equation and the integral gives back $U(n)$ (here $D = 2.6$, $n = 3$):
+#cell("factorial")
 
 // ======================================================================== 5
-= Sectors
+= Part 1: the basis of one-loop integrals
 
-#beyond("sectors")[
-  The lecture used sectors in the reduction of the kite without dwelling on them. They are the bridge between the graph and integration by parts, so this chapter goes slowly: what an index vector is, what a sector is, why a missing line is drawn shrunk to a point, which sectors are zero, and why all this matters for the master integrals.
+Passarino and Veltman showed that every one-loop integral is a combination of four scalar functions, $A$ (tadpole), $B$ (bubble), $C$ (triangle) and $D$ (box). Package-X computes them in Mathematica and FeynCalc uses it through FeynHelpers. FIRE and Kira do the IBP reduction for many loops.
+#func("A0(m), B0(s, m1, m2), C0(s1, s12, s2, m0, m1, m2), D0(...)")[
+  The four scalar one-loop functions in the Package-X normalisation (Minkowski space). `B0(s, m1, m2)` has propagators $(ell, m_1)$ and $(ell + p, m_2)$ with $p^2 = s$. $A_0$ and $B_0$ come back as formulas with the pole $1\/epsilon$ and the scale $mu$. A finite $C_0$ or $D_0$ stays a symbol until `.n()` asks for its number (more than 30 digits are available).
 ]
-
-== Index vectors
-
-Take the kite as a *family* of integrals. `family()` gives every line a momentum (as explained above):
-#cell("kitefam")
-Every member of the family is fixed by five integers, one per line:
-$ F(a_1, dots, a_5) = integral dif^D ell_1 dif^D ell_2 thin 1/(D_1^(a_1) D_2^(a_2) D_3^(a_3) D_4^(a_4) D_5^(a_5)) $
-- $a_i = 1$: line $i$ is an ordinary propagator
-- $a_i = 2, 3, dots$: the same propagator raised to a higher power (a *dot* on the line)
-- $a_i = 0$: the propagator is *absent*
-- $a_i < 0$: $D_i$ sits upstairs as a *numerator*
-
-== What a sector is
-
-The *sector* of $F(a_1, dots, a_5)$ is the pattern of lines that are really there: a 1 where $a_i > 0$ and a 0 where $a_i lt.eq 0$. Dots and numerators do not change the sector:
-#cell("sectorof")
-So the sector tells us *which diagram* we are looking at. The dots and numerators only change what sits on its lines. A family with $t$ lines has $2^t$ sectors, here $2^5 = 32$.
-
-== Why a missing line is drawn shrunk to a point
-
-When $a_5 = 0$ the propagator $1\/D_5$ is gone, but the integral is still over both loop momenta. Look at the momenta above: without $D_5$ the remaining four depend on $ell_1$ (lines 1, 2) or on $ell_2$ (lines 3, 4), never on both. So the integral splits into two one-loop bubbles that touch at one point. In the picture this means the two ends of line 5 (the vertices `T` and `B`) become *one vertex*: line 5 is shrunk to a point (contracted). It is *not* erased, since an erased line would leave a one-loop graph with four lines.
-#cell("contract", fig: 62%)
-The same holds for the graph polynomials. The parametric formula of a sector is the one of the full family with $x_j = 0$ for every missing line $j$ (an index $a_j = 0$ puts $x_j^(a_j - 1)\/Gamma(a_j)$, which becomes $delta(x_j)$). Sage checks that this is exactly $cal(U)$ and $cal(F)$ of the shrunk graph:
-#cell("contractUF")
-#physics(title: "In one line")[
-  A missing line costs nothing to cross. Its two ends act as one point and the diagram of the sector is the original one with that line shrunk.
+#func("finite_part(expr, mu_value=None),  uv_part(expr)")[
+  The $epsilon^0$ part and the coefficient of $1\/epsilon$ of an expression. `mu_value` sets the scale $mu$ to a number.
 ]
-
-== All sectors with four and three lines
-
-`draw_sectors` draws each sector this way. The title is the sector and *zero* marks the sectors whose integrals all vanish (explained next).
-#cell("allsectors", fig: 100%)
-How to read them:
-- The five four-line sectors are all non-zero. Shrinking line 5 gives the two bubbles in a row, as above. Shrinking any other line gives a triangle with a bubble on one side.
-- Of the ten three-line sectors only two survive. Both are *sunsets*: three lines between the vertex where $p$ enters and the vertex where it leaves.
-- In every other three-line sector a line closes on itself at one vertex (a little loop), or both legs end up at the same vertex.
-
-== Zero sectors
-
-Take the sector $(1,1,1,0,0)$ and also $(1,0,1,0,1)$:
-#cell("zerosector", fig: 60%)
-In $(1,1,1,0,0)$ line 3 has become a loop that starts and ends at one vertex. Its loop momentum $k$ appears in this line only, so the integral contains the factor
-$ integral dif^D k thin 1/(k^2) $
-This has no scale at all: no mass and no external momentum. Under $k -> lambda k$ it changes by $lambda^(D - 2)$, so it can only be zero in dimensional regularisation (the note shows this for the massless tadpole). One zero factor makes the whole sector zero. In $(1,0,1,0,1)$ both legs end up on the same vertex, where $p$ comes in and goes out again. Their momenta cancel there, so the picture has no legs left: no momentum flows through the sunset, which is again a massless vacuum integral and zero.
-
-#beyond("Lee's criterion for zero sectors")[
-  The computer cannot look at pictures, so it uses a test of R. N. Lee (2013) on $G = cal(U) + cal(F)$ of the sector.
-
-  *The test.* The sector is zero if there are numbers $k_i$ such that the rescaling $x_i -> lambda^(k_i) x_i$ multiplies *every* monomial of $G$ by the same factor $lambda$.
-
-  *Why it works.* In the Lee-Pomeransky form of the parametric integral the integrand is $G^(-D\/2)$ times powers $x_i^(a_i - 1)$. Change variables $x_i -> lambda^(k_i) x_i$. The integral cannot change (it is only a change of variables), but the integrand picks up a factor $lambda^(c)$ with $c = sum_i k_i a_i - D\/2$, which is not zero for general $D$. A number equal to $lambda^c$ times itself for every $lambda$ is zero.
-
-  *In practice* each monomial $x^e$ of $G$ gives one linear equation $sum_i k_i e_i = 1$, and the sector is zero exactly when these equations have a solution. That is a few lines of linear algebra.
-]
-For $(1,1,1,0,0)$, $G = x_1 x_3 + x_2 x_3 - s x_1 x_2 x_3$ and $x_3 -> lambda x_3$ does it ($k = (0, 0, 1)$): that is the lonely line 3. For the sunset no such rescaling exists:
-#cell("leecrit", math-size: 8.5pt)
-Counted by the number of lines:
-#cell("count")
-Of the 31 sectors with at least one line only 8 are non-zero.
-
-== Why sectors matter
-
-#result(title: "Three facts that make sectors useful")[
-  + *IBP never creates a line.* An IBP identity can add a dot or a numerator, and a numerator can cancel a propagator, but no identity puts back a propagator that was absent. So an integral of one sector is always written through integrals of the *same or smaller* sectors. This is why Laporta's algorithm starts with the simplest sectors and works upwards.
-  + *Zero sectors drop out at once.* Here 23 of the 31 sectors never need any work.
-  + *Every master integral belongs to one sector.* For the kite the masters are one integral in the sunset sector and one in the bubble-bubble sector:
-]
-#cell("kitemasters", fig: 52%)
-#cell("kitered", math-size: 9pt)
-The kite itself, the top sector $(1,1,1,1,1)$, has *no* master of its own: everything in it reduces to the two simpler sectors.
-
-== The same sector under another name
-
-The kite has two non-zero sunset sectors, $(0,1,1,0,1)$ and $(1,0,0,1,1)$. Drawn, they are the same diagram: three massless lines between the in-vertex and the out-vertex. So their integrals are equal after renaming the lines and the reducer keeps only one of them. `canon` shows the representative it picks for a few integrals:
-#cell("sectorsym", fig: 56%)
-
-#beyond("sector symmetries")[
-  *Pak's criterion.* An integral *without numerators* depends only on its powers $a_i$ and on $G = cal(U) + cal(F)$ of its sector (that is all the parametric formula contains). So if renaming the $x_i$ turns the $G$ of one sector into the $G$ of another, the two sectors hold the same integrals, line for line. Here are the two sunsets:
-]
-#cell("pak")
-#note(title: "How the computer compares two polynomials")[
-  Renaming $x_2, x_3, x_5 -> x_1, x_4, x_5$ turns one $G$ into the other. To find such renamings for every pair of sectors at once, feynsage turns each $G$ into a small graph (a vertex for each $x_i$, a vertex for each monomial coloured by its coefficient, an edge whenever $x_i$ appears in a monomial) and asks Sage for its *canonical labelling*: a fixed way of numbering the vertices such that two graphs get identical labels exactly when they are the same up to renaming. Sectors with the same canonical form are the same; one of them is chosen as the representative and every integral is moved there. To keep this fast for large families, a cheap fingerprint (number of monomials, their coefficients and degrees) is compared first and only matching sectors are labelled.
-]
-For the kite the same renaming also follows from a symmetry of the whole diagram (the left-right reflection). Sometimes two sectors match *only* as sectors, with no symmetry of the full family behind them. The two-loop sunset with three equal masses (with the two numerator lines $k + p$ and $ell$ that IBP needs) shows the difference:
-#cell("sunset63")
-With sector symmetries the three tadpole-product sectors become one and the sunset sector keeps two masters: 3 in all, the same as Kira 3.1 finds (`tests/test_kira_symmetries.sage` compares every coefficient).
-
-#beyond("integrals with numerators")[
-  With a numerator Pak's criterion is not enough: renaming the lines does not tell what happens to $D_j$ upstairs. Then feynsage looks for a *shift of the loop momenta* $ell -> A ell + B p$ (with $det A = plus.minus 1$, so the measure does not change, and the external momenta allowed to swap or change sign when their scalar products stay the same) that carries every propagator of the sector into the corresponding propagator of the other. Applied to the numerator, the shift turns $D_j$ into a combination of propagators, which is written out. The result is one more linear equation between integrals, added to the IBP system. For example, for the equal-mass sunset, a symmetry inside the sunset sector gives
-]
-#cell("numrel")
-These equations are added only when a master with numerators could need them; otherwise the reduction is left as it is.
+#cell("basis")
 
 // ======================================================================== 6
-= Integration by parts and master integrals
+= Part 1: the bubble
 
-This chapter follows the IBP part of the lecture and the course notebooks.
-
-== The bubble family
-
-The equal-mass bubble of the note, Euclidean, $m = 1$. A massive line is written `("momentum", "mass")`.
+The lecture followed Argeri-Mastrolia and Ramond, with equal masses, external momentum $k$ and loop momentum $p$,
+$ J_(n_1 n_2) = integral dif^D p thin 1/(D_1^(n_1) D_2^(n_2)), quad D_1 = p^2 + m^2, quad D_2 = (p - k)^2 + m^2 $
+In `family` this is two massive propagators. The name `kk` is just $k^2$. A Sage variable name cannot contain `^`, so $k^2$ is written `kk` (and $k dot p$ would be `kp`):
 #cell("bubfam")
-`ibp(a)` gives the identities for the seed $F(a)$, one for each vector ($ell$ and $p$) inside the derivative. Each line reads $sum c thin F = 0$ with $d$ the dimension:
+
+== IBP for the bubble
+
+Now there are two vectors to put inside the derivative, the internal momentum $p$ and the external one $k$, so `ibp` gives two identities:
 #cell("bubibp")
-With $F(1,2) = F(2,1)$ the first one is the identity of the note, $0 = (D - 3) J(1,1) + (p^2 + 4 m^2) J(2,1) - T(2)$.
-
-== Reduction to master integrals
-
-`ibp_reduce(family, targets)` picks the seeds, finds the symmetries and solves the system:
-#cell("bubred", math-size: 8.5pt)
-The note has $J(2,1) = -(D-3)\/(p^2 + 4m^2) thin J(1,1) + T(2)\/(p^2 + 4m^2)$ and $T(2) = -(D-2)\/(2m^2) thin T(1)$. With $m = 1$ both coefficients agree exactly:
+A dot on a line means one more power of that propagator. `ibp_reduce` solves the identities and gives the two results of the lecture,
+$ J_(21) = -(D - 3)/(k^2 + 4 m^2) thin J_(11) + 1/(k^2 + 4m^2) thin T(2), quad quad T(2) = -(D - 2)/(2 m^2) thin T(1) $
+where `J(0,1)` is the tadpole $T(1)$ (line 1 absent, power 0):
+#cell("bubred")
+The coefficients are rational functions in the variables `d`, `kk`, `m`. `.parent().gens()` hands these variables to us, so the comparison with the lecture is exact:
 #cell("bubcheck")
+The same reduction as pictures. The graph is two lines between the vertices $A$ and $B$, with $k$ coming in at $A$ and going out at $B$. `rename` prints `kk` as $k^2$:
+#cell("bubdraw", fig: 100%)
 
-== A two-loop number from two masters
+== The differential equation
 
-The kite in the labelling of the note, $q^2 = 1$. Both masters are products of Gamma functions: the bubble times bubble is $G(1,1)^2$ and the sunset is $G(1,1) G(1, 2 - D\/2)$, with $G(a,b)$ the massless one-loop bubble. Put them into the reduction and expand:
-#cell("kitevalue")
-All the poles and all the rational numbers cancel and $6 zeta(3)$ is left, the value of the note found there with Feynman parameters and Cheng-Wu.
+$J$ depends on $k$ only through $k^2$, so $k_mu partial J\/partial k_mu = 2 k^2 thin partial J\/partial k^2$. Differentiating under the integral,
+$ k_mu (partial J)/(partial k_mu) = T(2) - J_(11) - k^2 J_(12) $
+The reduction above already contains $J_(12)$ and $T(2)$ in terms of the masters, so the right-hand side becomes $A J + B thin T(1)$. That is the differential equation. Compare it with the lecture,
+$ (dif J)/(dif k^2) + 1/2 [1/k^2 - (D - 3)/(k^2 + 4m^2)] J = -(D - 2)/(4 m^2) [1/k^2 - 1/(k^2 + 4m^2)] T(1) $
+#cell("bubde")
+== Solving the differential equation
 
-== Three reducers, one answer
-
-#beyond("finite fields")[
-  An IBP system for a real problem has hundreds of thousands of equations whose coefficients are rational functions of $d$ and the invariants. Gaussian elimination with such coefficients swells: intermediate expressions become huge although the final answer is small. Modern programs (FIRE, Kira, FiniteFlow) avoid this:
-  + Put numbers for $d$ and the invariants, and do the arithmetic *modulo a large prime* $p$. Every number then fits in one machine word and nothing swells.
-  + The first such run shows which equations the targets really need. All the others are thrown away (*trimming*).
-  + Repeat at many values of $d$ and rebuild each coefficient as a rational function of $d$ from these values (Thiele interpolation, a continued fraction). With two primes, rebuild the rational numbers inside it (*rational reconstruction*) and check with a third.
-
-  feynsage does this in `method="ff"`, with a small C kernel for the first run. `method="trimmed"` uses the first run only to find the needed equations and then solves those with exact rational functions. `method="exact"` solves everything exactly, which is simple but slow. All three must agree:
+Now we solve it, with its boundary condition. Put $k^2 = 4 m^2 x$, so that $dif J\/dif x = 4 m^2 thin dif J\/dif k^2$. `partial_fraction` splits the coefficients into simple poles. The equation has singular points only at $x = 0$ ($k^2 = 0$) and $x = -1$ (the threshold $k^2 = -4m^2$ in this Euclidean metric):
+#cell("dex")
+#func("expr.subs(kk=...),  expr.subs({dd: D}),  expr.partial_fraction(x)", what: "Sage")[
+  `subs` replaces a variable. The keyword form `subs(kk=...)` works when the Python name and the Sage name are the same. `dd` is the Sage variable printed `d`, so it goes in a dictionary. `partial_fraction(x)` writes a rational function of `x` as a sum of simple fractions.
 ]
-#cell("methods")
-With `verbose=True` the finite-field reducer says how big the system was:
-#cell("ffverbose")
-
-== Seeds
-
-`ibp_reduce` also chose the *seeds*: the integrals $F(a)$ for which the IBP identities were written. It takes every non-zero sector, adds up to `rmax` extra dots and `smax` numerator powers (enough for the targets) and orders the integrals Laporta's way: fewer lines first, then fewer dots and numerators. Each identity is solved for its most complicated integral. Whatever cannot be eliminated is a master integral. The note's Laporta chapter shows this by hand.
-
-== Counting masters without reducing
-
-#beyond("the Lee-Pomeransky count")[
-  Lee and Pomeransky (2013) found that the number of master integrals can be read off $G = cal(U) + cal(F)$ without any reduction: in each sector, set the missing $x_j$ to zero and count the points where all derivatives of $G$ vanish with every remaining $x_i != 0$. That number is the number of masters of the sector.
-
-  *By hand for the bubble* ($m = 1$): $G = x_1 + x_2 + x_1 x_2 p^2 + (x_1 + x_2)^2$. The two derivatives differ by $(x_2 - x_1) p^2$, so $x_1 = x_2 = x$ and $1 + x(p^2 + 4) = 0$: one point. In the tadpole sector $G = x_1 + x_1^2$ has one point too.
-
-  *Two cautions* (the master chapter of the note has the details): the count does not know about symmetries, so equal sectors must be counted once, and it needs the points to be isolated, which fails in some massless sectors.
+*The homogeneous equation.* `desolve` gives $J_0 = C thin x^(-1\/2) (1 + x)^((D - 3)\/2)$:
+#cell("dehom")
+*The boundary condition.* At $k^2 = 0$ the bubble is $J(D, 0) = integral dif^D p\/(p^2 + m^2)^2 = T(2)$, a finite number. The homogeneous solution behaves as $x^(-1\/2)$ there, so it must not appear. Try a power series $J = sum_n c_n x^n$, which is regular at $x = 0$. Multiply the equation by $x(1 + x)$ to clear the denominators and ask that every power of $x$ cancels. The $x^0$ equation does not contain any free constant. It *fixes* $c_0$ and the value is exactly $T(2)$. So regularity at $x = 0$ and the boundary condition are the same statement. Every higher $c_n$ then follows from the one before:
+#cell("deseries")
+#func("solve(eqs, vars, solution_dict=True),  expr.coefficient(x, k)", what: "Sage")[
+  `coefficient(x, k)` takes the coefficient of $x^k$ in an expanded expression. `solve` solves a list of equations for the listed variables. With `solution_dict=True` it returns a list of dictionaries `{variable: value}`.
 ]
-A Gröbner basis counts the points. The extra variable $t$ with $t product x_i = 1$ throws away the points where some $x_i = 0$:
-#cell("lp")
-Top sector 1, each tadpole sector 1. The two tadpole sectors are the same integral, so $1 + 1 = 2$ masters, as IBP found.
+The ratio of two neighbouring terms of $attach(F, bl: 2, br: 1)(a, b; c; z) = sum_n (a)_n (b)_n\/((c)_n n!) thin z^n$ is $(a + n)(b + n)\/((c + n)(1 + n)) thin z$. The ratios $c_(n+1)\/c_n$ found above are exactly this with $a = 2 - D\/2$, $b = 1$, $c = 3\/2$, $z = -x$. With $c_0 = T(2) = Gamma(2 - D\/2) m^(D - 4)$ the solution is
+$ J(D, k^2) = Gamma(2 - D\/2) thin m^(D - 4) thin attach(F, bl: 2, br: 1)(2 - D\/2, 1; 3\/2; -k^2\/4m^2) $
+#func("bubble_equal_mass(p2, m2)")[
+  The equal-mass bubble $integral dif^D p\/pi^(D\/2) thin 1\/((p^2 + m^2)((p - k)^2 + m^2))$ at $k^2 =$ `p2`, this solution of the differential equation. The kinematic variable sits in the argument and the dimension in the parameters.
+]
+*A numerical check.* Forget the closed form and integrate the equation with a numerical solver (SciPy's `solve_ivp`), starting next to $x = 0$ from the boundary value. The numbers agree with the hypergeometric function to all ten digits shown ($D = 3.3$, $m = 1$):
+#cell("denum")
+#func("fast_callable(expr, vars=[x]),  solve_ivp(f, [x0, x1], y0, dense_output=True)", what: "Sage, SciPy")[
+  `fast_callable` turns a Sage expression into a fast numerical function. `solve_ivp` integrates $y' = f(x, y)$ from `x0` to `x1` with the starting value `y0`. `num.sol(x)` gives the solution at any `x` in between.
+]
+
+== The hypergeometric function in Sage
+
+Sage knows $attach(F, bl: 2, br: 1)$ as `hypergeometric([a, b], [c], z)`. `.n(digits=25)` evaluates it to 25 digits (through mpmath, which Sage contains). Below the same number is found from the series itself and directly from mpmath. The parameters are exact fractions, since a decimal number like `0.35` would limit the precision to 16 digits. For special parameters Maxima can rewrite the function in elementary functions. At $D = 3$ the bubble is an arc tangent:
+#cell("hyp")
+#func("hypergeometric([a, b], [c], z),  rising_factorial(a, n),  simplify_hypergeometric(algorithm='maxima')", what: "Sage")[
+  `hypergeometric` is the generalised hypergeometric function $attach(F, bl: p, br: q)$ with the lists of upper and lower parameters. `rising_factorial(a, n)` is the Pochhammer symbol $(a)_n = a(a + 1) dots (a + n - 1)$. `simplify_hypergeometric` looks for a closed form. Maxima needs to know the sign of $x$, so `assume(x > 0)` comes first.
+]
 
 // ======================================================================== 7
-= Dirac traces with FORM
+= Part 1: the fish diagram and Feynman parameters
 
-#beyond("FORM")[
-  FORM (J. Vermaseren) is the program in which most large perturbative calculations are done: it handles expressions with millions of terms. feynsage writes a short FORM program for each trace, runs it and reads the result back into Sage. Two conventions to know:
-  - `'g5'` is $gamma_5$. With $gamma_5$ the trace is done in 4 dimensions (FORM's `trace4`). In $D$ dimensions $gamma_5$ has no unique definition and one must choose a scheme, so feynsage does not mix $gamma_5$ with $D$.
-  - FORM's Levi-Civita symbol `e_` is $-i$ times the usual $epsilon^(mu nu rho sigma)$. feynsage prints it as `eps` and keeps FORM's convention.
+The fish diagram of $lambda phi^4$ is the same bubble. The lecture combined the two denominators with the Feynman trick,
+$ 1/(A B) = integral_0^1 (dif x)/([x A + (1 - x) B]^2) $
+#func("assume(cond),  integrate(f, x, a, b)", what: "Sage")[
+  `integrate` does definite integrals exactly. `assume` tells it what it needs to know about the symbols (here that $A, B > 0$).
+]
+#cell("feyntrick")
+After the shift $ell -> ell + p(1 - x)$ the loop integral is a tadpole with mass$""^2$ $m^2 + p^2 x (1 - x)$ and two powers, so `tadpole(2, ...)` gives it. Only the integral over the Feynman parameter $x$ is left. Done numerically it equals the hypergeometric result of the differential equation ($D = 3.3$, $m = 1$, $p^2 = 3$):
+#cell("fishfp")
+
+== Ramond's expansion around $D = 4$
+
+Expanding around $omega = 2$ the finite part is $-integral_0^1 dif x ln(1 + x(1-x) p^2\/m^2)$, which Ramond writes as $2 - sqrt(1 + 4m^2\/p^2) thin ln[(sqrt(1 + 4m^2\/p^2) + 1)\/(sqrt(1 + 4m^2\/p^2) - 1)]$:
+#cell("ramond")
+
+== Going to Minkowski space: the imaginary part
+
+In Minkowski space $p^2 -> -s$ and above the threshold $s > 4m^2$ the argument of the logarithm turns negative. Then $ln z = ln|z| + i pi$ for $z < 0$ and the bubble gets an imaginary part. By the optical theorem it must, because above threshold the two particles in the loop can be real. `B0` is the same bubble in Minkowski space, so its imaginary part should be $pi beta$ with $beta = sqrt(1 - 4m^2\/s)$ (here $m = 1$):
+#cell("continuation")
+#func("quick_plot(exprs, (s, a, b), labels=None)")[
+  Plots one or more expressions in `s` from `a` to `b`. For an expression with $1\/epsilon$ it plots the finite part. Complex values are drawn as the real part (full line) and the imaginary part (dashed). Returns a matplotlib figure.
+]
+The imaginary part starts at $s = 4$:
+#cell("b0plot", fig: 66%)
+
+// ======================================================================== 8
+= Part 2: graph polynomials
+
+The second lecture combined the denominators of any diagram at once and read the result off the graph. Take a diagram with $L$ loops and $N$ propagators $D_j = q_j^2 - m_j^2 + i 0$ (Minkowski space), raised to powers $nu_j$. Its *Feynman integral* is the integral over all loop momenta of the product of propagators. With Feynman parameters it becomes
+$ I(nu_1, dots, nu_N) &= integral product_(l=1)^L (dif^D ell_l)/(i pi^(D\/2)) thin 1/(D_1^(nu_1) dots D_N^(nu_N)) \
+  &= (-1)^(N_nu) (Gamma(N_nu - L D\/2))/(product_j Gamma(nu_j)) integral_0^infinity product_(j=1)^N dif x_j thin x_j^(nu_j - 1) thin delta(1 - sum x_j) thin (cal(U)^(N_nu - (L+1) D\/2))/(cal(F)^(N_nu - L D\/2)) $
+with $N_nu = sum_j nu_j$. This is not yet the scattering amplitude. The amplitude contains such integrals, multiplied by the couplings and by the numerator from the Dirac algebra (the pion in the last chapter shows how they fit together). The sign $(-1)^(N_nu)$ comes from the Minkowski propagators. In Euclidean space, with $dif^D ell\/pi^(D\/2)$ and propagators $ell^2 + m^2$, the same formula holds without it.
+
+The two polynomials come from the graph:
+- A 1-tree (spanning tree) is what is left after erasing $L$ lines so that the rest touches every vertex without a loop. Each gives the product of the $x_i$ of the erased lines. $cal(U)$ is their sum, homogeneous of degree $L$.
+- A 2-tree is what is left after erasing one more line, so that the graph falls into two pieces. Each gives the product of the erased $x_i$ times the square of the momentum flowing from one piece to the other. Their sum is $V$ and $cal(F) = V + cal(U) sum_i x_i m_i^2$.
+
+#func("graph(edges, legs, kin=None, euclidean=False)")[
+  A Feynman diagram as a graph, from strings.
+  - `edges`: the lines, `"A-B"` between vertices A and B, or `"A-B:m"` for a line of mass $m$. *The order of the lines is the numbering* $x_1, x_2, dots$ (the lecture's $alpha_1, alpha_2, dots$).
+  - `legs`: the momentum *entering* at each vertex, for example `{"A": "p", "B": "-p"}`. They must add up to zero.
+  - `kin`: the scalar products of the external momenta. `euclidean=True` for Euclidean signs.
+  - returns a `FeynmanGraph` with these methods:
+    - `.spanning_trees()`: the 1-trees, as tuples of the *erased* lines (counted from 0)
+    - `.two_forests()`: the 2-trees, as pairs (erased lines, vertices of one of the two pieces)
+    - `.U()`, `.F0()` ($= V$), `.F()`: the polynomials, read off the trees exactly by the rules above
+    - `.plot()`: a picture
+    - `.N`, `.V`, `.L`: the numbers of lines, vertices and loops
+]
+#func("draw_panels(g, erased, titles=None, ncols=5)")[
+  Draws the graph `g` several times side by side, each copy with its own erased lines (grey and dashed). Feed it `g.spanning_trees()` to see all the 1-trees.
 ]
 
-The metric comes back as `g(mu, nu)`:
-#cell("tr1", math-size: 9pt)
-A repeated index is summed ($gamma^mu gamma_mu = D$ in $D$ dimensions). A factor like `'p + m'` means $slash(p) + m$:
-#cell("tr2")
+== The bubble with two masses
 
-== A whole cross section: $e^+ e^- -> mu^+ mu^-$
+Two 1-trees (erase the top line or the bottom line) and one 2-tree (erase both lines, then $p$ flows between the two vertices).
+#cell("bub2", fig: 74%)
+So $cal(U) = alpha_1 + alpha_2$, $V = alpha_1 alpha_2 p^2$ and $cal(F) = V + (m_1^2 alpha_1 + m_2^2 alpha_2) cal(U)$, as in the lecture.
 
-For massless fermions summed over spins $sum |cal(M)|^2 = (e^4\/s^2) "Tr"[slash(p)' gamma^mu slash(p) gamma^nu] thin "Tr"[slash(k) gamma_mu slash(k)' gamma_nu]$. Two traces share $mu, nu$, so we write the FORM program ourselves and run it with `form.run_form`. `g_(1, ...)` and `g_(2, ...)` are the two fermion lines. The `id` lines put in the Mandelstam variables, $p dot k = p' dot k' = -t\/2$ and $p dot k' = p' dot k = -u\/2$:
-#cell("ee")
-Average over the four spin states, go to the centre-of-mass frame ($t = -s(1 - cos theta)\/2$, $u = -s(1 + cos theta)\/2$) and use $dif sigma\/dif Omega = overline(|cal(M)|^2)\/(64 pi^2 s)$:
-#cell("eexs")
-Since $2 - sin^2 theta = 1 + cos^2 theta$ this is $dif sigma\/dif Omega = alpha^2 (1 + cos^2 theta)\/(4 s)$ and the total cross section is $4 pi alpha^2\/(3 s)$, as in Peskin and Schroeder (eq. 5.12).
+== The box (Smirnov, Fig. 3.6)
+
+The massless box with $p_i^2 = 0$, $s = (p_1 + p_2)^2$ and $t = (p_1 + p_3)^2$, with the lines numbered as on the board. Line 1 is on top (between $p_1$ and $p_3$), 2 on the left (between $p_1$ and $p_2$), 3 on the right (between $p_3$ and $p_4$) and 4 at the bottom (between $p_2$ and $p_4$). feynsage draws the square turned by 45 degrees.
+#cell("box", fig: 34%)
+All six 2-trees. Only the two that cut the box into a left and a right half, or a top and a bottom half, carry momentum. The other four cut off a single corner, which receives only one $p_i$ with $p_i^2 = 0$, so they do not contribute (the grey pictures of the lecture). The small helper `momentum_in` adds up the momenta entering one piece:
+#cell("box2trees", fig: 72%)
+#note(title: "The labels matter")[
+  With lines 1 and 4 on top and bottom, erasing them separates $p_1, p_2$ from $p_3, p_4$ and gives $s thin alpha_1 alpha_4$. The board had $V = s thin alpha_1 alpha_3 + t thin alpha_2 alpha_4$, which is the same diagram with the lines numbered in order around the box (1 left, 2 top, 3 right, 4 bottom). The safe rule is to look at the picture. $s$ goes with the pair of lines whose removal separates $p_1, p_2$ from $p_3, p_4$.
+]
+
+== Smirnov's two-loop example
+
+This is the two-loop propagator diagram of the lecture, with lines 1 and 2 on the left, 3 and 4 on the right and 5 in the middle.
+#cell("kite", fig: 34%)
+Eight 1-trees, each erasing two lines, give $cal(U)$ of degree 2:
+#cell("kitetrees", fig: 100%)
+Eight 2-trees carry the momentum $p$, each erasing three lines:
+#cell("kite2trees", fig: 100%)
+These are the 1-trees and 2-trees drawn in the lecture.
+
+== From $cal(U)$ and $cal(F)$ back to the integral
+
+Put $cal(U)$ and $cal(F)$ into the general formula. For the massless bubble ($N = 2$, $L = 1$) the delta function leaves one integral over $x$. `SR(str(...))` turns the polynomials into ordinary expressions so that $x_1 = x$, $x_2 = 1 - x$ can be put in. At $D = 3.3$ and $p^2 = 1$ the result agrees with the closed form `bubble_massless(1, 1, 1)` (to the precision of the numerical integration):
+#cell("fpformula")
+
+== Sir's notebook: completing the square
+
+The Mathematica notebook shown in the lecture finds $cal(U)$ and $cal(F)$ in a second way, without drawing any trees. The formula it uses was not written on the board, so here it is step by step.
+
+*Step 1: one denominator.* With Feynman parameters $x_i$ all the propagators are combined into one sum, $sum_i x_i D_i$. Each $D_i$ is quadratic in the loop momentum, so the sum is too.
+
+*Step 2: sort it by powers of the loop momentum.* For one loop with loop momentum $ell$ every quadratic expression can be written as
+$ sum_i x_i D_i = M thin ell^2 - 2 thin Q dot ell + J $
+- $M$ collects everything in front of $ell^2$. Every propagator contains $ell^2$ once, so $M = sum_i x_i$.
+- $Q$ is a momentum. It collects the terms linear in $ell$ (the factor $-2$ is a convention that makes the next step neat).
+- $J$ is the rest, made of external momenta and masses with no $ell$ at all.
+
+*Step 3: complete the square.* Shift $ell = ell' + Q\/M$:
+$ M thin ell^2 - 2 Q dot ell + J = M thin ell'^2 + (J - (Q dot Q)\/M) $
+Now the integral over $ell'$ is a tadpole, because the loop momentum appears only as $ell'^2$, with a "mass" $(J - Q^2\/M)\/M$. Doing it gives a power of $M$ and a power of $J - Q^2\/M$ and they combine exactly into the general formula above with
+$ cal(U) = M = det M, quad quad cal(F) = det M thin (J - Q M^(-1) Q) $
+*At more loops* there are several loop momenta $ell_1, ell_2, dots$ The coefficients of $ell_r dot ell_s$ form a matrix $M$ (2 by 2 at two loops) and $Q$ becomes a list of momenta (one per loop). The same formulas hold with $det M$ and the matrix inverse $M^(-1)$. This is why the notebook writes them with a determinant.
+
+As a worked example take the bubble with two masses (Euclidean, $D_1 = k^2 + m_1^2$, $D_2 = (k + p)^2 + m_2^2$). Write the scalar products as symbols (`kk` $= k^2$, `kp` $= k dot p$, `pp` $= p^2$), expand and read off $M$, $Q$ and $J$ as the coefficients.
+#cell("square")
+This is the same $cal(F)$ as from the 1-trees and 2-trees above.
+
+#func("fam.UF()")[
+  $cal(U)$ and $cal(F)$ of a family by exactly this method. It builds $M$, $Q$ and $J$ from the list of propagators and returns $det M$ and $det M (J - Q M^(-1) Q)$, for any number of loops (no graph needed). For a Minkowski family the signs are those of the notebook.
+]
+#cell("squarecheck")
+The notebook's own examples, the triangle, the bubble with two masses and the box (Minkowski signs, as in the notebook), come out as on the screen in the lecture:
+#cell("sirnb")
+
+// ======================================================================== 9
+= A real prediction: the lifetime of the neutral pion
+
+Now put the tools together for a number that is measured in a laboratory. The neutral pion lives for about $8.4 times 10^(-17)$ s and in $98.8%$ of the cases decays into two photons. It has no charge, so the photons cannot attach to it directly. The decay goes through a *triangle* of charged quarks. The physics is explained below as we go and every step is done with feynsage, with the graph method of Part 2 at its centre.
+
+#physics(title: "The model")[
+  The quarks $u$ and $d$ ($Q_u = 2\/3$, $Q_d = -1\/3$) come in $N_c$ colours. They couple to the photon with charge $Q e$ and to the pion through $g thin overline(q) i gamma_5 tau_3 q thin pi^0$ ($tau_3 = +1$ for $u$, $-1$ for $d$), with $g = m\/f_pi$ (the Goldberger-Treiman relation, $f_pi approx 92$ MeV). For each quark there are two triangle diagrams, one for each order of the photons. The photons have $k_1^2 = k_2^2 = 0$ and the pion $(k_1 + k_2)^2 = m_pi^2$.
+]
+
+== Step 1: the graph, its trees and its polynomials
+
+Write the triangle as a graph. The pion vertex is P and the photon vertices are A and B. All three lines are quarks of mass $m$. Line 1 is P-A (parameter $x_1$), line 2 is B-P ($x_2$) and line 3 is A-B ($x_3$). The pion brings in $k_1 + k_2$ at P and the photons take out $k_1$ at A and $k_2$ at B (Minkowski space, $k_1^2 = k_2^2 = 0$, $2 k_1 dot k_2 = m_pi^2$):
+#cell("piongraph", fig: 30%)
+Now the rules of Part 2, drawn. One loop, so a 1-tree erases one line and a 2-tree erases two. Each 2-tree cuts off one vertex. Only the one that cuts off the pion vertex P carries momentum, $(k_1 + k_2)^2 = m_pi^2$. The two that cut off a photon vertex carry $k_1^2 = 0$ or $k_2^2 = 0$ and drop out:
+#cell("piontrees", fig: 72%)
+So $cal(U) = x_1 + x_2 + x_3$ and $V = x_1 x_2 thin m_pi^2$. With the mass term $cal(F) = -V + cal(U) (x_1 + x_2 + x_3) m^2$ (Minkowski sign), which is the $cal(F)$ printed above. On the simplex $x_1 + x_2 + x_3 = 1$, with $x_1 = x$ and $x_2 = y$, the polynomials become $cal(U) = 1$ and
+#cell("piondelta")
+This is the $Delta$ of the textbook calculation, read off the trees without completing any square.
+
+== Step 2: the integral from $cal(U)$ and $cal(F)$
+
+Now put $cal(U)$ and $cal(F)$ into the general formula of Part 2. Here $N = 3$ lines, all with power 1, $L = 1$ loop and $D = 4$ (the triangle is finite):
+$ integral (dif^4 ell)/(i pi^2) thin 1/(D_1 D_2 D_3) = (-1)^3 thin Gamma(3 - 2) integral_0^infinity dif x_1 dif x_2 dif x_3 thin delta(1 - x_1 - x_2 - x_3) thin (cal(U)^(3 - 4))/(cal(F)^(3 - 2)) = -integral dif^3 x thin delta(dots) thin 1/(cal(U) cal(F)) $
+feynsage writes the integrand straight from the polynomials of Step 1:
+#cell("pionUF")
+That is $-1\/Delta$ on the simplex, so the triangle is $-integral_0^1 dif x integral_0^(1-x) dif y thin 1\/(m^2 - x y m_pi^2) = -I(r)\/m^2$ with
+$ I(r) = integral_0^1 dif x integral_0^(1-x) dif y thin 1/(1 - x y r), quad r = (m_pi^2)/(m^2) $
+Do the integral numerically from $cal(U)$ and $cal(F)$ (here $m = 1$, $r = 0.5$) and compare with the closed form $I(r) = (2\/r) arcsin^2(sqrt(r)\/2)$:
+#cell("pionnum")
+The amplitude uses the measure $dif^4 ell\/(2 pi)^4$, which is $i pi^2\/(2 pi)^4$ times the measure of the formula:
+#cell("pionnorm")
+For $I(r)$ itself, expand $1\/(1 - x y r)$ in powers of $r$, integrate term by term and compare with the closed form.
+#cell("pionIr")
+For a heavy quark $I -> 1\/2$, the area of the triangle. Even for a light constituent quark ($m = 330$ MeV) $2 I(r)$ is only $1.4%$ above 1.
+
+== Step 3: the Dirac trace
+
+The numerator of the diagram is a trace of Dirac matrices. The pion vertex gives $gamma_5$, each photon vertex a $gamma^mu$ or $gamma^nu$ and each quark propagator its numerator $gamma dot p + m$, where $gamma dot p = gamma^mu p_mu$ (often written with a slash through $p$). With the momenta of the triangle and the loop momentum shifted to $q$ ($ell = q - x k_1 + y k_2$, as in Step 2) the trace is
+$ "Tr"[ gamma_5 thin (gamma dot (q - x k_1 - (1 - y) k_2) + m) thin gamma^nu thin (gamma dot (q - x k_1 + y k_2) + m) thin gamma^mu thin (gamma dot (q + (1 - x) k_1 + y k_2) + m) ] $
+#func("form.dirac_trace(factors, vectors, dim=4, levi_civita=\"form\")")[
+  The trace of a product of Dirac matrices, done by the program FORM. The matrices are given as a list, in the order of the product. Each entry is one matrix:
+  #table(columns: (auto, auto), inset: 4pt, stroke: none,
+    [`'g5'`], [$gamma_5$],
+    [`'mu'` (any name that is not a momentum)], [$gamma^mu$],
+    [`'p'` (a momentum)], [$gamma dot p = gamma^mu p_mu$],
+    [`'p + m'`], [$gamma dot p + m$ ($m$ times the unit matrix)],
+    [`'q - x*k1 + y*k2 + m'`], [$gamma dot (q - x k_1 + y k_2) + m$],
+  )
+  - `vectors`: the names that are momenta (so that `'q'` means $gamma dot q$ and not an index)
+  - `dim=4`: four dimensions, needed with $gamma_5$. A symbol such as `'D'` gives $D$ dimensions
+  - `levi_civita="usual"`: write the answer with the usual Levi-Civita symbol $epsilon^(mu nu rho sigma)$ (Peskin and Schroeder, $epsilon^(0123) = -1$), printed $epsilon$. The default `"form"` keeps FORM's own symbol, which is $-i$ times it.
+  - returns a Sage expression. `g(mu,nu)` is $g^(mu nu)$ and `dot(p,q)` is $p dot q$. In $epsilon(dots)$ a momentum in a slot means it is contracted there, so $epsilon(k_1, k_2, mu, nu) = epsilon^(rho sigma mu nu) k_(1 rho) k_(2 sigma)$.
+]
+#cell("piontrace")
+So the whole numerator is one term,
+$ 4 i m thin epsilon(k_1, k_2, mu, nu) = 4 i m thin epsilon^(mu nu rho sigma) k_(1 rho) k_(2 sigma) $
+(moving the two momentum slots past the two index slots is an even permutation). Nothing depends on $q$, $x$ or $y$, so the loop integral of Step 2 is all that is needed. It is a pure scalar triangle. Only the terms with exactly one $m$ survive, because a trace with $gamma_5$ needs an even number, at least four, of other $gamma$ matrices.
+
+== Step 4: the amplitude and why the quark mass drops out
+
+Collect the factors of one quark. They are $N_c$ colours, $(e Q)^2$ from the photon vertices, $g$ from the pion vertex, $4 m$ from the trace (Step 3), $I\/(16 pi^2 m^2)$ from the integral (Step 2) and a factor 2 for the two orders of the photons. Then put in $g = m\/f_pi$ and add $u$ and $d$ (with $tau_3 = plus.minus 1$):
+#cell("pionamp")
+The $m$ of the coupling cancels the $1\/m$ of the loop. A heavier quark couples more strongly and propagates less. The answer knows only the charges and the number of colours, $A = N_c (Q_u^2 - Q_d^2) e^2\/(4 pi^2 f_pi) = alpha\/(pi f_pi)$ for $N_c = 3$. This is the axial anomaly of Adler, Bell and Jackiw.
+
+== Step 5: the decay rate
+
+Square the amplitude and sum over the photon polarisations. That needs the contraction $epsilon^(mu nu rho sigma) epsilon_(mu nu alpha beta) k_(1 rho) k_(2 sigma) k_1^alpha k_2^beta$. It is written exactly as on paper in Sage notation. `form.compute` turns it into a FORM program, runs it and reads the answer back. No FORM code has to be written (`show_code=True` prints the program it made):
+#func("form.compute(expr, vectors, lines=(), rules=None, dim=4, show_code=False)")[
+  Traces and index contractions, written in Sage notation and done by FORM.
+  - `expr`: a product such as `eps(mu,nu,rho,sigma)*k1(rho)`, with `eps(...)` the Levi-Civita symbol, `g(mu,nu)` the metric, `dot(p,q)` or `p.q` a scalar product, `p(mu)` the component $p^mu$ and any other symbols
+  - `lines`: fermion lines to trace, each a list of factors as in `dirac_trace`. For example `[["pp","mu","p","nu"], ["k","mu","kp","nu"]]` is the product of two traces of $e^+ e^- -> mu^+ mu^-$
+  - `rules`: scalar products to put in, for example `{"k1.k1": 0, "k1.k2": "s/2"}`
+  - `dim`: 4, or a symbol like `'D'` for traces in $D$ dimensions
+  - `levi_civita="usual"`: `eps` is the usual $epsilon^(mu nu rho sigma)$, in the input and in the answer (otherwise FORM's own symbol, $-i epsilon$)
+  - every repeated index is summed. Returns a Sage expression, with `dot(p,q)` for $p dot q$.
+]
+#cell("pioneps")
+The printed program shows what was done for us. It has FORM's `e_` for $epsilon$ (with the factor $i$ taken care of), the indices declared, `contract` and the two rules $k_1^2 = k_2^2 = 0$. The answer is $epsilon^(mu nu rho sigma) epsilon_(mu nu alpha beta) k_(1 rho) k_(2 sigma) k_1^alpha k_2^beta = 2 (k_1 dot k_2)^2 = m_pi^4\/2$.
+
+#note(title: "Writing FORM yourself")[
+  For anything `compute` does not cover, `form.run_form(code)` runs a FORM program written by hand and returns FORM's output. A pedestrian introduction to FORM for particle physics (declarations, `g_` and `trace4`, `e_` and `contract`, `id` and a full Compton-scattering calculation) is on my blog, #link("https://rousan.netlify.app/pages/physics/blogs/form_pedestrian_qft_blog/")[rousan.netlify.app/pages/physics/blogs/form_pedestrian_qft_blog].
+]
+
+With the two-body phase space $1\/(8 pi)$, a factor $1\/2$ for the two identical photons and $1\/(2 m_pi)$ for the decaying pion,
+$ Gamma = 1/(2 m_pi) dot 1/2 dot 1/(8 pi) dot A^2 (m_pi^4)/2 = (A^2 m_pi^3)/(64 pi) $
+Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi = 130.2\/sqrt(2)$ MeV (Particle Data Group), against the measurements. The lifetime follows from the width as $tau = ℏ thin "BR"(gamma gamma)\/Gamma$:
+#cell("pionrate")
+
+#dbox("Result: the pion lifetime from one triangle", c-blue, breakable: false)[
+  #table(columns: 3, inset: 6pt, align: (left, center, center),
+    stroke: (x, y) => if y == 0 { (bottom: 0.6pt + ink2) } else { none },
+    [], [*feynsage*], [*experiment*],
+    [width $Gamma(pi^0 -> gamma gamma)$], [$7.79$ eV], [$7.80 plus.minus 0.12$ eV (PrimEx-II, 2020): $0.1 sigma$],
+    [lifetime from that width], [$8.35 times 10^(-17)$ s], [$8.34 times 10^(-17)$ s],
+    [lifetime, world average], [$8.35 times 10^(-17)$ s], [$(8.43 plus.minus 0.13) times 10^(-17)$ s (PDG): $0.6 sigma$],
+    [the same with $N_c = 1$], [$0.87$ eV], [ruled out],
+  )
+]
+#physics(title: "Reading the comparison")[
+  - The width agrees with the most precise measurement, PrimEx-II, to $0.1 sigma$. The lifetime it implies is the same as ours to the last digit shown.
+  - Why 8.35 and not 8.43? The two experimental numbers come from different measurements. The PrimEx-II width alone corresponds to a lifetime of $8.34 times 10^(-17)$ s, which is ours. The PDG lifetime is a world average that also contains older experiments, earlier Primakoff measurements and a direct measurement of the decay length at CERN (1985) that found a longer lifetime. They pull the average to a width of $7.72$ eV, so the average lifetime is a little longer. Our lifetime is $1%$ shorter than this average, which is $0.6$ of its standard deviation. There is no tension.
+  - The prediction has its own small uncertainty. Since $Gamma prop 1\/f_pi^2$, so $1%$ in $f_pi$ moves it by $2%$. The corrections left out (the masses of the $u$ and $d$ quarks, mixing with $eta$ and $eta'$) are of a few per cent as well.
+  - With one colour the rate would be nine times smaller and the pion would live nine times longer, against every measurement. This decay was one of the early pieces of evidence that quarks come in three colours. The quark mass does not matter (Step 4), which is the content of the anomaly.
+]
 
 // ======================================================================== end
 = Where to go next
 
 #note(title: "What feynsage is for")[
-  feynsage is meant for small and medium problems and for studying: every step is exact, can be checked and explains itself. On such problems it runs in the same range as the established tools and sometimes a little faster. For very large reductions (millions of equations, several scales) Kira and FIRE remain the better choice. I may continue improving feynsage in the future.
+  feynsage is meant for small and medium problems and for studying. Every step is exact, can be checked and explains itself. For very large reductions Kira and FIRE remain the better choice. I may continue improving feynsage in the future.
 ]
-
-- #repo: the code, the issues page and the latest version.
-- `tutorials/`: the same steps as five Jupyter notebooks, with exercises and solutions.
-- `examples/feynsage_walkthrough.ipynb`: the longer tour, with the neutral pion lifetime and the QED of Chluba's thesis.
-- `docs/DETAILS.md`: every module, every check against other programs and the speed numbers.
-- The lecture note _Feynman integrals at one loop_: the physics behind every step.
+- #repo: the code and the latest version.
+- `examples/feynsage_walkthrough.ipynb`: a notebook that goes through the whole package.
+- My notes of the lecture, _Feynman integrals at one loop_, with every derivation in full. They are not finished yet and will be shared once complete.
+- References used in the lecture
+  - P. Ramond, _Field Theory: A Modern Primer_ (appendix A)
+  - M. Argeri and P. Mastrolia, _Feynman diagrams and differential equations_
+  - V. A. Smirnov, _Analytic Tools for Feynman Integrals_ (chapter 3)
+  - S. Weinzierl, _Feynman Integrals_
+  - T. Rauh's lecture notes
+- For the pion
+  - S. L. Adler (1969) and J. S. Bell and R. Jackiw (1969)
+  - PrimEx-II Collaboration, Science 368 (2020) 506
+  - Particle Data Group, Review of Particle Physics

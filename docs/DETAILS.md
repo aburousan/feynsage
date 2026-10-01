@@ -4,6 +4,8 @@ The front page (`README.md`) is short. This page keeps the full description of e
 
 ## What it does
 
+Every function with its arguments is in [`REFERENCE.md`](REFERENCE.md).
+
 | Module | Content |
 |---|---|
 | `graph.FeynmanGraph` | A diagram as a multigraph with external momenta. Spanning trees and 2-forests are enumerated from their definitions and give the Symanzik polynomials U and F. U is also computed from the Kirchhoff matrix-tree theorem as an independent check. `family()` routes the momenta through a cycle basis. |
@@ -17,7 +19,7 @@ The front page (`README.md`) is short. This page keeps the full description of e
 | `explain` | `info(f)` and `explain=True` on every public function print what it computes and what its output means. |
 | `oneloop` | Closed results: tadpole, massless bubble with any powers, on-shell triangle with any powers, equal-mass and one-mass bubbles and the epsilon expansion (Gamma poles are made explicit before expanding). |
 | `form` | Dirac traces with FORM: `trace(indices)` in D dimensions and `dirac_trace(factors, vectors)` for products with slashed momenta, masses and gamma_5 (for example the pion triangle, `4*m*eps(k1, k2, mu, nu)`). `compute(expr, vectors, lines, rules, dim)` takes traces of several fermion lines and index contractions written in Sage notation (`eps(...)`, `g(mu,nu)`, `dot(p,q)`, `p(mu)`), writes the FORM program itself, runs it and returns a Sage expression; `run_form(code)` runs a FORM program written by hand. FORM is found on the PATH, in `~/.local/bin`, `~/bin`, Homebrew, or through `FEYNSAGE_FORM`. |
-| `plotting` | Figures in the style of the notes: `quick_plot(expr, (s, a, b))` (one line, real and imaginary parts, finite part of expressions with 1/eps, parallel evaluation), `set_theme()` (also for Sage's own `plot`), `curves`, `mb_plane`, `FeynmanGraph.plot()` (vertices on a circle with fewest crossings, or on a line for chains; labels x_i matching U and F; thick blue massive lines; pink dots for raised powers), `draw_panels` (spanning trees and 2-forests, removed lines dashed) and `draw_sectors` (sectors, with the lines of index 0 shrunk to points by `FeynmanGraph.contract`). `sage examples/plots.sage` writes examples. |
+| `plotting` | Figures in the style of the notes: `quick_plot(expr, (s, a, b))` (one line, real and imaginary parts, finite part of expressions with 1/eps, parallel evaluation), `set_theme()` (also for Sage's own `plot`), `curves`, `mb_plane`, `FeynmanGraph.plot()` (vertices on a circle with fewest crossings, or on a line for chains; labels x_i matching U and F; thick blue massive lines; pink dots for raised powers), `draw_panels` (spanning trees and 2-forests, removed lines dashed), `draw_reduction` (a reduction as equations of diagrams, also `Reduction.draw`) and `draw_sectors` (sectors, with the lines of index 0 shrunk to points by `FeynmanGraph.contract`). `sage examples/plots.sage` writes examples. |
 
 ## Checks
 

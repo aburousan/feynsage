@@ -212,7 +212,8 @@ class Reduction:
         self.table, self.masters, self.method, self.seconds, self.fam = table, masters, method, seconds, fam
 
     def __getitem__(self, target):
-        return self.table[tuple(target)]
+        """r["J(2,1)"] or r[(2, 1)]."""
+        return self.table[_target(target)]
 
     def _lab(self, a):
         """An integral as the family's name with its powers, e.g. T(2) or J(1,1)."""

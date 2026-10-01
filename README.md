@@ -55,6 +55,11 @@ ibp_reduce(kite, ["F(2,2,1,2,2)"], method="trimmed")     # exact arithmetic, jus
 g = diagram("kite"); g.U(), g.F(); g.plot()
 ```
 
+## Function reference
+
+[`docs/REFERENCE.md`](docs/REFERENCE.md) lists every public function with its arguments and what it
+returns. `info(f)` prints the same for one function inside Sage.
+
 ## Notebooks
 
 - [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial, in the
@@ -70,7 +75,7 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
 - `examples/peskin_examples.ipynb`: vacuum polarisation and the electron g-2 from Peskin and
   Schroeder, exactly.
 - `examples/chluba/`: Compton and double Compton scattering from J. Chluba's thesis (CMB spectral
-  distortions), with feynsage and with FeynCalc, and the cancellation of the infrared divergence in
+  distortions) with feynsage and with FeynCalc. Also the cancellation of the infrared divergence in
   dimensional regularisation.
 
 ## Is it right?

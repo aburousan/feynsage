@@ -67,16 +67,18 @@ Every cell of this tutorial can be run again with `sage docs/tutorial/run_cells.
 
 feynsage is a Python package that runs inside SageMath, so all of Sage (symbols, exact fractions, calculus, plots) is available next to it. Load it once:
 #cell("import")
-The first line loads everything that is used most. The second loads a few closed formulas from the module `feynsage.oneloop`. The functions used in this tutorial fall into four groups:
+The first line loads everything that is used most. The second loads a few closed formulas from the module `feynsage.oneloop`. The functions used in this tutorial fall into five groups:
 
-#table(columns: (24%, 44%, 32%),
+#table(columns: (20%, 50%, 30%),
   table.header([*task*], [*functions*], [*lecture*]),
   [closed formulas], [`tadpole`, `bubble_equal_mass`, `bubble_massless`, `expand_eps`], [tadpole, bubble, the $epsilon$ expansion],
-  [families and IBP], [`family`, `.ibp`, `ibp_reduce`, `.UF`], [IBP identities, reduction, completing the square],
+  [families and IBP], [`family`, `.ibp`, `ibp_reduce`, `.draw`, `.UF`], [IBP identities, reduction, completing the square],
   [one-loop functions], [`A0`, `B0`, `C0`, `D0`, `finite_part`, `quick_plot`], [the basis $A, B, C, D$],
   [graphs], [`graph`, `.U`, `.F`, `.spanning_trees`, `.two_forests`, `.plot`, `draw_panels`], [1-trees, 2-trees, $cal(U)$, $cal(F)$],
   [Dirac traces], [`form.dirac_trace`, `form.compute` (traces and contractions in Sage notation, converted to FORM)], [the pion (last chapter)],
 )
+
+These are only the functions this tutorial needs. feynsage has many more that the lecture did not reach. Some of them are one-loop tensor integrals in the style of Package-X (`loop`, `PVB`, `PVC`, `PVD`), closed forms of $C_0$ and $D_0$ in dilogarithms (`explicit`, `c0_closed`, `d0_closed`), infrared poles (the module `ir`), the finite-field reducer `reduce_ff`, `symmetries`, `diagram` (ready-made graphs like `"kite"`) and pictures of sectors (`draw_sectors`). All of them are listed with their arguments in `docs/REFERENCE.md` in the repository and the notebook `examples/feynsage_walkthrough.ipynb` uses most of them. `info(f)` explains any one of them.
 
 Two normalisations appear and each is used in its own place.
 - The closed formulas and the families use the Euclidean measure of the lecture with the $pi^(D\/2)$ taken out, $integral dif^D k\/pi^(D\/2)$ with propagators $k^2 + m^2$.

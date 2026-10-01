@@ -39,3 +39,12 @@ for a, ref in kira.items():
     for m, c in ref.items():
         ok = ok and K(got.get(red.canon(m), 0)) - K(c) == 0
 print("bubble ff agrees with Kira:", ok)
+
+# exact Laporta on the trimmed system (one modular probe picks the equations) = finite fields
+from feynsage import family, ibp_reduce
+kite_f = family(["l1", "l1 + q", "l1 + l2", "l1 + l2 + q", "l2"], kin={"q^2": 1})
+r_ff = ibp_reduce(kite_f, ["F(2,2,1,2,2)"], method="ff")
+r_tr = ibp_reduce(kite_f, ["F(2,2,1,2,2)"], method="trimmed")
+same = r_ff.table == r_tr.table
+print("kite F(2,2,1,2,2): exact on the trimmed system = finite fields:", same)
+assert same

@@ -38,7 +38,8 @@ C0(0, 5, 0, 0, 0, 0)                                                # IR diverge
 
 # two loops: reduce the kite to master integrals
 kite = family(["l1", "l1 + q", "l1 + l2", "l1 + l2 + q", "l2"], kin={"q^2": 1})
-ibp_reduce(kite, ["F(2,2,1,2,2)"])
+ibp_reduce(kite, ["F(2,2,1,2,2)"])                       # finite fields
+ibp_reduce(kite, ["F(2,2,1,2,2)"], method="trimmed")     # exact arithmetic, just as fast
 
 # graph polynomials and a picture
 g = diagram("kite"); g.U(), g.F(); g.plot()

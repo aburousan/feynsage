@@ -229,8 +229,10 @@ def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain
 
     The seed range is chosen from the targets (enough dots and numerator powers), the
     symmetries are found automatically (symmetries(fam)), and the method is
-    "ff" (finite fields, fast; at most one symbolic invariant besides d) or "exact"
-    (Laporta with exact rational functions).  "auto" picks ff when it can.
+    "ff" (finite fields, fast; at most one symbolic invariant besides d), "exact"
+    (Laporta with exact rational functions on every seeded equation) or "trimmed" (exact
+    Laporta on only the equations the targets need, found by one modular probe: exact
+    arithmetic, much faster than "exact").  "auto" picks ff when it can.
     nproc > 1 samples the finite-field system in parallel.
     """
     import time
@@ -249,6 +251,9 @@ def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain
     if method == "ff":
         from .ff import reduce_ff
         table = reduce_ff(red, ts, rmax=rmax, smax=smax, verbose=verbose, nproc=nproc)
+    elif method == "trimmed":
+        from .ff import reduce_exact_trimmed
+        table = reduce_exact_trimmed(red, ts, rmax=rmax, smax=smax, verbose=verbose)
     else:
         red.run(rmax=rmax, smax=smax)
         table = {t: red.reduce(t) for t in ts}

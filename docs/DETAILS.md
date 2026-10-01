@@ -67,12 +67,16 @@ g.U(), g.F()           # the kite, read off its trees and 2-forests
 
 Two-loop kite family (massless, q^2 = 1), coefficients checked to be identical in every case:
 
-| Seeds | Equations | Exact `Reducer` | `reduce_ff` | Kira 3.1 |
-|---|---|---|---|---|
-| rmax 4, smax 2 | 9 368 | 7.3 s | 0.2 s | |
-| rmax 9, smax 4 (target kite[3,3,2,3,3]) | 157 843 | too slow | 2.7 s | 6.7 s |
+| Seeds | Equations | Exact `Reducer` (all equations) | exact, trimmed (`reduce_exact_trimmed`) | `reduce_ff` | Kira 3.1 |
+|---|---|---|---|---|---|
+| rmax 4, smax 2 | 9 368 | 7.5 s (laptop), 37 s (hercules) | 0.1 s, 0.6 s | 0.2 s, 0.7 s | |
+| rmax 9, smax 4 (target kite[3,3,2,3,3]) | 157 843 | 11 min, 280 MB (hercules) | 2.1 s, 8.6 s | 2.7 s, 11.7 s | 6.7 s |
 
-feynsage ran on the laptop, Kira on a server with one thread, so the last column is only a rough guide.
+The exact reducer over all equations grows about linearly on hercules: 68 s for 16 626 equations,
+154 s for 37 610, 246 s for 58 232, 464 s for 110 782, 663 s for 157 843. The trimmed method does one
+elimination modulo a prime to find the equations the targets need (859 here) and then runs the
+exact reducer on those only: exact arithmetic, no sampling, the same coefficients. Kira ran on
+another server with one thread, so its column is only a rough guide.
 
 Where the time goes in the rmax 9 run: building the equations with numpy (all seeds of one IBP
 template at once) 1.0 s; the first probe, a sparse elimination of all 157 843 equations in C

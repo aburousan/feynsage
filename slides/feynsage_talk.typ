@@ -113,7 +113,12 @@
     )).flatten()
   )
   #v(0.2em)
-  #text(11pt, fill: ink2)[The "tennis court" we first tried had a 2-valent vertex (two lines with the same momentum): FeynCalc merges such lines into one doubled propagator, feynsage keeps two parameters. Both are right; the triple box above is the clean test.]
+  ```python
+  g = graph("T1-T2, T2-T3, T3-T4, B1-B2, B2-B3, B3-B4, T1-B1, T2-B2, T3-B3, T4-B4",
+            {"B1": "p1", "T1": "p2", "T4": "p3", "B4": "-p1 - p2 - p3"}, kin=box_kin)
+  g.U(), g.F(), g.U_kirchhoff()                        # trees, 2-forests, matrix-tree theorem
+  props, loops = g.family(); IntegralFamily("f", loops, g.kin, props).UF()   # det M
+  ```
   #grid(columns: (auto, 1fr), gutter: 0.4em, align: horizon,
     [kite: $#U =$], mt("out/kite_U.tex", size: 11pt),
     [$#F =$], mt("out/kite_F.tex", size: 11pt))
@@ -128,17 +133,17 @@
     ibp_reduce(kite, ["F(2,2,1,2,2)"])
     ```
     #mt("out/kite_red.tex", size: 11pt)
-    Two master integrals: the product of two bubbles $F(1,1,1,1,0)$ and the sunset $F(0,1,1,0,1)$. The coefficients are *identical* to LiteRed and Kira 3.1.
+    Masters: two bubbles $F(1,1,1,1,0)$ and the sunset $F(0,1,1,0,1)$. Identical to LiteRed and Kira 3.1.
   ],
   [
     #image("out/kite.svg", width: 100%)
   ])
-  #table(columns: (34%, 18%, 16%, 16%, 16%),
-    table.header([*kite, seeds up to*], [*equations*], [*exact Laporta*], [*finite fields*], [*Kira 3.1*]),
-    [4 dots, 2 numerators], [9 368], [7.3 s], [0.2 s], [],
-    [9 dots, 4 numerators], [157 843], [too slow], [2.7 s], [6.7 s#super[\*]],
+  #table(columns: (25%, 13%, 17%, 17%, 14%, 14%),
+    table.header([*kite, seeds up to*], [*equations*], [*exact, all equations*], [*exact, trimmed*], [*finite fields*], [*Kira 3.1*]),
+    [4 dots, 2 numerators], [9 368], [37 s], [0.6 s], [0.7 s], [],
+    [9 dots, 4 numerators], [157 843], [11 min], [8.6 s], [11.7 s], [6.7 s#super[\*]],
   )
-  #text(10pt, fill: ink2)[\*Kira on a server with one thread, feynsage on a laptop: a rough guide only.]
+  #text(9pt, fill: ink2)[All on one server (hercules). Trimmed: exact Laporta on only the 859 equations the target needs (`method="trimmed"`); the three feynsage columns agree exactly. \*Kira: another server, one thread.]
 ]
 
 // ---------------------------------------------------------------- one loop
@@ -246,7 +251,12 @@
     ]
   ])
   #v(0.3em)
-  Both are worked out in the notebooks `examples/peskin_examples.ipynb` and `examples/feynsage_walkthrough.ipynb`.
+  ```python
+  T = form.dirac_trace(["mu", "l + m", "nu", "l + q + m"], vectors=["l", "q"], dim="D")      # FORM
+  r = loop(form.to_loop(T).replace("D", "d"), ["l", "m"], ["l + q", "m"], kin={"q^2": "s"})
+  (r["g^{mu nu}"] + s * r["q^mu q^nu"]).expand()        # 0: the Ward identity, exactly
+  ```
+  #text(11pt, fill: ink2)[Worked out in `examples/peskin_examples.ipynb` and `examples/feynsage_walkthrough.ipynb`.]
 ]
 
 // ---------------------------------------------------------------- Chluba: Compton
@@ -281,6 +291,57 @@
   [
     #table(columns: 2, table.header([*36 traces, 12 $gamma$'s*], [*time per point*]),
       [feynsage + FORM], [0.5 s], [FeynCalc], [7.7 s])
+  ])
+]
+
+#slide[The code: Compton and double Compton][
+  #show raw.where(block: true): set text(size: 7.7pt)
+  #grid(columns: (1fr, 1fr), gutter: 0.4cm,
+  [
+    #text(12pt, weight: "semibold", fill: c-blue)[feynsage + FORM] #h(0.2em) #text(9pt, fill: ink2)[`examples/chluba/compton_dc.sage`]
+    ```python
+    from feynsage import form
+    # Compton: (chain, conjugate chain, s-m^2 or u-m^2)
+    ch = [(["nu", "p + k + m", "mu"],
+           ["mu", "p + k + m", "nu"], 2*pk),
+          (["mu", "p - kp + m", "nu"],
+           ["nu", "p - kp + m", "mu"], -2*pkp)]
+    tr = lambda f: evaluate(form.dirac_trace(
+             f, vectors=["p", "pp", "k", "kp"]), table)
+    msq = sum(tr(["pp + m"] + a + ["p + m"] + bc) / (da*db)
+              for a, _, da in ch for _, bc, db in ch)
+
+    # double Compton: photons as outgoing momenta
+    ph = {"a": ("-k0", "mu1"), "b": ("k1", "mu2"),
+          "c": ("k2", "mu3")}
+    for o in itertools.permutations("abc"):  # 6 diagrams
+        (q1, i1), (q2, i2), (q3, i3) = (ph[x] for x in o)
+        chain = [i1, "pp + %s + m" % q1, i2,
+                 "p - (%s) + m" % q3, i3]
+    # msq = -(sum of the 36 traces / denominators)
+    msq / mandl_skyrme_X(table)       # = 4, exactly
+    ```
+  ],
+  [
+    #text(12pt, weight: "semibold", fill: c-violet)[FeynCalc] #h(0.2em) #text(9pt, fill: ink2)[`examples/chluba/compton_dc_feyncalc.wl`]
+    ```
+    chain = GA[nu].(GS[p+k]+m).GA[mu]/(s-m^2) +
+            GA[mu].(GS[p-kp]+m).GA[nu]/(u-m^2);
+    chainbar = GA[mu].(GS[p+k]+m).GA[nu]/(s-m^2) +
+               GA[nu].(GS[p-kp]+m).GA[mu]/(u-m^2);
+    msq = TR[(GS[p+k-kp]+m).chain.(GS[p]+m).chainbar]
+          // Contract // ExpandScalarProduct // Simplify
+
+    (* double Compton: the 6 orders of the photons *)
+    ph = {{-k0, i1}, {k1, i2}, {k2, i3}};
+    chains = Map[
+      {GA[#[[1,2]]].(GS[pp + #[[1,1]]] + 1).GA[#[[2,2]]].
+        (GS[p - #[[3,1]]] + 1).GA[#[[3,2]]], ...} &,
+      Permutations[ph]];
+    msq = -ExpandScalarProduct[Contract[
+             TR[(GS[pp]+1).M.(GS[p]+1).Mbar]]];
+    msq/mandlSkyrme[...]          (* = 4, exactly *)
+    ```
   ])
 ]
 
@@ -326,6 +387,47 @@
     #text(11pt)[Normalisation check: $F_2 -> alpha\/2 pi$ as $t -> 0$ in both (1.99999967 at $t = -10^(-6)$, in units $alpha\/4 pi$).]
     #result(title: "So")[the cutoff $nu_(2,"min")$ of the thesis becomes $log(Delta E)$, the energy resolution: Bloch–Nordsieck, computed.]
   ])
+]
+
+#slide[The code: the vertex in $D$ dimensions][
+  #show raw.where(block: true): set text(size: 7.7pt)
+  #grid(columns: (1fr, 1fr), gutter: 0.4cm,
+  [
+    #text(12pt, weight: "semibold", fill: c-blue)[feynsage + FORM] #h(0.2em) #text(9pt, fill: ink2)[`examples/chluba/ir_cancellation.sage`]
+    ```python
+    # the vertex projected on gamma^mu (and on (P+P')^mu)
+    num = form.dirac_trace(
+        ["p + m", "mu", "pp + m", "nu",
+         "pp + l + m", "mu", "p + l + m", "nu"],
+        vectors=["p", "pp", "l"], dim="D")
+    r = loop(form.to_loop(num).replace("D", "d"),
+             ["l", "0"], ["l + pp", "1"], ["l + p", "1"],
+             kin={"p^2": 1, "pp^2": 1, "p.pp": 1 - t/2})
+    # r["1"] holds A0, B0 and the soft triangle
+    # C0(1, t, 1; 0, 1, 1) with its IR pole
+    A, B = Mx.solve_right(vector(SR, vs))  # Gordon basis
+    F1, F2 = A + B, -B                     # units alpha/4pi
+    F1.coefficient(eps, -1)   # = I(t) + const: IR pole
+    ```
+  ],
+  [
+    #text(12pt, weight: "semibold", fill: c-violet)[FeynCalc + Package-X] #h(0.2em) #text(9pt, fill: ink2)[`ir_cancellation_feyncalc.wl`]
+    ```
+    numG = DiracTrace[(GSD[p]+1).GAD[mu].(GSD[pp]+1).
+       GAD[nu].(GSD[pp+l]+1).GAD[mu].(GSD[p+l]+1).GAD[nu],
+       DiracTraceEvaluate -> True];
+    loopG = PaXEvaluate[
+       ToPaVe[TID[ExpandScalarProduct[Contract[numG]] *
+         FAD[{l,0}, {l+pp,1}, {l+p,1}], l], l]/(I Pi^2),
+       PaXImplicitPrefactor -> 1];
+    AB = LinearSolve[M, {loopG, loopP}];
+    F1 = Normal[Series[AB[[1]] + AB[[2]],
+                       {Epsilon, 0, 0}]];
+    Coefficient[F1, Epsilon, -1]    (* the same pole *)
+    ```
+  ])
+  #v(0.2em)
+  #text(11pt, fill: ink2)[Run time for four values of $t$: feynsage 1.3 s, FeynCalc + Package-X 6.6 s.]
 ]
 
 // ---------------------------------------------------------------- comparison: features
@@ -379,17 +481,18 @@
 #slide[A point where Package-X and LoopTools fail][
   $C_0(-4, -3, -1; 0, 0, 1)$: every invariant is spacelike, so $C_0 = -integral dif^3 x thin delta(1 - sum x_i) \/ #F$ must be *real and negative*.
   #v(0.2em)
-  #table(columns: (46%, 54%),
-    table.header([*program*], [*value*]),
-    [feynsage (closed form)], [#raw(read("out/bug_c0.txt").trim())],
-    [Mathematica `NIntegrate` (no Package-X)], [`-0.585976809672364723`],
-    [FeynCalc `FCFeynmanParametrize`, integrated], [`-0.58597680967236472`],
-    [mpmath, 45 digits], [`-0.585976809672364722650390572218069267`],
-    [Package-X 2.1.1, two labellings], text(fill: c-bad)[`+0.671253`, `-0.721045`],
-    [LoopTools 2.16, version a (FF)], text(fill: c-bad)[`+0.671253`, `-0.721045`, `-1.843207`],
-    [LoopTools 2.16, version b (Denner)], text(fill: c-bad)[four different complex numbers],
+  #table(columns: (44%, 48%, 8%),
+    table.header([*program*], [*value*], [*right?*]),
+    [feynsage (closed form)], [#raw(read("out/bug_c0.txt").trim())], ok,
+    [Mathematica `NIntegrate` (no Package-X)], [`-0.585976809672364723`], ok,
+    [FeynCalc `FCFeynmanParametrize`, integrated], [`-0.58597680967236472`], ok,
+    [mpmath, 45 digits], [`-0.585976809672364722650390572218069267`], ok,
+    [Package-X 2.1.1, two labellings], text(fill: c-bad)[`+0.671253`, `-0.721045`], bad,
+    [LoopTools 2.16, version a (FF)], text(fill: c-bad)[`+0.671253`, `-0.721045`, `-1.843207`], bad,
+    [LoopTools 2.16, version b (Denner)], text(fill: c-bad)[four different complex numbers], bad,
   )
-  At nearby points Package-X and LoopTools' FF version agree with `NIntegrate` to 16 digits (the Denner version is still wrong there). Package-X's wrong values are LoopTools' FF values digit for digit.
+  #text(12pt)[*Red = wrong.* The true value is $-0.5859768096 dots$; it cannot change when the lines are relabelled, and it must be real and negative.]
+  At nearby points Package-X and LoopTools' FF version agree with `NIntegrate` to 16 digits (the Denner version is still wrong there). #h(0.3em) In feynsage: `C0(-4, -3, -1, 0, 0, 1).n(digits=40)`. Package-X's wrong values are LoopTools' FF values digit for digit.
 ]
 
 // ---------------------------------------------------------------- tests

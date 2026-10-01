@@ -621,3 +621,40 @@ def _lift(residues, R, K):
             den += c * prod(g**e for g, e in zip(gens, mon if hasattr(mon, '__iter__') else (mon,)))
         out[k] = K(num) / K(den)
     return out
+
+
+def reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False):
+    r"""
+    Exact Laporta reduction (rational functions in d and the invariants, no sampling) on the
+    trimmed system: one elimination modulo a large prime at a random point finds the
+    equations the targets need (as in reduce_ff); only those are then eliminated exactly.
+    Same answer as reducer.run(rmax, smax) for these targets, in a fraction of the time.
+    Returns {target: {master: coefficient}} like reduce_ff.
+    """
+    import time
+    from .laporta import Reducer
+    t0 = time.time()
+    sysm = IBPSystem(reducer, rmax, smax)
+    nv = sysm.nvars
+    p = next(_primes(2**62 if nv == 1 else 2**29))
+    sysm.sample([tuple(t) for t in targets], p, [GF(p).random_element() for _ in range(nv)])
+    rows = sysm._rows_int
+    if verbose:
+        print("system: %d equations, %d kept for the targets (%.1fs)" % (sysm.nrows, len(rows), time.time() - t0))
+    R = sysm.R
+    gens = R.gens()
+    exact = Reducer.__new__(Reducer)
+    exact.__dict__.update({'fam': reducer.fam, 't': reducer.t, 'syms': reducer.syms, '_zero': dict(reducer._zero),
+                           'rules': {}, 'seen': set(), 'K': reducer.K})
+    for row in rows:
+        ident = {}
+        for col, terms in row:
+            poly = sum((c * prod((g ** e for g, e in zip(gens, exps)), R(1)) for c, exps in terms), R(0))
+            if poly:
+                key = sysm.cols[col]
+                ident[key] = ident.get(key, exact.K(0)) + exact.K(poly)
+        exact.add_identity(ident)
+    out = {tuple(t): exact.reduce(t) for t in targets}
+    if verbose:
+        print("exact elimination of the trimmed system: %.1fs" % (time.time() - t0))
+    return out

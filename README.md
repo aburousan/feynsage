@@ -51,6 +51,9 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
   8.43e-17 s).
 - `examples/peskin_examples.ipynb`: vacuum polarisation and the electron g-2 from Peskin and
   Schroeder, exactly.
+- `examples/chluba/`: Compton and double Compton scattering from J. Chluba's thesis (CMB spectral
+  distortions), with feynsage and with FeynCalc, and the cancellation of the infrared divergence in
+  dimensional regularisation.
 
 ## Is it right?
 

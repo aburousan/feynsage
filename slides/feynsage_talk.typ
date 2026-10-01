@@ -1,4 +1,5 @@
 #import "theme.typ": *
+#import "diagrams.typ": *
 #show: setup
 
 // ---------------------------------------------------------------- title
@@ -248,6 +249,85 @@
   Both are worked out in the notebooks `examples/peskin_examples.ipynb` and `examples/feynsage_walkthrough.ipynb`.
 ]
 
+// ---------------------------------------------------------------- Chluba: Compton
+#let chl = json("out/chluba_feynsage.json")
+#let chir = json("out/chluba_ir.json")
+#let chfc = json("out/chluba_ir_feyncalc.json")
+#slide[From Chluba's thesis (2005): Compton scattering][
+  #text(12pt, fill: ink2)[J. Chluba, _Spectral distortions of the cosmic microwave background_ (2005): Compton, double Compton and their infrared divergence. Every QED result there was recomputed twice, with feynsage + FORM and with FeynCalc.]
+  #align(center)[#grid(columns: 2, gutter: 1.6cm, compton(channel: "s", scale: 0.75), compton(channel: "u", scale: 0.75))]
+  #v(-0.3em)
+  #result(title: "Both programs give, exactly")[
+    #set text(13pt)
+    $ sum |cal(M)|^2 = 8 e^4 [ -(u - m^2)/(s - m^2) - (s - m^2)/(u - m^2) + 4 m^2 (1/(s-m^2) + 1/(u - m^2)) + 4 m^4 (1/(s-m^2) + 1/(u - m^2))^2 ] $
+    $ (dif sigma)/(dif Omega) = r_0^2/2 (omega'/omega)^2 (omega'/omega + omega/omega' - sin^2 theta) quad "(Klein–Nishina)", quad quad sigma_T = (8 pi)/3 r_0^2 quad "(Thomson limit)" $
+  ]
+  #text(11pt, fill: ink2)[FeynCalc: 0.2 s, symbolic. feynsage: exact rationals through FORM. Script: `examples/chluba/`.]
+]
+
+#slide[Double Compton: six diagrams][
+  $e(P) + gamma(K_0) -> e(P') + gamma(K_1) + gamma(K_2)$: the photons attach to the electron line in all $3! = 6$ orders.
+  #v(0.2em)
+  #align(center)[#grid(columns: 3, gutter: 0.25cm,
+    dc(("0", "1", "2"), scale: 0.6), dc(("0", "2", "1"), scale: 0.6), dc(("1", "0", "2"), scale: 0.6),
+    dc(("2", "0", "1"), scale: 0.6), dc(("1", "2", "0"), scale: 0.6), dc(("2", "1", "0"), scale: 0.6))]
+  #grid(columns: (1.25fr, 1fr), gutter: 0.6cm,
+  [
+    #result(title: "Against Mandl & Skyrme's X (thesis eq. D.1)")[
+      #set text(13pt)
+      At four random rational points both programs give *exactly* $sum_("spins, pol.") |cal(M)|^2 = 4 thin e^6 X$: the thesis's $|cal(M)|^2 = e^6 X$ is the average over the $2 times 2$ initial states.
+    ]
+  ],
+  [
+    #table(columns: 2, table.header([*36 traces, 12 $gamma$'s*], [*time per point*]),
+      [feynsage + FORM], [0.5 s], [FeynCalc], [7.7 s])
+  ])
+]
+
+#slide[The infrared divergence (thesis sec. 4.4.5)][
+  #grid(columns: (0.85fr, 1.3fr), gutter: 0.5cm, align: horizon,
+  [
+    #align(center)[#soft-real(leg: "in", scale: 0.8) #h(0.2cm) #soft-real(leg: "out", scale: 0.8)]
+    #align(center)[#text(10pt, fill: ink2)[a soft photon $K_2$ from an external electron]]
+  ],
+  [
+    For $K_2 -> 0$ double Compton factorises into Compton times the *eikonal factor*:
+    $ sum |cal(M)_"DC"|^2 -> e^2 S(K_2) sum |cal(M)_"C"|^2 $
+    $ S = (2 P dot P')/((P dot K_2)(P' dot K_2)) - m^2/(P dot K_2)^2 - m^2/(P' dot K_2)^2 $
+    #table(columns: 4, table.header([$K_2$ scaled by], [$10^(-4)$], [$10^(-6)$], [$10^(-8)$]),
+      [ratio of the two sides], ..chl.soft.map(r => [#calc.round(r.at(1), digits: 10)]))
+  ])
+  $S prop 1\/omega_2^2$, so $dif sigma prop dif omega_2 \/ omega_2$: the divergence of the thesis. Integrated over angles, a soft photon is emitted with $dif N = alpha\/pi thin I(t) thin dif omega_2\/omega_2$, $I(t) = 2 P dot P' integral_0^1 (dif x)/(m^2 - x(1-x) t) - 2$.
+  #physics(title: "Lightman's law (thesis eq. 4.24), derived")[
+    For cold electrons and soft photons $I(t) = -2t\/3 + dots$; averaged over Thomson scattering, $-t = 2 omega_0^2 (1 - cos theta) -> 2 omega_0^2$, so
+    $dif N \/ dif omega_2 = (4 alpha)/(3 pi) thin omega_0^2 \/ omega_2$ per Compton scattering: exactly the $4 alpha\/3 pi$ of the thesis.
+  ]
+]
+
+#slide[Regularisation: the divergence cancels][
+  #grid(columns: (0.75fr, 1.4fr), gutter: 0.5cm,
+  [
+    #align(center)[#soft-virtual(scale: 0.8)]
+    #align(center)[#text(10pt, fill: ink2)[the virtual soft photon between the electron legs]]
+    #v(0.2em)
+    #align(center)[#vertex-loop(scale: 0.8)]
+    #align(center)[#text(10pt, fill: ink2)[its pole is that of the QED vertex at $t = (P - P')^2$]]
+  ],
+  [
+    The thesis stops the divergence with a lowest frequency $nu_(2,"min")$. In $D = 4 - 2 epsilon$ it cancels:
+    $ "real" (omega_2 < Delta E): -(alpha I(t))/(2 pi epsilon), quad quad "virtual" (2 thin "Re" F_1): +(alpha I(t))/(2 pi epsilon) $
+    The vertex, computed with the loop in $D$ dimensions, its IR pole from the soft triangle $C_0(m^2, t, m^2; 0, m, m)$ (UV poles do not depend on $t$, so differences isolate the IR part):
+    #table(columns: 4,
+      table.header([$t$], [$I(t) - I(-1\/2)$], [feynsage], [FeynCalc + Package-X]),
+      ..range(3).map(i => {
+        let r = chir.ir_lines.at(i); let f = chfc.lines.at(i)
+        ([#r.at(0)], [#calc.round(r.at(2), digits: 12)], [#calc.round(r.at(1), digits: 12)], [#calc.round(f.at(1), digits: 12)])
+      }).flatten())
+    #text(11pt)[Normalisation check: $F_2 -> alpha\/2 pi$ as $t -> 0$ in both (1.99999967 at $t = -10^(-6)$, in units $alpha\/4 pi$).]
+    #result(title: "So")[the cutoff $nu_(2,"min")$ of the thesis becomes $log(Delta E)$, the energy resolution: Bloch–Nordsieck, computed.]
+  ])
+]
+
 // ---------------------------------------------------------------- comparison: features
 #slide[Comparison with other packages][
   #set text(12pt)
@@ -340,6 +420,7 @@
     #result(title: "feynsage")[
       - graphs → #U, #F → families → IBP → masters
       - one loop: exact tensor reduction, $C_0$ and $D_0$ in closed form, IR poles, zero Gram determinants
+      - QED of Chluba's thesis: Compton, double Compton, the IR divergence cancelled in $D$ dimensions
       - free, in SageMath, checked against Package-X, LoopTools, FeynCalc, LiteRed and Kira
     ]
   ],

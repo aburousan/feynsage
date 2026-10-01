@@ -1193,12 +1193,14 @@ def loop(numerator, *props, kin=None, euclidean=False, explain=False):
     for key, c in total.items():
         num, den = c.numerator(), c.denominator()
         groups = {}
+        uni = R.ngens() == 1                     # only d is a symbol: keys are plain integers
         for mon, cf in num.dict().items():
+            mon = (mon,) if uni else mon
             exps = tuple(mon[i] for i in sidx)
             rest = list(mon)
             for i in sidx:
                 rest[i] = 0
-            groups.setdefault(exps, {})[tuple(rest)] = cf
+            groups.setdefault(exps, {})[rest[0] if uni else tuple(rest)] = cf
         for exps, mons in groups.items():
             split.setdefault(exps, {})[key] = K.K(R(mons)) / K.K(den)
 
@@ -1218,7 +1220,7 @@ def loop(numerator, *props, kin=None, euclidean=False, explain=False):
 
 _TOKEN_G = re.compile(r'\bg\(\s*(\w+)\s*,\s*(\w+)\s*\)')
 _TOKEN_IDX = re.compile(r'\b([A-Za-z]\w*)\^([A-Za-z]\w*)\b')
-_TOKEN_SQ = re.compile(r'\b([A-Za-z]\w*)\^2\b')
+_TOKEN_SQ = re.compile(r'(?<![.\w])([A-Za-z]\w*)\^2\b')     # not after a dot: p.pp^2 is (p.pp)^2
 _TOKEN_DOT = re.compile(r'\b([A-Za-z]\w*)\.([A-Za-z]\w*)\b')
 
 

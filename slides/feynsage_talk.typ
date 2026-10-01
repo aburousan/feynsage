@@ -169,29 +169,6 @@
   #text(10.5pt, fill: ink2)[`v.two_forests()` lists (removed lines, vertices of one tree); `F()` adds up (product of removed $x_i$) $times P^2$, then $+ #U sum x_i m_i^2$.]
 ]
 
-// ---------------------------------------------------------------- graphs: sectors
-#slide[Sectors: shrink a line to a point][
-  #grid(columns: (0.78fr, 1.22fr), gutter: 0.5cm,
-  [
-    #set text(13.5pt)
-    A sector says which lines are present. Index 0 means the propagator is gone: its two ends become one vertex.
-    ```python
-    h, kept = g.contract([5])
-    draw_sectors(g, sectors)
-    fam.is_zero_sector(s)
-    ```
-    `contract` shrinks lines, `is_zero_sector` is Lee's criterion.
-    The kite's sectors with four and three lines. #text(fill: c-pink)[8 of the 15] are zero: a massless tadpole is left on one side, so the integral has no scale.
-    #v(0.2em)
-    #note(title: "Why it matters")[
-      Laporta's order (simplest sectors first) and the zero sectors are read straight off these pictures.
-    ]
-  ],
-  [
-    #align(center)[#image("out/kite_sectors.svg", width: 100%)]
-  ])
-]
-
 // ---------------------------------------------------------------- graphs: routing and symmetries
 #slide[From the graph to an integral family][
   #grid(columns: (1fr, 1fr), gutter: 0.6cm,
@@ -203,12 +180,13 @@
   ],
   [
     #result(title: "New: sector symmetries")[
-      Some symmetries hold inside one sector only. feynsage puts each sector polynomial $(#U + #F)|_(x_j = 0)$ in canonical form (Sage's canonical graph labelling) and maps integrals to one representative sector; with numerators it shifts the loop momenta, as LiteRed and Kira do.
+      #set text(12.5pt)
+      A *sector* = the lines present in an integral (tutorial PDF, Chapter 5). Some symmetries hold inside one sector only: feynsage compares the sector polynomials $(#U + #F)|_(x_j = 0)$ in canonical form and, with numerators, shifts the loop momenta, as LiteRed and Kira do.
       #table(columns: (52%, 24%, 24%),
         table.header([*two-loop sunset*], [*before*], [*now*]),
         [three masses], [7], [7],
         [equal masses], [6], [*3*])
-      Same masters and identical coefficients as Kira 3.1 (also the two-loop vertex with a numerator line); equal-mass reductions also checked against the Feynman-parameter integral at $D = 2.6$.
+      Same masters and identical coefficients as Kira 3.1.
     ]
   ])
 ]
@@ -645,7 +623,7 @@
     git clone https://github.com/aburousan/feynsage
     cd feynsage && ./install.sh --test
     ```
-    Start with `tutorials/README.md` (five step-by-step notebooks), then `examples/feynsage_walkthrough.ipynb`.
+    Start with the tutorial PDF `docs/tutorial/feynsage_tutorial.pdf` or the notebooks in `tutorials/`, then `examples/feynsage_walkthrough.ipynb`.
 
     #v(0.4em)
     #text(fill: ink2)[Thanks to Prof. B. Ananthanarayan for the lecture and the `uf-new-short.nb` notebook that started the #U, #F part.]

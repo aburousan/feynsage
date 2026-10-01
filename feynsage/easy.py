@@ -147,6 +147,17 @@ _LIBRARY = {
     "kite": (lambda: graph("L-B, L-T, B-R, T-R, T-B", {"L": "p", "R": "-p"}, kin={"p^2": "s"}), "two-loop massless kite"),
     "phi4_two": (lambda: graph("A-B, A-C, B-C, B-C", {"A": "p3+p4", "B": "-p3", "C": "-p4"},
                                kin={"p3^2": 0, "p4^2": 0, "p3.p4": "Q2/2"}), "two-loop phi^4 diagram of the notes"),
+    "vertex2": (lambda: graph("B1-C1, A-B1, A-B2, B2-C2, C1-C2, B1-B2", {"A": "p1+p2", "C1": "-p1", "C2": "-p2"},
+                              kin={"p1^2": 0, "p2^2": 0, "p1.p2": "q2/2"}),
+                "planar two-loop vertex, on-shell massless legs (lines x1..x6 as in the notes)"),
+    "banana3": (lambda: graph("A-B:m, A-B:m, A-B:m, A-B:m", {"A": "p", "B": "-p"}, kin={"p^2": "s"}),
+                "three-loop banana, four equal masses"),
+    "ladder3": (lambda: graph("L-A, A-B, B-R, L-C, C-D, D-R, A-C, B-D", {"L": "p", "R": "-p"}, kin={"p^2": "s"}),
+                "three-loop massless ladder propagator"),
+    "triplebox": (lambda: graph("B1-T1, T1-T2, T2-T3, T3-T4, T4-B4, B4-B3, B3-B2, B2-B1, T2-B2, T3-B3",
+                                {"B1": "p1", "T1": "p2", "T4": "p3", "B4": "-p1-p2-p3"},
+                                kin={"p1^2": 0, "p2^2": 0, "p3^2": 0, "p1.p2": "s/2", "p2.p3": "t/2", "p1.p3": "-(s+t)/2"}),
+                  "three-loop massless planar triple box, on-shell legs, s and t"),
 }
 
 
@@ -219,6 +230,10 @@ class Reduction:
                 terms.append(r'%s\; F%s' % (cl, str(tuple(mm)).replace(' ', '')))
             rows.append(r'F%s &= %s' % (str(tuple(t)).replace(' ', ''), r' \\ &\quad + '.join(terms) if terms else '0'))
         return r'$$\begin{aligned} %s \end{aligned}$$' % r' \\[6pt] '.join(rows)
+
+    def _latex_(self):
+        # used by Sage's latex() and by %display latex in notebooks
+        return self._repr_latex_()[2:-2]
 
     def __repr__(self):
         lines = []

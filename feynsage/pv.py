@@ -6,7 +6,8 @@ Conventions
 -----------
 Minkowski metric (+,-,-,-).  A propagator (q, m) is 1/(q^2 - m^2 + i0).  The measure is
 
-    mu^(2 eps) e^(eps gamma_E) (4 pi)^(-eps) * (1/(i pi^2)) * Int d^d l ,   d = 4 - 2 eps
+    mu^(2 eps) e^(eps gamma_E) * (1/(i pi^(d/2))) * Int d^d l ,   d = 4 - 2 eps
+    (the same as (16 pi^2/i) mu^(2 eps) (e^gamma_E/(4 pi))^eps Int d^d l/(2 pi)^d, the MS-bar convention)
 
 so that   A0(m) = m^2 (1/eps + log(mu^2/m^2) + 1)   and   B0 = 1/eps + (finite).
 These are exactly the normalisations of Package-X (LoopRefine with Eps, Mu) and of
@@ -993,6 +994,10 @@ class LoopResult:
         rows = [r'%s &:\quad %s' % (structure(st), laurent(e)) for st, e in self.parts]
         return r'$$\begin{aligned} %s \end{aligned}$$' % (r' \\[6pt] '.join(rows) if rows else '0')
 
+    def _latex_(self):
+        # used by Sage's latex() and by %display latex in notebooks
+        return self._repr_latex_()[2:-2]
+
     def __repr__(self):
         if not self.parts:
             return "0"
@@ -1000,7 +1005,7 @@ class LoopResult:
 
 
 _INFO = r"""loop(): a one-loop integral reduced to scalar functions.
-  Normalisation (Package-X / LoopTools): mu^(2 eps) e^(eps gamma_E) (4 pi)^(-eps) Int d^d l/(i pi^2),
+  Normalisation (Package-X / LoopTools): mu^(2 eps) e^(eps gamma_E) Int d^d l/(i pi^(d/2)),
   d = 4 - 2 eps, propagators 1/(q^2 - m^2 + i0) [Minkowski] or, with euclidean=True,
   Int d^d l/pi^(d/2) with 1/(q^2 + m^2) [Euclidean; the functions are then the Minkowski
   ones at p_M^2 = -p_E^2 times (-1)^N].

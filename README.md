@@ -12,7 +12,9 @@ Feynman integrals in SageMath, written from scratch.
 - **Dirac algebra with FORM**, gamma_5 included.
 - Every function can explain its own output: `explain=True` or `info(f)`.
 
-It grew out of the lecture notes "Feynman integrals at one loop" (Prof. B. Ananthanarayan, NISER, 2026).
+I wrote feynsage in 2024 for my MSc project. After the talk "Feynman integrals at one loop" by
+Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
+talk and published.
 A short talk with real computations is in [`slides/feynsage_talk.pdf`](slides/feynsage_talk.pdf).
 
 ## Install
@@ -47,6 +49,10 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
 
 ## Notebooks
 
+- `tutorials/`: five short step-by-step notebooks for a first contact, each with exercises and
+  solutions: first steps (A0, B0, numbers, plots), one-loop tensors, graph polynomials at one, two
+  and three loops, families, IBP and master integrals (the kite as 6 zeta(3)), Dirac traces with FORM.
+  Start with [`tutorials/README.md`](tutorials/README.md).
 - `examples/feynsage_walkthrough.ipynb`: the whole package step by step, with a picture for every
   step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact),
   one-loop integrals with IR poles, a real prediction (the neutral pion lifetime, 8.35e-17 s against

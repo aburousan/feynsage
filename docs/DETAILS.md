@@ -26,6 +26,7 @@ The front page (`README.md`) is short. This page keeps the full description of e
 - `test_bubble.sage`: the equal-mass bubble reductions agree with Kira 3.1.
 - `test_kite.sage`: the two-loop propagator family: masters, F(1,1,1,1,1) and F(2,2,1,2,2) agree with LiteRed.
 - `test_graphs.sage`: U and F of the kite, the massless box, the two-loop phi^4 diagram and the two-mass bubble agree three ways (tree rules, Kirchhoff, matrix method).
+- `test_multiloop_graphs.sage`: U and F at two and three loops (the two-loop vertex of the notes, the three-loop banana, ladder and triple box), trees against Kirchhoff and the matrix method, and against the notes where they give the polynomials.
 - `test_ff.sage`: the finite-field reducer gives the same kite and bubble results (LiteRed, Kira).
 - `test_oneloop_form.sage`: Lee's criterion on massless and massive tadpoles, the massless triangle, the two-loop phi^4 diagram of the notes and a FORM trace.
 - `test_pv.sage`: A0, B0, B1, B00, B11, B0', C0, C1, C2, C00, C11, C12 and D0 against Package-X 2.1.1 at 190 kinematic points (below, between and above thresholds, light-like momenta, massless lines, vanishing Gram determinants): A, B and the C tensors to 1e-15; C0 and D0 agree with every digit of Package-X's double-precision values. The reference values are in `tests/data`.

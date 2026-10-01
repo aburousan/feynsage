@@ -42,8 +42,15 @@ class IBPSystem:
             raise ValueError("ff reduction handles d and at most one invariant: set the other scales to numbers")
         t = fam.t
         templates = ibp_templates(fam)
+        # symmetry relations of the seeds with numerators (sector symmetries, momentum shifts)
+        sym_rows = []
+        for sd in reducer.seeds(rmax, smax):
+            for rel in reducer.symmetry_relations(sd, polynomial=True):
+                den = lcm([QQ(x).denominator() for c in rel.values() for x in c.coefficients()])
+                sym_rows.append({b: _as_dict(self.R(c * den)) for b, c in rel.items()})
         # every coefficient is an integer combination of these monomials in (d, invariant)
-        mons = sorted({e for tpl in templates for _, c0, cs in tpl for dct in [c0] + cs for e in dct})
+        mons = sorted({e for tpl in templates for _, c0, cs in tpl for dct in [c0] + cs for e in dct}
+                      | {e for row in sym_rows for dct in row.values() for e in dct})
         midx = {e: k for k, e in enumerate(mons)}
         nmon = len(mons)
         seeds = np.array(reducer.seeds(rmax, smax), dtype=np.int64).reshape(-1, t)
@@ -92,6 +99,31 @@ class IBPSystem:
                 nz = cols >= 0
                 rows = (np.nonzero(keep)[0] * len(templates) + ti)[nz]
                 R_.append(rows); C_.append(cols[nz]); E_.append(coef[keep][nz])
+        base_row = N * len(templates)
+        for k, row in enumerate(sym_rows):
+            for b, dct in row.items():
+                if not dct:
+                    continue
+                if max(b) + 2 >= OFF or -min(b) + 2 >= OFF:
+                    raise ValueError("index vectors too large for the packed representation")
+                key = sum((x + OFF) << (B * i) for i, x in enumerate(b))
+                c = cid.get(key)
+                if c is None:
+                    cb = None if reducer.is_zero(b) else reducer.canon(b)
+                    if cb is None:
+                        c = -1
+                    else:
+                        c = cmap.get(cb)
+                        if c is None:
+                            c = cmap[cb] = len(canon_of)
+                            canon_of.append(cb)
+                    cid[key] = c
+                if c < 0:
+                    continue
+                vec = np.zeros((1, nmon), dtype=np.int64)
+                for e, v in dct.items():
+                    vec[0, midx[e]] = v
+                R_.append(np.array([base_row + k], dtype=np.int64)); C_.append(np.array([c], dtype=np.int64)); E_.append(vec)
         R_ = np.concatenate(R_); C_ = np.concatenate(C_); E_ = np.concatenate(E_)
         # final column order: most complicated integral first
         order = sorted(range(len(canon_of)), key=lambda c: weight(canon_of[c]), reverse=True)
@@ -468,7 +500,30 @@ def _primes(start=2**62):
         yield p
 
 
+def _auto_relations(once, reducer, *args, **kw):
+    """Run a reduction; with numerator_relations="auto", repeat it with the momentum-shift
+    relations if a master with numerators sits in a sector where they could matter."""
+    out = once(reducer, *args, **kw)
+    if getattr(reducer, 'numerator_relations', False) == "auto" and not reducer._use_relations:
+        masters = {m for row in out.values() for m in row}
+        if reducer.relations_needed(masters):
+            if kw.get('verbose'):
+                print("masters with numerators in symmetric sectors: again with momentum-shift relations")
+            reducer._use_relations = True
+            out = once(reducer, *args, **kw)
+    return out
+
+
 def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1):
+    r"""
+    Reduce the targets with finite fields (see _reduce_ff_once); with the reducer's
+    numerator_relations="auto" the reduction is repeated with the momentum-shift relations
+    when a master with numerators sits in a sector where they could matter.
+    """
+    return _auto_relations(_reduce_ff_once, reducer, targets, rmax, smax=smax, point=point, verbose=verbose, nproc=nproc)
+
+
+def _reduce_ff_once(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1):
     r"""
     Reduce the targets with finite fields.  The reducer's kinematics may have the
     variable d and at most one invariant.  Returns {target: {master: coefficient}}
@@ -625,6 +680,14 @@ def _lift(residues, R, K):
 
 def reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False):
     r"""
+    Exact Laporta reduction on the trimmed system (see _reduce_exact_trimmed_once), with the
+    same automatic momentum-shift relations as reduce_ff.
+    """
+    return _auto_relations(_reduce_exact_trimmed_once, reducer, targets, rmax, smax=smax, verbose=verbose)
+
+
+def _reduce_exact_trimmed_once(reducer, targets, rmax, smax=0, verbose=False):
+    r"""
     Exact Laporta reduction (rational functions in d and the invariants, no sampling) on the
     trimmed system: one elimination modulo a large prime at a random point finds the
     equations the targets need (as in reduce_ff); only those are then eliminated exactly.
@@ -644,8 +707,9 @@ def reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False):
     R = sysm.R
     gens = R.gens()
     exact = Reducer.__new__(Reducer)
-    exact.__dict__.update({'fam': reducer.fam, 't': reducer.t, 'syms': reducer.syms, '_zero': dict(reducer._zero),
-                           'rules': {}, 'seen': set(), 'K': reducer.K})
+    # the same family, symmetries and caches (so both pick the same representatives), no rules yet
+    exact.__dict__.update(reducer.__dict__)
+    exact.__dict__.update({'_zero': dict(reducer._zero), 'rules': {}, 'seen': set()})
     for row in rows:
         ident = {}
         for col, terms in row:

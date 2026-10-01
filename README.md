@@ -17,6 +17,14 @@ Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lectur
 talk and published.
 A short talk with real computations is in [`slides/feynsage_talk.pdf`](slides/feynsage_talk.pdf).
 
+## Who it is for
+
+feynsage is meant for small and medium problems and for studying: every step is exact, can be
+checked and explains itself. On such problems it runs in the same range as the established tools
+and sometimes a little faster. For very large reductions (millions of equations, several scales)
+Kira and FIRE remain the better choice: they are multi-threaded and much more economical with
+memory. I may continue improving feynsage in the future.
+
 ## Install
 
 ```bash
@@ -49,6 +57,10 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
 
 ## Notebooks
 
+- [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial as a PDF, in the
+  style of the lecture note: every step with its code and its real output, install instructions, and
+  a careful explanation of everything that goes beyond the lecture (sectors, zero sectors, sector
+  symmetries, Kirchhoff's theorem, infrared poles, finite fields, FORM).
 - `tutorials/`: five short step-by-step notebooks for a first contact, each with exercises and
   solutions: first steps (A0, B0, numbers, plots), one-loop tensors, graph polynomials at one, two
   and three loops, families, IBP and master integrals (the kite as 6 zeta(3)), Dirac traces with FORM.

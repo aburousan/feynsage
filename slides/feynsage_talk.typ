@@ -124,6 +124,119 @@
     [$#F =$], mt("out/kite_F.tex", size: 11pt))
 ]
 
+// ---------------------------------------------------------------- graphs: input and pictures
+#slide[Graphs: a diagram in one line][
+  #grid(columns: (0.95fr, 1.25fr), gutter: 0.5cm,
+  [
+    ```python
+    g = graph("A-B:m, A-B:m, A-B:m",
+              {"A": "p", "B": "-p"},
+              kin={"p^2": "s"})
+    g.L, g.U(), g.F(), g.plot()
+    diagram("triplebox")
+    ```
+    - lines `"U-V"` or `"U-V:mass"`, then the momentum entering each vertex and the scalar products
+    - `diagram()` lists the ready-made graphs
+    - the order of the lines is the numbering $x_1, x_2, dots$ of #U and #F
+    - massive lines thick and blue, $x_i$ written on each line
+    - vertices placed with the fewest crossing lines
+    - the same drawing code makes every picture on the next slides
+  ],
+  [
+    #align(center)[#image("out/gallery.svg", width: 100%)]
+    #v(-0.5em)
+    #align(center)[#text(10pt, fill: ink2)[eight of the twelve diagrams in `diagram()`, drawn by `g.plot()`]]
+  ])
+]
+
+#let v2 = json("out/v2.json")
+#slide[Spanning trees, drawn: the two-loop vertex of the note][
+  ```python
+  v = diagram("vertex2");  v.spanning_trees();  draw_panels(v, v.spanning_trees())
+  ```
+  #align(center)[#image("out/v2_trees.svg", width: 92%)]
+  #v(-0.3em)
+  All #v2.trees spanning trees (dashed = removed lines). Each gives the product of its removed $x_i$:
+  $ #U = (x_2 + x_3)(x_1 + x_4 + x_5) + (x_1 + dots + x_5) thin x_6 $
+  #text(10.5pt, fill: ink2)[The same as the lecture note (sector decomposition, Example 3) #ok, and the same as Kirchhoff's determinant and $det M$ #ok]
+]
+
+#slide[2-forests that carry momentum][
+  #align(center)[#image("out/v2_forests.svg", width: 82%)]
+  #v(-0.3em)
+  Of the #v2.forests 2-forests only #v2.carry separate the $q$ vertex from both on-shell legs; the others carry $p_1^2 = 0$ or $p_2^2 = 0$:
+  $ #F = -q^2 [x_1 x_3 x_4 + x_1 x_2 (x_3 + x_4) + x_2 x_3 (x_4 + x_5) + (x_1 + x_2)(x_3 + x_4) x_6] $
+  #text(10.5pt, fill: ink2)[`v.two_forests()` lists (removed lines, vertices of one tree); `F()` adds up (product of removed $x_i$) $times P^2$, then $+ #U sum x_i m_i^2$.]
+]
+
+// ---------------------------------------------------------------- graphs: sectors
+#slide[Sectors: shrink a line to a point][
+  #grid(columns: (0.78fr, 1.22fr), gutter: 0.5cm,
+  [
+    #set text(13.5pt)
+    A sector says which lines are present. Index 0 means the propagator is gone: its two ends become one vertex.
+    ```python
+    h, kept = g.contract([5])
+    draw_sectors(g, sectors)
+    fam.is_zero_sector(s)
+    ```
+    `contract` shrinks lines, `is_zero_sector` is Lee's criterion.
+    The kite's sectors with four and three lines. #text(fill: c-pink)[8 of the 15] are zero: a massless tadpole is left on one side, so the integral has no scale.
+    #v(0.2em)
+    #note(title: "Why it matters")[
+      Laporta's order (simplest sectors first) and the zero sectors are read straight off these pictures.
+    ]
+  ],
+  [
+    #align(center)[#image("out/kite_sectors.svg", width: 100%)]
+  ])
+]
+
+// ---------------------------------------------------------------- graphs: routing and symmetries
+#slide[From the graph to an integral family][
+  #grid(columns: (1fr, 1fr), gutter: 0.6cm,
+  [
+    *Momentum routing.* `g.family()` takes a spanning tree; every line outside it (a chord) gets a loop momentum, closed through the tree; the external momenta flow through the tree.
+    #out("out/kite_routing.txt", size: 10pt)
+    *Symmetries of the whole family.* Permutations of the lines that leave $#U + #F$ unchanged (Pak's criterion), found as automorphisms of a coloured graph:
+    #raw(read("out/kite_syms.txt").trim())
+  ],
+  [
+    #result(title: "New: sector symmetries")[
+      Some symmetries hold inside one sector only. feynsage puts each sector polynomial $(#U + #F)|_(x_j = 0)$ in canonical form (Sage's canonical graph labelling) and maps integrals to one representative sector; with numerators it shifts the loop momenta, as LiteRed and Kira do.
+      #table(columns: (52%, 24%, 24%),
+        table.header([*two-loop sunset*], [*before*], [*now*]),
+        [three masses], [7], [7],
+        [equal masses], [6], [*3*])
+      Same masters and identical coefficients as Kira 3.1 (also the two-loop vertex with a numerator line); equal-mass reductions also checked against the Feynman-parameter integral at $D = 2.6$.
+    ]
+  ])
+]
+
+// ---------------------------------------------------------------- graphs: counting masters
+#let lprows = json("out/lp_rows.json")
+#slide[How many masters, before any reduction?][
+  #grid(columns: (1.05fr, 1fr), gutter: 0.6cm,
+  [
+    Lee and Pomeransky (2013): in each sector set the missing $x_j = 0$ and count the points where every derivative of
+    $ G = #U + #F $
+    vanishes, all remaining $x_i != 0$. That is the number of masters of the sector. A Gröbner basis does the counting:
+    ```python
+    I = R.ideal([G.derivative(x) for x in live] + [t*prod(live) - 1])
+    I.vector_space_dimension()
+    ```
+  ],
+  [
+    #table(columns: (46%, 27%, 27%),
+      table.header([*family*], [*critical points*], [*IBP masters*]),
+      ..lprows.map(r => ([#r.name], [#r.lp], [#r.ibp #if r.lp == r.ibp { ok } else { bad }])).flatten())
+    #note(title: "Limits of the count")[
+      - it does not use symmetries: equal-mass sunset gives 4 points in the sunset sector, IBP needs 2
+      - the points must be isolated; in the massless kite's top sector they form a curve, then one needs the Euler characteristic (Bitoun, Bogner, Klausen, Panzer 2019)
+    ]
+  ])
+]
+
 // ---------------------------------------------------------------- IBP
 #slide[Two loops: IBP reduction of the kite][
   #grid(columns: (1fr, 0.42fr), gutter: 0.6cm,
@@ -532,7 +645,7 @@
     git clone https://github.com/aburousan/feynsage
     cd feynsage && ./install.sh --test
     ```
-    Start with `examples/feynsage_walkthrough.ipynb`.
+    Start with `tutorials/README.md` (five step-by-step notebooks), then `examples/feynsage_walkthrough.ipynb`.
 
     #v(0.4em)
     #text(fill: ink2)[Thanks to Prof. B. Ananthanarayan for the lecture and the `uf-new-short.nb` notebook that started the #U, #F part.]

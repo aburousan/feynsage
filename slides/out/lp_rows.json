@@ -1,0 +1,26 @@
+[
+ {
+  "name": "bubble, equal masses",
+  "lp": 2,
+  "ibp": 2,
+  "t": 0.020378828048706055
+ },
+ {
+  "name": "bubble, two masses",
+  "lp": 3,
+  "ibp": 3,
+  "t": 0.005224943161010742
+ },
+ {
+  "name": "massless box",
+  "lp": 3,
+  "ibp": 3,
+  "t": 0.014281988143920898
+ },
+ {
+  "name": "sunset, three masses",
+  "lp": 7,
+  "ibp": 7,
+  "t": 0.014132022857666016
+ }
+]

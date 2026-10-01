@@ -1,0 +1,515 @@
+{
+ "import": {
+  "code": "from feynsage import *",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 1
+ },
+ "info": {
+  "code": "info(A0)",
+  "stdout": "A0\n--\nTadpole A0(m) = m^2 (1/eps + log(mu^2/m^2) + 1) in the Package-X normalisation; A0(0) = 0.\nOutput: a symbolic expression in eps (the 1/eps UV pole) and mu (the renormalisation scale).",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 2
+ },
+ "a0": {
+  "code": "m = var('m')\na = A0(m)\na",
+  "stdout": "",
+  "latex": "m^{2} {\\left(\\frac{1}{{\\epsilon}} + \\log\\left(\\frac{\\mu^{2}}{m^{2}}\\right) + 1\\right)}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 3
+ },
+ "a0parts": {
+  "code": "print(\"pole:           \", uv_part(a))\nprint(\"finite part:    \", finite_part(a))\nprint(\"finite, mu = m: \", finite_part(a, m))",
+  "stdout": "pole:            m^2\nfinite part:     m^2*log(mu^2/m^2) + m^2\nfinite, mu = m:  m^2",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 4
+ },
+ "b0": {
+  "code": "s = var('s')\nB0(s, m, m)",
+  "stdout": "",
+  "latex": "\\frac{1}{{\\epsilon}} + \\Lambda(s; m, m) + \\log\\left(\\frac{\\mu^{2}}{m^{2}}\\right) + 2",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 5
+ },
+ "b0numbers": {
+  "code": "for sv in [1, 3, 5, 10]:\n    val = finite_part(B0(sv, 1, 1), 1).n(digits=12)\n    beta = sqrt(1 - 4/sv) if sv > 4 else 0\n    print(\"s = %2d   B0 finite = %-38s pi*beta = %.12f\" % (sv, val, (pi*beta).n()))",
+  "stdout": "s =  1   B0 finite = 0.186200635766 + 2.09199576156e-26*I   pi*beta = 0.000000000000\ns =  3   B0 finite = 0.790800423844 + 1.41839915231e-25*I   pi*beta = 0.000000000000\ns =  5   B0 finite = 1.56959105904 + 1.40496294621*I        pi*beta = 1.404962946208\ns = 10   B0 finite = 0.401668519244 + 2.43346720558*I       pi*beta = 2.433467205584",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 6
+ },
+ "b0plot": {
+  "code": "from feynsage.plotting import quick_plot, set_theme\nset_theme()\nfig = quick_plot([B0(s, 1, 1), B0(s, 1, 2)], (s, -2, 14),\n                 labels=[\"$m_1 = m_2 = 1$\", \"$m_1 = 1,\\\\ m_2 = 2$\"])",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/b0plot.svg",
+  "seconds": 0.26,
+  "n": 7
+ },
+ "a0b0": {
+  "code": "(A0(m) - m^2*(B0(0, m, m) + 1)).simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.61,
+  "n": 8
+ },
+ "norm": {
+  "code": "from feynsage.oneloop import tadpole, expand_eps, D\nnote = expand_eps(tadpole(1, 1), 0)        # the note: e^(eps gamma_E) Int [dl] 1/(l^2 + 1), Euclidean\npx = A0(1).subs(mu=1)                       # Package-X normalisation, Minkowski, m = mu = 1\nprint(\"note's tadpole:\", note)\nprint(\"A0(1):         \", px)\nprint(\"sum:           \", (note + px).simplify_full())",
+  "stdout": "note's tadpole: -(eps + 1)/eps\nA0(1):          1/eps + 1\nsum:            0",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 9
+ },
+ "loop1": {
+  "code": "loop(\"1\", [\"l\", \"m1\"], [\"l + p\", \"m2\"], kin={\"p^2\": \"s\"})",
+  "stdout": "",
+  "latex": "\\begin{aligned} 1 &:\\quad \\frac{1}{{\\epsilon}} - \\frac{m_{1}^{2} - m_{2}^{2} + s}{2  s}\\,\\log\\left(\\frac{m_{1}^{2}}{m_{2}^{2}}\\right) \\\\ & \\quad + \\Lambda(s; m_{1}, m_{2}) + \\log\\left(\\frac{\\mu^{2}}{m_{2}^{2}}\\right) \\\\ & \\quad + 2 \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 10
+ },
+ "loopmu": {
+  "code": "loop(\"l^mu\", [\"l\", \"m1\"], [\"l + p\", \"m2\"], kin={\"p^2\": \"s\"})",
+  "stdout": "",
+  "latex": "\\begin{aligned} p^{\\mu} &:\\quad -\\frac{1}{2  {\\epsilon}} + \\frac{{\\left(m_{1}^{2} - m_{2}^{2} + s\\right)}^{2}}{4  s^{2}}\\,\\log\\left(\\frac{m_{1}^{2}}{m_{2}^{2}}\\right) \\\\ & \\quad - \\frac{m_{1}^{2} - m_{2}^{2} + s}{2  s}\\,\\Lambda(s; m_{1}, m_{2}) + \\frac{m_{1}^{2}}{2  s}\\,\\log\\left(\\frac{\\mu^{2}}{m_{1}^{2}}\\right) \\\\ & \\quad - \\frac{m_{1}^{2} + s}{2  s}\\,\\log\\left(\\frac{\\mu^{2}}{m_{2}^{2}}\\right) - \\frac{m_{1}^{2} - m_{2}^{2} + 2  s}{2  s} \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 11
+ },
+ "b1check": {
+  "code": "sv, a1, a2 = 10, 1, 2\nhand = (A0(a1) - A0(a2) - (sv + a1^2 - a2^2)*B0(sv, a1, a2))/(2*sv)\npv = PVB(0, 1, sv, a1, a2)                      # Package-X's PVB[0, 1, ...] = B1\nprint(\"poles:        \", uv_part(hand), uv_part(pv))\nprint(\"finite parts: \", finite_part(hand, 1).n(), \"   \", finite_part(pv, 1).n())",
+  "stdout": "poles:         -1/2 -1/2\nfinite parts:  -0.184578706662452 - 0.329867228626928*I     -0.184578706662452 - 0.329867228626928*I",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 12
+ },
+ "loopmunu": {
+  "code": "loop(\"l^mu l^nu\", [\"l\", \"m\"], [\"l + p\", \"m\"], kin={\"p^2\": \"s\"})",
+  "stdout": "",
+  "latex": "\\begin{aligned} g^{\\mu\\nu} &:\\quad \\frac{1}{\\epsilon}\\left(\\frac{1}{2}  m^{2} - \\frac{1}{12}  s\\right) + \\left(\\frac{1}{3}  m^{2} - \\frac{1}{12}  s\\right)\\,\\Lambda(s; m, m) \\\\ & \\quad + \\left(\\frac{1}{2}  m^{2} - \\frac{1}{12}  s\\right)\\,\\log\\left(\\frac{\\mu^{2}}{m^{2}}\\right) + \\frac{7}{6}  m^{2} - \\frac{2}{9}  s \\\\[6pt] p^{\\mu} p^{\\nu} &:\\quad \\frac{1}{3  {\\epsilon}} - \\frac{m^{2} - s}{3  s}\\,\\Lambda(s; m, m) \\\\ & \\quad + \\frac{1}{3}\\,\\log\\left(\\frac{\\mu^{2}}{m^{2}}\\right) - \\frac{12  m^{2} - 13  s}{18  s} \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 13
+ },
+ "gram": {
+  "code": "s1, s2, s12 = var('s1 s2 s12')\np1p2 = (s1 + s2 - s12)/2                    # p1.p2 from s12 = (p1 - p2)^2\nGram = matrix([[s1, p1p2], [p1p2, s2]])\nprint(\"det Gram =\", Gram.det().expand())\nprint(\"at the g-2 point s1 = s2 = m^2, q^2 = s12 = 0:\", Gram.det().subs(s1=m^2, s2=m^2, s12=0))",
+  "stdout": "det Gram = -1/4*s1^2 + 1/2*s1*s12 - 1/4*s12^2 + 1/2*s1*s2 + 1/2*s12*s2 - 1/4*s2^2\nat the g-2 point s1 = s2 = m^2, q^2 = s12 = 0: 0",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 14
+ },
+ "c0": {
+  "code": "c = C0(1, 2, 3, 1, 2, 3)\nprint(c, \"=\", c.n(digits=30))\nprint(\"direct numerical integration:\", c0_numeric(1, 2, 3, 1, 2, 3))\nprint(\"as logs and dilogs:\", len(str(explicit(c))), \"characters, value\", explicit(c).n(digits=20).real())",
+  "stdout": "C0(1, 2, 3, 1, 2, 3) = -0.142398839895237347030644540980\ndirect numerical integration: (-0.1423988398952359+0j)\nas logs and dilogs: 1206 characters, value -0.14239883989523734703",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.18,
+  "n": 15
+ },
+ "c0hand": {
+  "code": "from scipy.integrate import dblquad\ns1v, s12v, s2v, m0, m1, m2 = -1.0, -2.0, -3.0, 1.0, 2.0, 3.0      # all invariants spacelike: F > 0\ndef Fpar(x1, x2):\n    x0 = 1 - x1 - x2                         # x0, x1, x2 on the lines (l, m0), (l + p1, m1), (l + p2, m2)\n    return x0*m0**2 + x1*m1**2 + x2*m2**2 - x0*x1*s1v - x0*x2*s2v - x1*x2*s12v\nby_hand = -dblquad(lambda x2, x1: 1/Fpar(x1, x2), 0, 1, 0, lambda x1: 1 - x1, epsabs=1e-13)[0]\nprint(\"by hand:  \", by_hand)\nprint(\"feynsage: \", C0(-1, -2, -3, 1, 2, 3).n(digits=16))",
+  "stdout": "by hand:   -0.11122756310943065\nfeynsage:  -0.1112275631094306",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.91,
+  "n": 16
+ },
+ "d0": {
+  "code": "d = D0(-1, -2, -3, -4, -5, -6, 1, 2, 3, 4)\nprint(d.n(digits=25))\nprint(d0_numeric(-1, -2, -3, -4, -5, -6, 1, 2, 3, 4))",
+  "stdout": "0.003369962787211075225506485\n(0.0033699627872110765+0j)",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.19,
+  "n": 17
+ },
+ "cir": {
+  "code": "pole_parts(C0(0, s, 0, 0, 0, 0))",
+  "stdout": "",
+  "latex": "\\left(\\frac{1}{s}, -\\frac{\\ln\\left(-s - i0\\right)}{s} + \\frac{\\log\\left(\\mu^{2}\\right)}{s}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 18
+ },
+ "irgraph": {
+  "code": "tri = graph(\"A-B, B-C, C-A\", {\"A\": \"p1 + p2\", \"B\": \"-p1\", \"C\": \"-p2\"},\n            kin={\"p1^2\": 0, \"p2^2\": 0, \"p1.p2\": \"Q2/2\"}, euclidean=True)\nprint(\"U =\", tri.U(), \"     F =\", tri.F())\nep = var('eps')\ndirichlet = gamma(1 + ep)*gamma(-ep)^2/gamma(1 - 2*ep)\n(exp(ep*euler_gamma)*dirichlet).series(ep, 1).truncate()",
+  "stdout": "U = x1 + x2 + x3      F = Q2*x1*x3",
+  "latex": "-\\frac{1}{12} \\, \\pi^{2} + \\frac{1}{{\\epsilon}^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 19
+ },
+ "gramc": {
+  "code": "print(\"C1  =\", PVC(0, 1, 0, m^2, 0, m^2, 0, m, m))\nprint(\"C00 =\", PVC(1, 0, 0, m^2, 0, m^2, 0, m, m).log_expand().expand())",
+  "stdout": "C1  = 1/2/m^2\nC00 = 1/4/eps - 1/2*log(m) + 1/2*log(mu) + 1/4",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 20
+ },
+ "graphbub": {
+  "code": "bub = graph(\"A-B:ma, A-B:mb\", {\"A\": \"p\", \"B\": \"-p\"}, kin={\"p^2\": \"pp\"}, euclidean=True)\nprint(\"lines N =\", bub.N, \"  vertices V =\", bub.V, \"  loops L = N - V + 1 =\", bub.L)\nfig = bub.plot(figsize=(2.6, 2.6))",
+  "stdout": "lines N = 2   vertices V = 2   loops L = N - V + 1 = 1",
+  "latex": null,
+  "text": null,
+  "fig": "out/graphbub.svg",
+  "seconds": 0.01,
+  "n": 21
+ },
+ "kiteplot": {
+  "code": "from feynsage.plotting import draw_panels, draw_sectors, draw_graph\nkite = diagram(\"kite\")\nprint(kite.lines)\nfig = kite.plot(figsize=(2.8, 2.8))",
+  "stdout": "[('L', 'B', '0'), ('L', 'T', '0'), ('B', 'R', '0'), ('T', 'R', '0'), ('T', 'B', '0')]",
+  "latex": null,
+  "text": null,
+  "fig": "out/kiteplot.svg",
+  "seconds": 0.01,
+  "n": 22
+ },
+ "kitetrees": {
+  "code": "xs = lambda rem: \"$\" + \"\".join(\"x_{%d}\" % (i + 1) for i in rem) + \"$\"\ntrees = kite.spanning_trees()\nprint(len(trees), \"spanning trees; removed lines (from 0):\", trees)\nfig = draw_panels(kite, trees, titles=[xs(r) for r in trees], momenta=False, ncols=8, size=1.5)",
+  "stdout": "8 spanning trees; removed lines (from 0): [(0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 4), (3, 4)]",
+  "latex": null,
+  "text": null,
+  "fig": "out/kitetrees.svg",
+  "seconds": 0.09,
+  "n": 23
+ },
+ "kiteU": {
+  "code": "kite.U()",
+  "stdout": "",
+  "latex": "x_{1} x_{3} + x_{2} x_{3} + x_{1} x_{4} + x_{2} x_{4} + x_{1} x_{5} + x_{2} x_{5} + x_{3} x_{5} + x_{4} x_{5}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 24
+ },
+ "kiteforests": {
+  "code": "def entering(comp):\n    tot = {}\n    for v in comp:\n        for k, c in kite.ext.get(v, {}).items():\n            tot[k] = tot.get(k, 0) + c\n    return {k: c for k, c in tot.items() if c}\n\nforests = kite.two_forests()\ncarry = [(r, c) for r, c in forests if entering(c)]\nprint(len(forests), \"2-forests,\", len(carry), \"of them carry the momentum p\")\nfig = draw_panels(kite, [r for r, c in carry], titles=[xs(r) + \"$\\\\,p^2$\" for r, c in carry],\n                  momenta=False, ncols=8, size=1.5)",
+  "stdout": "10 2-forests, 8 of them carry the momentum p",
+  "latex": null,
+  "text": null,
+  "fig": "out/kiteforests.svg",
+  "seconds": 0.1,
+  "n": 25
+ },
+ "kiteF": {
+  "code": "kite.F()",
+  "stdout": "",
+  "latex": "\\left(-s\\right) x_{1} x_{2} x_{3} + \\left(-s\\right) x_{1} x_{2} x_{4} + \\left(-s\\right) x_{1} x_{3} x_{4} + \\left(-s\\right) x_{2} x_{3} x_{4} + \\left(-s\\right) x_{1} x_{2} x_{5} + \\left(-s\\right) x_{2} x_{3} x_{5} + \\left(-s\\right) x_{1} x_{4} x_{5} + \\left(-s\\right) x_{3} x_{4} x_{5}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 26
+ },
+ "threeways": {
+  "code": "import time\ndef three_ways(g, name):\n    t0 = time.time()\n    U, F = g.U(), g.F()\n    t1 = time.time()\n    props, loops = g.family()\n    Um, Fm = IntegralFamily(name, loops, g.kin, props).UF()\n    same = g.U_kirchhoff() == U and g.R(str(Um)) == U and g.R(str(Fm)) == F\n    print(\"%-10s L = %d, %2d lines, %3d trees, %3d 2-forests (%.3f s); trees = Kirchhoff = det M: %s\"\n          % (name, g.L, g.N, len(g.spanning_trees()), len(g.two_forests()), t1 - t0, same))\n\nfor name in [\"bubble_mass\", \"kite\", \"vertex2\", \"banana3\", \"ladder3\", \"triplebox\"]:\n    three_ways(diagram(name), name)",
+  "stdout": "bubble_mass L = 1,  2 lines,   2 trees,   1 2-forests (0.000 s); trees = Kirchhoff = det M: True\nkite       L = 2,  5 lines,   8 trees,  10 2-forests (0.001 s); trees = Kirchhoff = det M: True\nvertex2    L = 2,  6 lines,  11 trees,  19 2-forests (0.001 s); trees = Kirchhoff = det M: True\nbanana3    L = 3,  4 lines,   4 trees,   1 2-forests (0.000 s); trees = Kirchhoff = det M: True\nladder3    L = 3,  8 lines,  30 trees,  59 2-forests (0.003 s); trees = Kirchhoff = det M: True\ntriplebox  L = 3, 10 lines,  56 trees, 163 2-forests (0.010 s); trees = Kirchhoff = det M: True",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.09,
+  "n": 27
+ },
+ "kirchhoff": {
+  "code": "X = [SR.var('x%d' % (i + 1)) for i in range(kite.N)]\nidx = {v: n for n, v in enumerate(kite.vertices)}\nLap = matrix(SR, kite.V, kite.V)\nfor i, (u, v, _) in enumerate(kite.lines):     # line i between u and v, weight 1/x_i\n    a, b = idx[u], idx[v]\n    Lap[a, a] += 1/X[i]; Lap[b, b] += 1/X[i]; Lap[a, b] -= 1/X[i]; Lap[b, a] -= 1/X[i]\nprint(\"vertices in this order:\", kite.vertices)\nLap",
+  "stdout": "vertices in this order: ['B', 'L', 'R', 'T']",
+  "latex": "\\begin{pmatrix}\n\\frac{1}{x_{1}} + \\frac{1}{x_{3}} + \\frac{1}{x_{5}} & -\\frac{1}{x_{1}} & -\\frac{1}{x_{3}} & -\\frac{1}{x_{5}} \\\\\n-\\frac{1}{x_{1}} & \\frac{1}{x_{1}} + \\frac{1}{x_{2}} & 0 & -\\frac{1}{x_{2}} \\\\\n-\\frac{1}{x_{3}} & 0 & \\frac{1}{x_{3}} + \\frac{1}{x_{4}} & -\\frac{1}{x_{4}} \\\\\n-\\frac{1}{x_{5}} & -\\frac{1}{x_{2}} & -\\frac{1}{x_{4}} & \\frac{1}{x_{2}} + \\frac{1}{x_{4}} + \\frac{1}{x_{5}}\n\\end{pmatrix}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 28
+ },
+ "kirchhoff2": {
+  "code": "reduced = Lap[1:, 1:]                           # strike out one row and column\nU_from_det = (prod(X) * reduced.det()).expand()\nprint(\"prod(x) * det(reduced Laplacian) =\", U_from_det)\nprint(\"equal to U from the trees:\", bool(U_from_det == SR(str(kite.U())).expand()))",
+  "stdout": "prod(x) * det(reduced Laplacian) = x1*x3 + x2*x3 + x1*x4 + x2*x4 + x1*x5 + x2*x5 + x3*x5 + x4*x5\nequal to U from the trees: True",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 29
+ },
+ "vertex2": {
+  "code": "v2 = diagram(\"vertex2\")\nfig = v2.plot(figsize=(3.0, 3.0))",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/vertex2.svg",
+  "seconds": 0.01,
+  "n": 30
+ },
+ "vertex2UF": {
+  "code": "R = v2.R\nx1, x2, x3, x4, x5, x6 = R.gens()\nq2 = R.base_ring()('q2')\nU_note = (x2 + x3)*(x1 + x4 + x5) + (x1 + x2 + x3 + x4 + x5)*x6\nF_note = -q2*(x1*x3*x4 + x1*x2*(x3 + x4) + x2*x3*(x4 + x5) + (x1 + x2)*(x3 + x4)*x6)\nprint(\"U as in the note:\", v2.U() == U_note, \"   F as in the note:\", v2.F() == F_note)",
+  "stdout": "U as in the note: True    F as in the note: True",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 31
+ },
+ "kitefam": {
+  "code": "props, loops = kite.family()\nkfam = IntegralFamily(\"kite\", loops, kite.kin, props)\nfor i, (q, m2) in enumerate(props):\n    print(\"line %d (x%d):  D%d = (%s)^2\" % (i + 1, i + 1, i + 1,\n          \" + \".join((\"\" if c == 1 else \"-\" if c == -1 else str(c)) + k for k, c in q.items()).replace(\"+ -\", \"- \")))",
+  "stdout": "line 1 (x1):  D1 = (l1)^2\nline 2 (x2):  D2 = (-l1 + p)^2\nline 3 (x3):  D3 = (l2)^2\nline 4 (x4):  D4 = (-l2 + p)^2\nline 5 (x5):  D5 = (-l1 + l2)^2",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 32
+ },
+ "sectorof": {
+  "code": "def sector(a):\n    return tuple(1 if x > 0 else 0 for x in a)\n\nfor a in [(1, 1, 1, 1, 1), (2, 1, 1, 1, 3), (1, 1, 1, 1, -2), (1, 1, 1, 1, 0), (0, 1, 1, 0, 1), (0, 2, 1, -1, 1)]:\n    print(\"F%s  is in sector %s\" % (a, sector(a)))",
+  "stdout": "F(1, 1, 1, 1, 1)  is in sector (1, 1, 1, 1, 1)\nF(2, 1, 1, 1, 3)  is in sector (1, 1, 1, 1, 1)\nF(1, 1, 1, 1, -2)  is in sector (1, 1, 1, 1, 0)\nF(1, 1, 1, 1, 0)  is in sector (1, 1, 1, 1, 0)\nF(0, 1, 1, 0, 1)  is in sector (0, 1, 1, 0, 1)\nF(0, 2, 1, -1, 1)  is in sector (0, 1, 1, 0, 1)",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 33
+ },
+ "contract": {
+  "code": "import matplotlib.pyplot as plt\nh, kept = kite.contract([5])           # the kite without line 5\nprint(\"lines kept:\", kept, \"   vertices:\", h.vertices)\nfig, axes = plt.subplots(1, 2, figsize=(5.2, 2.5))\ndraw_graph(kite, ax=axes[0], momenta=False, removed=[5], title=\"line 5 removed (dashed)\")\ndraw_graph(h, ax=axes[1], names=kept, momenta=False, title=\"line 5 shrunk to a point\")",
+  "stdout": "lines kept: [1, 2, 3, 4]    vertices: ['L', 'R', 'T']",
+  "latex": null,
+  "text": null,
+  "fig": "out/contract.svg",
+  "seconds": 0.01,
+  "n": 34
+ },
+ "contractUF": {
+  "code": "to_kite = h.R.hom([kite.R.gen(k - 1) for k in kept], kite.R)    # x_k of h -> x_kept[k] of the kite\nx5 = kite.R.gen(4)\nprint(\"U(kite) at x5 = 0  =  U(kite with line 5 shrunk):\", kite.U().subs({x5: 0}) == to_kite(h.U()))\nprint(\"F(kite) at x5 = 0  =  F(kite with line 5 shrunk):\", kite.F().subs({x5: 0}) == to_kite(h.F()))\nprint(\"the same graph with line 5 deleted instead has\", len(kite._graph([0, 1, 2, 3]).connected_components()),\n      \"component(s) and only\", kite.L - 1, \"loop: not the same integral\")",
+  "stdout": "U(kite) at x5 = 0  =  U(kite with line 5 shrunk): True\nF(kite) at x5 = 0  =  F(kite with line 5 shrunk): True\nthe same graph with line 5 deleted instead has 1 component(s) and only 1 loop: not the same integral",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 35
+ },
+ "allsectors": {
+  "code": "from itertools import product as cartesian\nsecs = [s for s in cartesian([1, 0], repeat=5) if sum(s) in (4, 3)]\ntitles = [str(s).replace(\" \", \"\") + (\"  zero\" if kfam.is_zero_sector(s) else \"\") for s in secs]\nprint(sum(kfam.is_zero_sector(s) for s in secs), \"of\", len(secs), \"are zero\")\nfig = draw_sectors(kite, secs, titles=titles, momenta=False, ncols=5, size=2.0)",
+  "stdout": "8 of 15 are zero",
+  "latex": null,
+  "text": null,
+  "fig": "out/allsectors.svg",
+  "seconds": 0.18,
+  "n": 36
+ },
+ "zerosector": {
+  "code": "s0 = (1, 1, 1, 0, 0)\nfig = draw_sectors(kite, [s0, (1, 0, 1, 0, 1)], titles=[str(s0), \"(1,0,1,0,1)\"], momenta=True, ncols=2, size=2.4)\nU0, F0 = kfam.UF(s0)\nprint(\"U =\", U0, \"    F =\", F0)\nprint(\"zero sector (Lee's criterion):\", kfam.is_zero_sector(s0))",
+  "stdout": "U = x1*x3 + x2*x3     F = (-s)*x1*x2*x3\nzero sector (Lee's criterion): True",
+  "latex": null,
+  "text": null,
+  "fig": "out/zerosector.svg",
+  "seconds": 0.02,
+  "n": 37
+ },
+ "leecrit": {
+  "code": "for s in [(1, 1, 1, 0, 0), (0, 1, 1, 0, 1), (1, 1, 1, 1, 0), (1, 1, 1, 1, 1)]:\n    U0, F0 = kfam.UF(s)\n    print(s, \" U + F =\", U0 + F0, \"   zero:\", kfam.is_zero_sector(s))",
+  "stdout": "(1, 1, 1, 0, 0)  U + F = (-s)*x1*x2*x3 + x1*x3 + x2*x3    zero: True\n(0, 1, 1, 0, 1)  U + F = (-s)*x2*x3*x5 + x2*x3 + x2*x5 + x3*x5    zero: False\n(1, 1, 1, 1, 0)  U + F = (-s)*x1*x2*x3 + (-s)*x1*x2*x4 + (-s)*x1*x3*x4 + (-s)*x2*x3*x4 + x1*x3 + x2*x3 + x1*x4 + x2*x4    zero: False\n(1, 1, 1, 1, 1)  U + F = (-s)*x1*x2*x3 + (-s)*x1*x2*x4 + (-s)*x1*x3*x4 + (-s)*x2*x3*x4 + (-s)*x1*x2*x5 + (-s)*x2*x3*x5 + (-s)*x1*x4*x5 + (-s)*x3*x4*x5 + x1*x3 + x2*x3 + x1*x4 + x2*x4 + x1*x5 + x2*x5 + x3*x5 + x4*x5    zero: False",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 38
+ },
+ "count": {
+  "code": "from collections import Counter\nallsec = [s for s in cartesian([0, 1], repeat=5) if sum(s) > 0]\nnz = Counter(sum(s) for s in allsec if not kfam.is_zero_sector(s))\ntot = Counter(sum(s) for s in allsec)\nfor k in sorted(tot):\n    print(\"%d lines: %2d sectors, %2d non-zero\" % (k, tot[k], nz.get(k, 0)))",
+  "stdout": "1 lines:  5 sectors,  0 non-zero\n2 lines: 10 sectors,  0 non-zero\n3 lines: 10 sectors,  2 non-zero\n4 lines:  5 sectors,  5 non-zero\n5 lines:  1 sectors,  1 non-zero",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 39
+ },
+ "kitemasters": {
+  "code": "red = ibp_reduce(kfam, [\"F(1,1,1,1,1)\"])\nprint(\"masters:\", red.masters)\nfig = draw_sectors(kite, [tuple(1 if x > 0 else 0 for x in m) for m in red.masters],\n                   titles=[\"master \" + str(m).replace(\" \", \"\") for m in red.masters], momenta=False, ncols=2, size=2.4)",
+  "stdout": "masters: [(0, 1, 1, 0, 1), (1, 1, 1, 1, 0)]",
+  "latex": null,
+  "text": null,
+  "fig": "out/kitemasters.svg",
+  "seconds": 0.31,
+  "n": 40
+ },
+ "kitered": {
+  "code": "red",
+  "stdout": "",
+  "latex": "\\begin{aligned} F(1,1,1,1,1) &= \\frac{\\left(-2\\right) \\cdot (d - 3)}{s \\cdot (d - 4)}\\; F(1,1,1,1,0) \\\\ &\\quad + \\frac{\\left(2\\right) \\cdot (3 d - 10) \\cdot (3 d - 8)}{s^{2} \\cdot (d - 4)^{2}}\\; F(0,1,1,0,1) \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 41
+ },
+ "sectorsym": {
+  "code": "from feynsage.laporta import Reducer\nr = Reducer(kfam, symmetries=symmetries(kfam))\nfor a in [(1, 0, 0, 1, 1), (2, 0, 0, 1, 1), (1, 0, 0, 1, 3), (0, 1, 1, 0, 1)]:\n    print(\"F%s  ->  F%s\" % (a, r.canon(a)))\nfig = draw_sectors(kite, [(0, 1, 1, 0, 1), (1, 0, 0, 1, 1)], titles=[\"(0,1,1,0,1)\", \"(1,0,0,1,1)\"],\n                   momenta=True, ncols=2, size=2.4)",
+  "stdout": "F(1, 0, 0, 1, 1)  ->  F(0, 1, 1, 0, 1)\nF(2, 0, 0, 1, 1)  ->  F(0, 1, 1, 0, 2)\nF(1, 0, 0, 1, 3)  ->  F(0, 1, 1, 0, 3)\nF(0, 1, 1, 0, 1)  ->  F(0, 1, 1, 0, 1)",
+  "latex": null,
+  "text": null,
+  "fig": "out/sectorsym.svg",
+  "seconds": 0.03,
+  "n": 42
+ },
+ "pak": {
+  "code": "for sec in [(0, 1, 1, 0, 1), (1, 0, 0, 1, 1)]:\n    U0, F0 = kfam.UF(sec)\n    print(sec, \"  U + F =\", U0 + F0)",
+  "stdout": "(0, 1, 1, 0, 1)   U + F = (-s)*x2*x3*x5 + x2*x3 + x2*x5 + x3*x5\n(1, 0, 0, 1, 1)   U + F = (-s)*x1*x4*x5 + x1*x4 + x1*x5 + x4*x5",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 43
+ },
+ "sunset63": {
+  "code": "from feynsage.ff import reduce_ff\nsun = family([(\"k\", \"1\"), (\"k - l\", \"1\"), (\"l + p\", \"1\"), \"k + p\", \"l\"], kin={\"p^2\": \"pp\"})\ntargets = [(2, 1, 1, 0, 0), (2, 2, 1, 0, 0), (1, 1, 2, 0, 0)]\nfor ss in [False, True]:\n    r = Reducer(sun, symmetries=symmetries(sun), sector_symmetries=ss)\n    tab = reduce_ff(r, targets, rmax=2, smax=1)\n    ms = sorted({m for row in tab.values() for m in row})\n    print(\"sector symmetries %-5s: %d masters %s\" % (ss, len(ms), ms))",
+  "stdout": "sector symmetries False: 6 masters [(0, 1, 1, 0, 0), (0, 1, 1, 0, 1), (1, 0, 1, 0, 0), (1, 0, 1, 0, 1), (1, 1, 1, 0, 0), (1, 1, 2, 0, 0)]\nsector symmetries True : 3 masters [(0, 1, 1, 0, 0), (1, 1, 1, 0, 0), (1, 1, 2, 0, 0)]",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.2,
+  "n": 44
+ },
+ "numrel": {
+  "code": "r = Reducer(sun, symmetries=symmetries(sun), numerator_relations=True)\nfor rel in r.symmetry_relations((1, 1, 1, -1, 0)):\n    print(\" + \".join(\"(%s) F%s\" % (c, a) for a, c in rel.items()).replace(\"+ (-\", \"- (\"), \"= 0\")",
+  "stdout": "(-1) F(0, 1, 1, 0, 0) - (1) F(1, 0, 1, 0, 0) - (1) F(1, 1, 0, 0, 0) + (2) F(1, 1, 1, -1, 0) + (1) F(1, 1, 1, 0, -1) - (pp - 3) F(1, 1, 1, 0, 0) = 0",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 45
+ },
+ "bubfam": {
+  "code": "bubf = family([(\"l\", \"1\"), (\"l - p\", \"1\")], kin={\"p^2\": \"pp\"}, euclidean=True)\nbubf.info()",
+  "stdout": "Integral family 'F'\n  loop momenta: l   external momenta: p   Euclidean metric\n  D1 = (l)^2 + 1\n  D2 = (l - 1*p)^2 + 1\n  An integral F(a1,...,at) is  Int prod_r d^d l_r  prod_i D_i^(-a_i); a_i <= 0 are numerators.",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 46
+ },
+ "bubibp": {
+  "code": "for k, ident in enumerate(bubf.ibp((1, 1))):\n    print(\"identity %d:\" % (k + 1), \" + \".join(\"(%s) F%s\" % (c, a) for a, c in ident.items()), \"= 0\")",
+  "stdout": "identity 1: (d - 3) F(1, 1) + (2) F(2, 1) + (pp + 2) F(1, 2) + (-1) F(0, 2) = 0\nidentity 2: (-pp) F(2, 1) + (1) F(2, 0) + (pp) F(1, 2) + (-1) F(0, 2) = 0",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 47
+ },
+ "bubred": {
+  "code": "rb = ibp_reduce(bubf, [\"F(2,1)\", \"F(2,2)\"])\nrb",
+  "stdout": "",
+  "latex": "\\begin{aligned} F(2,1) &= \\frac{\\left(-1\\right) \\cdot (d - 3)}{(\\mathit{pp} + 4)}\\; F(1,1) \\\\ &\\quad + \\frac{\\left(-\\frac{1}{2}\\right) \\cdot (d - 2)}{(\\mathit{pp} + 4)}\\; F(0,1) \\\\[6pt] F(2,2) &= \\frac{\\left(-1\\right) \\cdot (d - 2) \\cdot (2 d + \\mathit{pp} - 6)}{\\mathit{pp} \\cdot (\\mathit{pp} + 4)^{2}}\\; F(0,1) \\\\ &\\quad + \\frac{(d - 3) \\cdot (d \\mathit{pp} - 6 \\mathit{pp} - 4)}{\\mathit{pp} \\cdot (\\mathit{pp} + 4)^{2}}\\; F(1,1) \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 48
+ },
+ "bubcheck": {
+  "code": "row = rb[(2, 1)]\ndd, ppp = row[(1, 1)].parent().gens()\nprint(row[(1, 1)] == -(dd - 3)/(ppp + 4), row[(0, 1)] == -(dd - 2)/(2*(ppp + 4)))",
+  "stdout": "True True",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 49
+ },
+ "kitevalue": {
+  "code": "from feynsage.oneloop import G, D, expand_eps\nkq = family([\"l1\", \"l1 + q\", \"l1 + l2\", \"l1 + l2 + q\", \"l2\"], kin={\"q^2\": 1}, euclidean=True)\nrk = ibp_reduce(kq, [\"F(1,1,1,1,1)\"])\nvalue = {(0, 1, 1, 0, 1): G(1, 1)*G(1, 2 - D/2), (1, 1, 1, 1, 0): G(1, 1)^2}\nkite_value = sum(SR(str(c)).subs({SR.var('d'): D}) * value[mm] for mm, c in rk[(1, 1, 1, 1, 1)].items())\nexpand_eps(kite_value, 0, loops=2)",
+  "stdout": "",
+  "latex": "6 \\, \\zeta(3)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.16,
+  "n": 50
+ },
+ "methods": {
+  "code": "res = {meth: ibp_reduce(kq, [\"F(2,2,1,2,2)\"], method=meth) for meth in [\"ff\", \"trimmed\", \"exact\"]}\nfor meth, r in res.items():\n    print(\"%-8s %.2f s\" % (meth, r.seconds))\nprint(\"the same coefficients:\", res[\"ff\"].table == res[\"trimmed\"].table == res[\"exact\"].table)",
+  "stdout": "ff       0.11 s\ntrimmed  0.10 s\nexact    4.44 s\nthe same coefficients: True",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 4.65,
+  "n": 51
+ },
+ "ffverbose": {
+  "code": "r = ibp_reduce(kq, [\"F(2,2,1,2,2)\"], method=\"ff\", verbose=True)",
+  "stdout": "system: 6032 equations, 661 integrals (0.1s)\nprimes used: 2, total 0.1s",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.11,
+  "n": 52
+ },
+ "lp": {
+  "code": "def critical_points(fam, sector, numbers):\n    U, F = fam.UF()\n    n = len(sector)\n    R = PolynomialRing(QQ, ['x%d' % (i + 1) for i in range(n)] + ['t'])\n    x, t = R.gens()[:n], R.gens()[n]\n    G = R(str(SR(str(U + F)).subs(numbers)))\n    live = [x[i] for i in range(n) if sector[i]]\n    I = R.ideal([G.derivative(v) for v in live] + [x[i] for i in range(n) if not sector[i]] + [t*prod(live) - 1])\n    return 0 if I.is_one() else I.vector_space_dimension()\n\npp = var('pp')\nfor sec in [(1, 1), (1, 0), (0, 1)]:\n    print(sec, critical_points(bubf, sec, {pp: 7/3}))",
+  "stdout": "(1, 1) 1\n(1, 0) 1\n(0, 1) 1",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 53
+ },
+ "tr1": {
+  "code": "form.trace(['mu', 'nu', 'rho', 'sigma'])",
+  "stdout": "",
+  "latex": "4 \\, g\\left(\\mu, \\sigma\\right) g\\left(\\nu, \\rho\\right) - 4 \\, g\\left(\\mu, \\rho\\right) g\\left(\\nu, \\sigma\\right) + 4 \\, g\\left(\\mu, \\nu\\right) g\\left(\\rho, \\sigma\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 54
+ },
+ "tr2": {
+  "code": "print(form.dirac_trace(['mu', 'mu'], vectors=[], dim='D'))\nprint(form.dirac_trace(['g5', 'mu', 'nu', 'rho', 'sigma'], vectors=[]))\nprint(form.dirac_trace(['p + m', 'mu', 'k + m', 'nu'], vectors=['p', 'k']))",
+  "stdout": "4*D\n4*eps(mu, nu, rho, sigma)\n4*m^2*g(mu, nu) + 4*comp(k, nu)*comp(p, mu) + 4*comp(k, mu)*comp(p, nu) - 4*dot(p, k)*g(mu, nu)",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 55
+ },
+ "ee": {
+  "code": "code = '''\nSymbols s, t, u;\nVectors p, pp, k, kp;\nIndices mu, nu;\nLocal M = g_(1, pp, mu, p, nu) * g_(2, k, mu, kp, nu);\ntrace4, 1;\ntrace4, 2;\nid p.k = -t/2;   id pp.kp = -t/2;\nid p.kp = -u/2;  id pp.k = -u/2;\nPrint;\n.end\n'''\ntraces = SR(\" \".join(form.run_form(code).split(\"M =\")[1].split(\";\")[0].split()))\ntraces",
+  "stdout": "",
+  "latex": "8 \\, t^{2} + 8 \\, u^{2}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 56
+ },
+ "eexs": {
+  "code": "s, t, u, e, th, alpha = var('s t u e theta alpha')\nmsq = (e^4/s^2 * traces/4).subs(t=-s/2*(1 - cos(th)), u=-s/2*(1 + cos(th)))\ndsig = (msq/(64*pi^2*s)).subs(e=sqrt(4*pi*alpha))\nprint(\"dsigma/dOmega =\", dsig.trig_simplify().factor())\nprint(\"sigma =\", integrate(integrate(dsig*sin(th), th, 0, pi), var('phi'), 0, 2*pi))",
+  "stdout": "dsigma/dOmega = -1/4*(sin(theta)^2 - 2)*alpha^2/s\nsigma = 4/3*pi*alpha^2/s",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 57
+ }
+}

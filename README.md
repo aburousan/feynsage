@@ -48,8 +48,10 @@ g = diagram("kite"); g.U(), g.F(); g.plot()
 ## Notebooks
 
 - `examples/feynsage_walkthrough.ipynb`: the whole package step by step, with a picture for every
-  step, up to a real prediction (the neutral pion lifetime, 8.35e-17 s against the measured
-  8.43e-17 s).
+  step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact),
+  one-loop integrals with IR poles, a real prediction (the neutral pion lifetime, 8.35e-17 s against
+  the measured 8.43e-17 s) and the QED of Chluba's thesis (Compton, double Compton, the infrared
+  divergence and its cancellation), with Feynman diagrams.
 - `examples/peskin_examples.ipynb`: vacuum polarisation and the electron g-2 from Peskin and
   Schroeder, exactly.
 - `examples/chluba/`: Compton and double Compton scattering from J. Chluba's thesis (CMB spectral
@@ -66,7 +68,7 @@ The tested results are checked against another program, a known answer or a dire
 | IR-divergent C0, D0 | Package-X, 118 points; a photon mass where Package-X has no number | double precision |
 | D0, also with massless lines | Package-X (146 points), LoopTools, direct integration | 1e-9 (Package-X's own limit), 1e-15 against the others |
 | IBP reduction | Kira 3.1, LiteRed | identical |
-| U and F | the speaker's notebook; FeynCalc | identical |
+| U and F | sir's notebook (uf-new-short.nb); FeynCalc | identical |
 | QED | Peskin and Schroeder | Ward identity and F2(0) = alpha/2pi exactly |
 
 Package-X and LoopTools both fail at one point we found (C0(-4,-3,-1; 0,0,1)). See

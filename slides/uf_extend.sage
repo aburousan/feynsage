@@ -1,4 +1,4 @@
-# The speaker's notebook (uf-new-short.nb) finds U and F by completing the square, loop by loop,
+# Sir's notebook (uf-new-short.nb) finds U and F by completing the square, loop by loop,
 # for four diagrams.  Here the same polynomials are found for bigger diagrams in three independent
 # ways inside feynsage (graph rules: spanning trees and 2-forests; Kirchhoff matrix-tree theorem;
 # matrix method U = det M) and written out for FeynCalc's FCFeynmanPrepare as an outside check.

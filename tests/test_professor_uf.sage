@@ -1,4 +1,4 @@
-# The four examples of the UF notebook shared by the speaker (uf-new-short.nb, a Mathematica routine
+# The four examples of the UF notebook shared by sir (uf-new-short.nb, a Mathematica routine
 # that completes the square loop by loop).  feynsage must give the same U and F, both from the
 # propagators (matrix method) and from the graph (spanning trees and 2-forests).
 import sys; sys.path.insert(0, '.')

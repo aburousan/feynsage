@@ -32,7 +32,8 @@ from sage.all import (SR, RR, var, function, log, sqrt, pi, I, gamma, matrix, fa
                       exp, euler_gamma, beta, integrate,
                       Integer, QQ, prod, binomial)
 
-eps, mu = var('eps mu')
+eps = SR.var('eps', latex_name=r'\epsilon')
+mu = SR.var('mu')
 Dim = var('d')                      # the space-time dimension while reducing, d = 4 - 2 eps at the end
 
 # ---------------------------------------------------------------------------- special functions
@@ -986,6 +987,11 @@ class LoopResult:
 
     def info(self):
         print(self.description)
+
+    def _repr_latex_(self):
+        from .tex import structure, laurent
+        rows = [r'%s &:\quad %s' % (structure(st), laurent(e)) for st, e in self.parts]
+        return r'$$\begin{aligned} %s \end{aligned}$$' % (r' \\[6pt] '.join(rows) if rows else '0')
 
     def __repr__(self):
         if not self.parts:

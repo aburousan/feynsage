@@ -207,6 +207,19 @@ class Reduction:
         print("Each target F(a) is written as sum_M c_M(d, invariants) M over the master integrals")
         print("M = %s; d is the space-time dimension." % ", ".join("F%s" % (m,) for m in self.masters))
 
+    def _repr_latex_(self):
+        from sage.all import latex
+        rows = []
+        for t, row in self.table.items():
+            terms = []
+            for mm, c in row.items():
+                c = c if not hasattr(c, 'numerator') else c
+                cl = (r'\frac{%s}{%s}' % (latex(c.numerator().factor()), latex(c.denominator().factor()))
+                      if hasattr(c, 'denominator') and c.denominator() != 1 else latex(c.factor() if hasattr(c, 'factor') else c))
+                terms.append(r'%s\; F%s' % (cl, str(tuple(mm)).replace(' ', '')))
+            rows.append(r'F%s &= %s' % (str(tuple(t)).replace(' ', ''), r' \\ &\quad + '.join(terms) if terms else '0'))
+        return r'$$\begin{aligned} %s \end{aligned}$$' % r' \\[6pt] '.join(rows)
+
     def __repr__(self):
         lines = []
         for t, row in self.table.items():

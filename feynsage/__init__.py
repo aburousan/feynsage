@@ -18,6 +18,7 @@ from .easy import family, graph, diagram, symmetries, ibp_reduce, kinematics
 from .pv import loop, A0, B0, PVB, PVC, PVD, C0, D0, DiscB, LogM, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, eps, mu, explicit
 from .scalar import d0_closed, d0_value
 from . import ir
+from .tex import eq
 from .scalar import c0_closed, c0_value
 from . import oneloop, form, plotting, pv, easy
 from .explain import info, _install

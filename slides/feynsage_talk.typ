@@ -45,7 +45,7 @@
   #table(columns: (24%, 42%, 34%),
     table.header([*Step*], [*feynsage*], [*Plays the role of*]),
     [diagram], [`graph("A-B, A-B:m", legs, kin)`, `diagram("kite")`, pictures], [pen and paper],
-    [#U, #F], [spanning trees, 2-forests, Kirchhoff, $det M$], [the speaker's notebook, FeynCalc],
+    [#U, #F], [spanning trees, 2-forests, Kirchhoff, $det M$], [sir's notebook, FeynCalc],
     [family, sectors], [`family([...])`, zero sectors, symmetries], [LiteRed],
     [IBP], [Laporta; finite fields + rational reconstruction], [FIRE, Kira],
     [one loop], [`loop(...)` → $A_0, B_0, C_0, D_0$], [Package-X, FeynCalc],
@@ -76,7 +76,7 @@
 #slide[#U and #F: the idea of the lecture][
   #grid(columns: (1.15fr, 1fr), gutter: 0.7cm,
   [
-    The speaker's notebook (`uf-new-short.nb`) completes the square, loop by loop:
+    Sir's notebook (`uf-new-short.nb`) completes the square, loop by loop:
     $ sum_i x_i D_i = sum_(r,s) ell_r dot ell_s M_(r s) - 2 sum_r ell_r dot Q_r + J $
     $ #U = det M, quad quad #F = det M thin (J - Q^T M^(-1) Q) $
     and gives four examples. feynsage reproduces all four, *two ways*:

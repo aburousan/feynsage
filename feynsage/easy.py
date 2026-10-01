@@ -221,8 +221,11 @@ class Reduction:
 
     def draw(self, graph, targets=None, rename=None, size=1.5):
         """The reductions as equations of diagrams (see plotting.draw_reduction): `graph` is a
-        FeynmanGraph whose lines are this family's propagators in the same order."""
+        FeynmanGraph whose lines are this family's propagators in the same order.  targets are
+        given as "J(2,1)" or (2, 1)."""
         from .plotting import draw_reduction
+        if targets is not None:
+            targets = [_target(t) for t in targets]
         return draw_reduction(self.table, graph, targets=targets, rename=rename, size=size)
 
     def info(self):

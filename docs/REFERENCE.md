@@ -55,7 +55,7 @@ The short front ends. Everything is written as plain strings.
 | `r.masters` | the list of master integrals |
 | `r.method`, `r.seconds` | the method used and the time it took |
 | `r.info()` | a summary |
-| `r.draw(graph, targets=None, rename=None, size=1.5)` | the reduction as equations of diagrams. `graph` must have its lines in the order of the propagators. A line with power 0 is shrunk to a point, each extra power is a dot, `rename={"kk": "k^2"}` prints a variable under another name. Returns a matplotlib figure. |
+| `r.draw(graph, targets=None, rename=None, size=1.5)` | the reduction as equations of diagrams. `targets` as `"J(2,1)"` or `(2, 1)`. `graph` must have its lines in the order of the propagators. A line with power 0 is shrunk to a point, each extra power is a dot, `rename={"kk": "k^2"}` prints a variable under another name. Returns a matplotlib figure. |
 
 In a notebook a `Reduction` prints as typeset equations.
 

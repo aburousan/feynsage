@@ -68,10 +68,12 @@ returns. `info(f)` prints the same for one function inside Sage.
   ends with a real prediction, the neutral pion lifetime. Every step has its code, its real output and
   an explanation of each function used. Reductions can be drawn as equations of diagrams (`r.draw`).
 - `examples/feynsage_walkthrough.ipynb`: the whole package step by step, with a picture for every
-  step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact),
-  one-loop integrals with IR poles, a real prediction (the neutral pion lifetime, 8.35e-17 s against
-  the measured 8.43e-17 s) and the QED of Chluba's thesis (Compton, double Compton, the infrared
-  divergence and its cancellation), with Feynman diagrams.
+  step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact)
+  with reductions drawn as diagrams, Dirac traces from Sage notation with FORM, the bubble
+  differential equation solved from its boundary condition, one-loop integrals with IR poles, a real
+  prediction (the neutral pion lifetime, 8.35e-17 s against the measured 8.43e-17 s) and the QED of
+  Chluba's thesis (Compton, double Compton, the infrared divergence and its cancellation), with
+  Feynman diagrams.
 - `examples/peskin_examples.ipynb`: vacuum polarisation and the electron g-2 from Peskin and
   Schroeder, exactly.
 - `examples/chluba/`: Compton and double Compton scattering from J. Chluba's thesis (CMB spectral

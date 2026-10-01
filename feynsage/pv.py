@@ -15,7 +15,9 @@ LoopTools.  The +i0 is kept by two special functions:
     LogM(z)          = log(z - i0)   (z is always a "mass^2 minus momenta" combination)
     DiscB(s, m1, m2) = sqrt(lam)/s * log((m1^2 + m2^2 - s + sqrt(lam))/(2 m1 m2)),  s -> s + i0
 
-and C0, D0 are symbolic functions that evaluate numerically (see c0_numeric).
+C0 and D0: IR-finite ones are symbolic functions whose .n() uses the closed forms of
+feynsage.scalar (dilogarithms, > 30 digits) and explicit() writes them out; IR-divergent ones
+come out as Laurent series in eps with the poles explicit (feynsage.ir, Ellis-Zanderighi).
 
 Quick start
 -----------
@@ -26,7 +28,8 @@ Quick start
 """
 import itertools
 import re
-from sage.all import (SR, var, function, log, sqrt, pi, I, gamma, matrix, factorial, PolynomialRing, lcm,
+from sage.all import (SR, RR, var, function, log, sqrt, pi, I, gamma, matrix, factorial, PolynomialRing, lcm,
+                      exp, euler_gamma, beta, integrate,
                       Integer, QQ, prod, binomial)
 
 eps, mu = var('eps mu')
@@ -83,18 +86,84 @@ DiscB = function('DiscB', nargs=3, evalf_func=_discb_evalf, derivative_func=_dis
                  print_latex_func=lambda self, s, a, b: r"\Lambda(%s; %s, %s)" % (s._latex_(), a._latex_(), b._latex_()))
 
 
+def _exact_args(args):
+    """Numbers -> exact rationals (floats by their simplest rational), exact algebraic numbers kept."""
+    out = []
+    for a in args:
+        a = SR(a)
+        if a.is_numeric():
+            try:
+                out.append(QQ(a))
+            except (TypeError, ValueError):
+                out.append(RR(a).simplest_rational())
+        else:
+            out.append(a)
+    return out
+
+
+def _to_parent(v, parent):
+    """An mpmath value into Sage's requested field, keeping all its digits."""
+    from sage.all import RealField, ComplexField
+    if parent is None:
+        return complex(v)
+    import mpmath
+    prec = getattr(parent, 'prec', lambda: 53)()
+    R = RealField(prec)
+    z = ComplexField(prec)(R(mpmath.nstr(mpmath.re(v), 75)), R(mpmath.nstr(mpmath.im(v), 75)))
+    try:
+        return parent(z)
+    except (TypeError, ValueError):
+        return z
+
+
 def _c0_evalf(self, *args, parent=None, algorithm=None):
-    v = c0_numeric(*[float(a) for a in args])
-    return parent(v) if parent is not None else v
+    """Closed form (scalar.c0_value, about 40 digits); contour integration only where the closed
+    form does not apply (lambda(s1, s12, s2) = 0 with a nonzero invariant)."""
+    from .scalar import c0_value
+    try:
+        v = c0_value(*_exact_args(args), full=True)
+    except ZeroDivisionError:
+        v = c0_numeric(*[float(a) for a in args])
+    return _to_parent(v, parent)
 
 
 def _d0_evalf(self, *args, parent=None, algorithm=None):
-    v = d0_numeric(*[float(a) for a in args])
-    return parent(v) if parent is not None else v
+    """Closed form (scalar.d0_value: Denner, Denner-Dittmaier, about 40 digits); contour integration
+    only at exceptional points where no labelling gives a regular closed form."""
+    from .scalar import d0_value
+    try:
+        v = d0_value(*_exact_args(args), full=True)
+    except ZeroDivisionError:
+        v = d0_numeric(*[float(a) for a in args])
+    return _to_parent(v, parent)
 
 
-C0 = function('C0', nargs=6, evalf_func=_c0_evalf)
-D0 = function('D0', nargs=10, evalf_func=_d0_evalf)
+_C0f = function('C0', nargs=6, evalf_func=_c0_evalf)
+_D0f = function('D0', nargs=10, evalf_func=_d0_evalf)
+
+
+def C0(s1, s12, s2, m0, m1, m2):
+    """Scalar triangle C0(s1, s12, s2; m0, m1, m2), propagators (l, m0), (l + p1, m1), (l + p2, m2),
+    s1 = p1^2, s2 = p2^2, s12 = (p1 - p2)^2 (Package-X order).
+    Output: IR finite -> the symbol C0(...) (.n() gives > 30 digits, explicit() the dilogarithms);
+    IR divergent (soft or collinear) -> c_-2/eps^2 + c_-1/eps + c_0 with mu, poles explicit."""
+    from .ir import ir_coefficients, with_mu
+    c = ir_coefficients('C', (s1, s12, s2, m0, m1, m2))
+    if c is not None:
+        return with_mu(c)
+    return _C0f(s1, s12, s2, m0, m1, m2)
+
+
+def D0(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3):
+    """Scalar box D0(s1, s2, s3, s4; s12, s23; m0, m1, m2, m3) (Package-X / LoopTools order),
+    propagators (l, m0), (l + p1, m1), (l + p1 + p2, m2), (l + p1 + p2 + p3, m3).
+    Output: IR finite -> the symbol D0(...) (.n() gives > 30 digits, explicit() the dilogarithms);
+    IR divergent -> c_-2/eps^2 + c_-1/eps + c_0 with mu, poles explicit."""
+    from .ir import ir_coefficients, with_mu
+    c = ir_coefficients('D', (s1, s2, s3, s4, s12, s23, m0, m1, m2, m3))
+    if c is not None:
+        return with_mu(c)
+    return _D0f(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3)
 
 
 # ---------------------------------------------------------------------------- scalar functions
@@ -139,8 +208,14 @@ def B0(s, m1, m2):
 
 
 def uv_part(expr):
-    """The coefficient of 1/eps (the UV pole, if the integral is IR finite)."""
+    """The coefficient of 1/eps (the UV pole if the integral is IR finite; UV and IR together otherwise)."""
     return SR(expr).expand().coefficient(eps, -1)
+
+
+def pole_parts(expr):
+    """(coefficient of 1/eps^2, coefficient of 1/eps)."""
+    e = SR(expr).expand()
+    return e.coefficient(eps, -2), e.coefficient(eps, -1)
 
 
 def finite_part(expr, mu_value=None):
@@ -336,6 +411,128 @@ def _acc(total, part, c):
 
 
 # ---------------------------------------------------------------------------- the reduction engine
+_XREG = []          # values of the Feynman-parameter masters ('X', n): (full, (1/eps^2, 1/eps))
+
+
+def _divided_difference(nodes, deriv):
+    """f[z_0, ..., z_n] with repeated nodes allowed; deriv(j, z) = f^(j)(z)."""
+    nodes = sorted(nodes, key=str)
+    memo = {}
+
+    def dd(t):
+        if t in memo:
+            return memo[t]
+        if all((t[0] - z).is_trivial_zero() for z in t):
+            v = deriv(len(t) - 1, t[0]) / factorial(len(t) - 1)
+        else:
+            i1 = max(i for i in range(len(t)) if not (t[i] - t[0]).is_trivial_zero())
+            a = t[:i1] + t[i1 + 1:]          # without z_i1
+            b = t[1:]                        # without z_0
+            v = (dd(b) - dd(a)) / (t[i1] - t[0])
+        memo[t] = v
+        return v
+    return dd(tuple(SR(z) for z in nodes))
+
+
+def _manifestly_nonneg(e):
+    """Every term of the expanded e has a positive coefficient and even powers of all symbols."""
+    e = SR(e).expand()
+    if e.is_numeric():
+        return bool(e >= 0)
+    terms = e.operands() if e.operator() is not None and e.operator().__name__ == 'add' else [e]
+    for t in terms:
+        c = t
+        for v in t.variables():
+            dgr = t.degree(v)
+            if int(dgr) != dgr or int(dgr) % 2:
+                return False
+            c = c.coefficient(v, dgr)
+        if not (c.is_numeric() and bool(c > 0)):
+            return False
+    return True
+
+
+def _bernstein_nonneg(Delta, y):
+    """Quadratic Delta(y) >= 0 on [0, 1] if its Bernstein coefficients are manifestly >= 0."""
+    D0, D1 = Delta.subs({y: 0}), Delta.subs({y: 1})
+    b1 = D0 + Delta.diff(y).subs({y: 0}) / 2
+    return all(_manifestly_nonneg(b) for b in (D0, b1, D1))
+
+
+def _fast(expr, y):
+    return lambda t: float(expr.subs({y: t}))
+
+
+def _simplex_integral(groups, n, Msq, sfun, N, k):
+    r"""Int over the (N-1)-simplex of prod_i x_i^n_i Delta^s, s = d/2 + k - N = 2 - eps + k - N, as an
+    exact expression in eps.  sfun(i, j) is the coefficient of x_i x_j in Delta (i in one group, j in another)."""
+    s = 2 - eps + k - N
+    if len(groups) == 1:
+        Kd = N - 1 + sum(n)
+
+        def deriv(j, z):
+            if z.is_trivial_zero():
+                return SR(0)                 # 0^(c - eps) = 0 in dimensional regularisation
+            return z ** (s + Kd - j) / prod([s + i for i in range(1, Kd - j + 1)], SR(1))
+        nodes = [Msq[i] for i in range(N) for _ in range(n[i] + 1)]
+        return prod([factorial(x) for x in n], SR(1)) * _divided_difference(nodes, deriv)
+    for G in groups:
+        if any(not (Msq[i] - Msq[G[0]]).is_trivial_zero() for i in G):
+            raise ZeroDivisionError("vanishing Gram determinant with unequal masses on kinematically identical "
+                                    "lines: not covered; move the kinematics slightly")
+    if len(groups) != 2:
+        raise ZeroDivisionError("vanishing Gram determinant with more than two independent line groups: "
+                                "not covered; move the kinematics slightly")
+    weight, alpha = SR(1), []
+    for G in groups:
+        nG = sum(n[i] for i in G)
+        weight *= prod([factorial(n[i]) for i in G], SR(1)) / factorial(nG + len(G) - 1)
+        alpha.append(nG + len(G) - 1)
+    y = SR.var('fs_y')
+    G0, G1 = groups
+    M0, M1 = Msq[G0[0]], Msq[G1[0]]
+    c01 = sfun(G0[0], G1[0])
+    Delta = (c01 * y * (1 - y) + M0 * (1 - y) + M1 * y).expand()      # y = group-1 variable
+    a, b = alpha[1], alpha[0]                                          # y^a (1-y)^b
+    # Delta = c y^p (1-y)^q: Beta functions, exact in eps
+    for p in (0, 1, 2):
+        for q in (0, 1, 2):
+            c = (Delta / (y ** p * (1 - y) ** q)).simplify_rational()
+            if not c.has(y):
+                u, v = a + p * s + 1, b + q * s + 1
+                if c.is_numeric() and bool(c < 0):          # (c - i0)^s: the +i0 of the propagators
+                    cs = (-c) ** s * exp(-I * pi * s)
+                else:
+                    cs = c ** s
+                return weight * cs * gamma(u) * gamma(v) / gamma(u + v)
+    # general quadratic: expand in eps (the prefactor has at most a simple pole) and integrate.
+    # Only where Delta > 0 on [0, 1] (below threshold), so that log(Delta - i0) = log(Delta).
+    if not _bernstein_nonneg(Delta, y) and set(Delta.variables()) - {y}:
+        raise ZeroDivisionError("vanishing Gram determinant with symbolic kinematics where Delta > 0 on [0, 1] "
+                                "is not manifest (it may be above threshold): give numbers")
+    if not Delta.variables() or set(Delta.variables()) == {y}:
+        import mpmath as _m
+        f = _fast(Delta, y)
+        vals = [f(t / 64) for t in range(65)]
+        roots = [r for r in Delta.roots(y, ring=RR, multiplicities=False) if 0 <= r <= 1] if Delta.degree(y) > 0 else []
+        if min(vals) <= 0 or roots:
+            raise ZeroDivisionError("vanishing Gram determinant above threshold (Delta changes sign): "
+                                    "not covered; move the kinematics slightly")
+    s0 = 2 + k - N
+    L = log(Delta)
+    out = SR(0)
+    jmax = 1 if N - k - 2 <= 0 else 0              # Gamma(N - k - d/2) has a pole only then
+    for j in range(jmax + 1):
+        integrand = (y ** a * (1 - y) ** b * Delta ** s0 * (-L) ** j / factorial(j)).expand()
+        try:
+            val = integrate(integrand, y, 0, 1)
+        except ValueError:                           # Maxima asks for the sign of a symbolic combination
+            raise ZeroDivisionError("vanishing Gram determinant: the Feynman-parameter integral needs the "
+                                    "sign of a symbolic combination; give numbers")
+        out += val * eps ** j
+    return weight * out
+
+
 class _Engine:
     r"""
     Reduces one-loop integrals with numerators built from l^2 and l.v to the masters
@@ -586,8 +783,9 @@ class _Engine:
         GR = matrix(R, n, n, [R(x * den) for x in G.list()])
         det = GR.det()
         if det == 0:
-            raise ZeroDivisionError("vanishing Gram determinant (exceptional kinematics, e.g. collinear momenta); "
-                                    "move the kinematics slightly or use symbols")
+            res = self.tensor_feynman(props, r, basis)
+            self.cache[key] = res
+            return res
         adj = GR.adjugate()
         Ginv = matrix(self.K, n, n, [self.K(a) * self.K(den) / self.K(det) for a in adj.list()])
         rhs = [{k: len(terms[b]) * v for k, v in self.scalar(props, [props[lab][0] for lab in basis[b][1]], basis[b][0]).items()}
@@ -599,6 +797,65 @@ class _Engine:
                 _acc(out, rhs[b], Ginv[a, b])
             res[basis[a]] = out
         self.cache[key] = res
+        return res
+
+    def tensor_feynman(self, props, r, basis):
+        r"""
+        Tensor coefficients straight from Feynman parameters, for a vanishing Gram determinant:
+            T(k, ms) = (-1)^|ms| / prod_{i<k}(d + 2i) * [(-1)^(N+k)] Gamma(k + d/2) Gamma(N - k - d/2)/Gamma(d/2)
+                       * e^(eps gamma_E) mu^(2 eps) * Int_simplex prod_{l in ms} x_l  Delta(x)^(d/2 + k - N)
+        (the bracket only in Minkowski), Delta = -e sum_{i<j} x_i x_j s_ij + sum_i x_i m_i^2.
+        Lines with identical kinematics (s_ij = 0 and s_ik = s_jk for all k) are grouped and their
+        parameters integrated out exactly (Dirichlet).  One group left (e.g. all invariants zero):
+        divided differences of z^s, exact for any masses.  Two groups: a 1D integral, done exactly
+        (Beta functions if Delta is c y^a (1-y)^b, otherwise expanded in eps and integrated).
+        Each coefficient becomes a master ('X', n) whose value is stored in _XREG.
+        """
+        N = len(props)
+        K, e = self.K, self.e
+        sij = lambda i, j: self.dot(_add(props[i][0], props[j][0], -1), _add(props[i][0], props[j][0], -1))
+        groups = []
+        for i in range(N):
+            for G in groups:
+                j = G[0]
+                if sij(i, j) == 0 and all(sij(i, kk) == sij(j, kk) for kk in range(N) if kk not in (i, j)):
+                    G.append(i)
+                    break
+            else:
+                groups.append([i])
+        Msq = [_SR(K(m) ** 2) for _, m in props]
+        # the shift P = sum_i x_i q_i written in the basis momenta: q_i = sum_b c_ib q_b
+        labs = self.independent(props)
+        names = sorted({a for q, _ in props for a in q})
+        A = matrix(QQ, [[props[b][0].get(a, 0) for b in labs] for a in names]) if labs else None
+        X = PolynomialRing(QQ, ['fsx%d' % i for i in range(N)])
+        xs = X.gens()
+        lam = {b: X(0) for b in labs}
+        for i in range(1, N):
+            if not props[i][0]:
+                continue
+            c = A.solve_right(matrix(QQ, [[props[i][0].get(a, 0)] for a in names]))
+            for jb, b in enumerate(labs):
+                lam[b] += c[jb, 0] * xs[i]
+        res = {}
+        for struct in basis:
+            k, ms = struct
+            poly = prod([lam[lab] for lab in ms], X(1))
+            F = SR(0)
+            for coef, mon in zip(poly.coefficients(), poly.monomials()):
+                n = list(mon.exponents()[0])
+                F += coef * _simplex_integral(groups, n, Msq, lambda i, j: -e * _SR(sij(i, j)), N, k)
+            pref = (-1) ** len(ms) / prod([(4 - 2 * eps) + 2 * i for i in range(k)], SR(1))
+            dh = 2 - eps
+            pref *= gamma(k + dh) * gamma(N - k - dh) / gamma(dh)
+            if e == 1:
+                pref *= (-1) ** (N + k)
+            val = pref * F * exp(eps * euler_gamma) * mu ** (2 * eps)
+            ser = val.series(eps, 1).truncate().expand()
+            c2, c1, c0 = (ser.coefficient(eps, -2), ser.coefficient(eps, -1), ser.coefficient(eps, 0))
+            full = c2 / eps ** 2 + c1 / eps + c0
+            _XREG.append((full, (c2, c1)))
+            res[struct] = {('X', len(_XREG) - 1): K(1)}
         return res
 
     def contract_tensor(self, T, lv, props):
@@ -621,54 +878,71 @@ def _SR(x):
 
 
 def _master_formula(key, euclidean):
-    """(full value with its pole, the 1/eps coefficient) in the Package-X normalisation."""
+    """(full value with its poles, (1/eps^2 coefficient, 1/eps coefficient)) in the Package-X
+    normalisation.  IR-divergent C0 and D0 come from feynsage.ir."""
+    from .ir import ir_coefficients, with_mu
     kind = key[0]
     sign = -1 if euclidean else 1                    # Minkowski invariant = sign * Euclidean one
+    zero = SR(0)
     if kind == 'A':
         m = _SR(key[1])
-        full, pole = A0(m), m ** 2
+        full, pole = A0(m), (zero, m ** 2)
         n = 1
     elif kind == 'B':
         s, m1, m2 = sign * _SR(key[1]), _SR(key[2]), _SR(key[3])
-        full, pole = B0(s, m1, m2), SR(1)
+        full, pole = B0(s, m1, m2), (zero, SR(1))
         if _is_zero(s) and _is_zero(m1) and _is_zero(m2):
-            pole = SR(0)
+            pole = (zero, zero)
         n = 2
-    elif kind == 'C':
-        args = [sign * _SR(x) for x in key[1:4]] + [_SR(x) for x in key[4:]]
-        full, pole = C0(*args), SR(0)
-        n = 3
     else:
-        args = [sign * _SR(x) for x in key[1:7]] + [_SR(x) for x in key[7:]]
-        full, pole = D0(*args), SR(0)
-        n = 4
+        if kind == 'X':                              # Feynman-parameter value (vanishing Gram), already final
+            return _XREG[key[1]]
+        if kind == 'C':
+            args = [sign * _SR(x) for x in key[1:4]] + [_SR(x) for x in key[4:]]
+            n, f = 3, _C0f
+        else:
+            args = [sign * _SR(x) for x in key[1:7]] + [_SR(x) for x in key[7:]]
+            n, f = 4, _D0f
+        c = ir_coefficients(kind, args)
+        if c is None:
+            full, pole = f(*args), (zero, zero)
+        else:
+            full, pole = with_mu(c), (c[0], c[1] + log(mu ** 2) * c[0])
     if euclidean and n % 2:
-        full, pole = -full, -pole
+        full, pole = -full, (-pole[0], -pole[1])
     return full, pole
 
 
 def _at4(c, K):
-    """c(d = 4) and dc/dd(d = 4) for c in K."""
+    """c(d = 4), dc/dd(d = 4) and d^2c/dd^2(d = 4) for c in K."""
     R = K.ring()
     dgen = R('d')
     num, den = c.numerator(), c.denominator()
-    n4, d4 = num.subs({dgen: 4}), den.subs({dgen: 4})
-    if d4 == 0:
+    n0, d0 = num.subs({dgen: 4}), den.subs({dgen: 4})
+    if d0 == 0:
         raise ZeroDivisionError("a coefficient has a pole at d = 4; the eps expansion needs more terms")
-    dn, dd = num.derivative(dgen).subs({dgen: 4}), den.derivative(dgen).subs({dgen: 4})
-    return K(n4) / K(d4), (K(dn) * K(d4) - K(n4) * K(dd)) / K(d4) ** 2
+    n1, d1 = num.derivative(dgen).subs({dgen: 4}), den.derivative(dgen).subs({dgen: 4})
+    n2, d2 = num.derivative(dgen, 2).subs({dgen: 4}), den.derivative(dgen, 2).subs({dgen: 4})
+    n0, d0, n1, d1, n2, d2 = [K(x) for x in (n0, d0, n1, d1, n2, d2)]
+    f0 = n0 / d0
+    f1 = (n1 * d0 - n0 * d1) / d0 ** 2
+    f2 = (n2 - 2 * f1 * d1 - f0 * d2) / d0             # from (f d)'' = n''
+    return f0, f1, f2
 
 
 def _finalize(dct, K, euclidean):
-    """sum_M c_M(d) M  ->  expression in eps (up to eps^0), with the rational terms from d = 4 - 2 eps."""
+    """sum_M c_M(d) M  ->  expression in eps (up to eps^0), with the rational terms from
+    d = 4 - 2 eps:  c(d) = c(4) - 2 eps c'(4) + 2 eps^2 c''(4)."""
     K = K.K if isinstance(K, Kin) else K
     total = SR(0)
     for key, c in dct.items():
-        full, pole = _master_formula(key, euclidean)
-        c4, dc4 = _at4(c, K)
+        full, (p2, p1) = _master_formula(key, euclidean)
+        c4, dc4, d2c4 = _at4(c, K)
         total += _SR(c4) * full
-        if not pole.is_trivial_zero() and dc4 != 0:
-            total += -2 * _SR(dc4) * pole
+        if dc4 != 0 and not (p2.is_trivial_zero() and p1.is_trivial_zero()):
+            total += -2 * _SR(dc4) * (p2 / eps + p1)
+        if d2c4 != 0 and not p2.is_trivial_zero():
+            total += 2 * _SR(d2c4) * p2
     return total
 
 
@@ -677,6 +951,10 @@ def _masters_view(dct, euclidean):
     total = SR(0)
     for key, c in dct.items():
         k = key[0]
+        if k == 'X':
+            sym = SR.symbol('Xfeyn%d' % key[1], latex_name=r'X_{%d}' % key[1])
+            total += _SR(c) * _XREG[key[1]][0]
+            continue
         name = {'A': 'A0', 'B': 'B0', 'C': 'C0', 'D': 'D0'}[k]
         sym = SR.symbol('%s(%s)' % (name, ', '.join(str(x) for x in key[1:])))
         total += _SR(c) * sym
@@ -722,9 +1000,9 @@ _INFO = r"""loop(): a one-loop integral reduced to scalar functions.
   ones at p_M^2 = -p_E^2 times (-1)^N].
   Output: one line per tensor structure (g^{mu nu}, p^mu, ... or 1 for a scalar numerator),
   each with its coefficient expanded to eps^0.  The pieces are
-    1/eps       UV pole (IR poles are not separated; C0 and D0 are assumed IR finite),
+    1/eps^2, 1/eps  poles: UV, and IR (soft/collinear) from divergent C0, D0 written out,
     A0, B0      written out: logs, LogM(z) = log(z - i0), DiscB(s, m1, m2) (see B0?),
-    C0(...), D0(...)  exact symbols; .n() evaluates them numerically (two-grid check),
+    C0(...), D0(...)  IR-finite ones stay symbols; .n() gives > 30 digits, explicit() the dilogarithms,
     mu          the renormalisation scale.
   .masters() gives the exact coefficients in d before expanding; .coefficients() a dict."""
 
@@ -970,3 +1248,47 @@ def PVC(r, n1, n2, s1, s12, s2, m0, m1, m2, explain=False):
     eng = _Engine(K)
     T = eng.tensor((({}, K.to_K(m0)), ({'p1': 1}, K.to_K(m1)), ({'p2': 1}, K.to_K(m2))), 2 * r + n1 + n2)
     return _finalize(T[(r, (1,) * n1 + (2,) * n2)], K, False)
+
+
+def PVD(r, n1, n2, n3, s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, explain=False):
+    """PV coefficient D_{00..1..2..3..} as Package-X's PVD[r, n1, n2, n3, s1, s2, s3, s4, s12, s23, m0, m1, m2, m3].
+    Propagators (l, m0), (l + p1, m1), (l + p2, m2), (l + p3, m3); s1 = p1^2, s2 = (p2 - p1)^2,
+    s3 = (p3 - p2)^2, s4 = p3^2, s12 = p2^2, s23 = (p3 - p1)^2.  Exact, expanded to eps^0
+    (IR poles explicit when the box is soft or collinear divergent)."""
+    if explain:
+        print(PVD.__doc__)
+    s1, s2, s3, s4, s12, s23 = [SR(x) for x in (s1, s2, s3, s4, s12, s23)]
+    K = Kin(['p1', 'p2', 'p3'], {'p1^2': s1, 'p2^2': s12, 'p3^2': s4, 'p1.p2': (s1 + s12 - s2) / 2,
+                                 'p2.p3': (s12 + s4 - s3) / 2, 'p1.p3': (s1 + s4 - s23) / 2},
+            symbols=_masses_syms(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3))
+    eng = _Engine(K)
+    T = eng.tensor((({}, K.to_K(m0)), ({'p1': 1}, K.to_K(m1)), ({'p2': 1}, K.to_K(m2)), ({'p3': 1}, K.to_K(m3))),
+                   2 * r + n1 + n2 + n3)
+    return _finalize(T[(r, (1,) * n1 + (2,) * n2 + (3,) * n3)], K, False)
+
+
+def explicit(expr):
+    r"""
+    Replace every C0(...) and D0(...) with numerical arguments in expr by its closed form in
+    dilogarithms and logarithms (scalar.c0_closed, scalar.d0_closed): exact algebraic
+    arguments, branches fixed by the +i0.  Symbolic arguments, and the rare exceptional points
+    without a regular closed form, are left as they are.
+    """
+    from .scalar import c0_closed, d0_closed
+
+    def rep_c(*args):
+        if all(SR(a).is_numeric() for a in args):
+            try:
+                return c0_closed(*_exact_args(args))
+            except ZeroDivisionError:
+                pass
+        return _C0f(*args)
+
+    def rep_d(*args):
+        if all(SR(a).is_numeric() for a in args):
+            try:
+                return d0_closed(*_exact_args(args))
+            except ZeroDivisionError:
+                pass
+        return _D0f(*args)
+    return SR(expr).substitute_function(_C0f, rep_c).substitute_function(_D0f, rep_d)

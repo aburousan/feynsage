@@ -46,7 +46,7 @@ def _install():
                                   'bubble_one_mass', 'expand_eps']),
                        (form, ['trace', 'dirac_trace', 'to_loop', 'run_form']),
                        (ff, ['reduce_ff']),
-                       (pv, ['A0', 'B0', 'uv_part', 'finite_part', 'c0_numeric', 'd0_numeric']),
+                       (pv, ['A0', 'B0', 'C0', 'D0', 'uv_part', 'pole_parts', 'finite_part', 'c0_numeric', 'd0_numeric', 'explicit']),
                        (plotting, ['set_theme', 'curves', 'mb_plane', 'draw_graph', 'draw_panels', 'draw_sectors'])):
         for n in names:
             if hasattr(mod, n):

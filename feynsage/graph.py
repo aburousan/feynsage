@@ -115,19 +115,24 @@ class FeynmanGraph:
         determinant  sum over spanning trees of prod_{e in tree} 1/x_e,  so
         U = (prod_e x_e) * det(reduced Laplacian).
         """
-        F = self.R.fraction_field()
+        # same theorem without fractions: with weights x_e the determinant is
+        # K = sum over trees of prod_{e in tree} x_e, and U takes the complementary lines
+        P = PolynomialRing(QQ, ['x%d' % (i + 1) for i in range(self.N)])
+        y = P.gens()
         idx = {v: n for n, v in enumerate(self.vertices)}
-        Lap = [[F(0)] * self.V for _ in range(self.V)]
+        Lap = [[P(0)] * self.V for _ in range(self.V)]
         for i, (u, v, _) in enumerate(self.lines):
             if u == v:
                 continue
-            w = 1 / F(self.x[i])
             a, b = idx[u], idx[v]
-            Lap[a][a] += w; Lap[b][b] += w
-            Lap[a][b] -= w; Lap[b][a] -= w
-        red = matrix(F, [row[1:] for row in Lap[1:]])
-        val = red.det() * prod(self.x)
-        return self.R(val.numerator()) / self.R(val.denominator()) if val.denominator() != 1 else self.R(val)
+            Lap[a][a] += y[i]; Lap[b][b] += y[i]
+            Lap[a][b] -= y[i]; Lap[b][a] -= y[i]
+        K = matrix(P, [row[1:] for row in Lap[1:]]).det()
+        U = self.R(0)
+        for c, mon in zip(K.coefficients(), K.monomials()):
+            e = mon.exponents()[0]
+            U += c * prod(self.x[i] for i in range(self.N) if e[i] == 0)
+        return U
 
     # ------------------------------------------------------------------ momentum routing
     def contract(self, lines):

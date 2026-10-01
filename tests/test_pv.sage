@@ -22,13 +22,8 @@ def ours(f, a):
     return complex(finite_part(e, 1).n())
 
 worst, t0 = {}, time.time()
-exceptional = 0
 for r in ref:
-    try:
-        got = ours(r['f'], r['args'])
-    except ZeroDivisionError:
-        exceptional += 1          # vanishing Gram determinant: all external invariants zero
-        continue
+    got = ours(r['f'], r['args'])
     want = complex(r['re'], r['im'])
     err = abs(got - want) / max(1, abs(want))
     worst[r['f']] = max(worst.get(r['f'], 0), err)
@@ -36,5 +31,4 @@ for r in ref:
         print("MISMATCH", r['f'], r['args'], got, want)
 for f, e in worst.items():
     print("%-4s worst relative difference %.1e" % (f, e))
-print("points with a vanishing Gram determinant (skipped, feynsage raises): %d" % exceptional)
 print("time %.1fs" % (time.time() - t0))

@@ -15,9 +15,12 @@ from .laporta import Reducer
 from .graph import FeynmanGraph
 from .ff import reduce_ff, IBPSystem
 from .easy import family, graph, diagram, symmetries, ibp_reduce, kinematics
-from .pv import loop, A0, B0, PVB, PVC, C0, D0, DiscB, LogM, uv_part, finite_part, c0_numeric, d0_numeric, eps, mu
+from .pv import loop, A0, B0, PVB, PVC, PVD, C0, D0, DiscB, LogM, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, eps, mu, explicit
+from .scalar import d0_closed, d0_value
+from . import ir
+from .scalar import c0_closed, c0_value
 from . import oneloop, form, plotting, pv, easy
 from .explain import info, _install
 _install()
-from .pv import A0, B0, uv_part, finite_part, c0_numeric, d0_numeric
+from .pv import A0, B0, C0, D0, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, explicit
 from .ff import reduce_ff

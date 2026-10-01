@@ -1,0 +1,1 @@
+-1/60*pi^2 + 1/10*(-I*pi + log(5))^2 - 1/5*(-I*pi + log(5))*log(mu^2) + 1/10*log(mu^2)^2 - 1/5*(-I*pi + log(5) - log(mu^2))/eps + 1/5/eps^2

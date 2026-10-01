@@ -2,6 +2,8 @@
 #show: setup
 
 #let repo = link("https://github.com/aburousan/feynsage")[github.com/aburousan/feynsage]
+#let walkthrough = link("https://github.com/aburousan/feynsage/blob/main/examples/feynsage_walkthrough.ipynb")[`examples/feynsage_walkthrough.ipynb`]
+#let reference = link("https://github.com/aburousan/feynsage/blob/main/docs/REFERENCE.md")[`docs/REFERENCE.md`]
 
 // ---------------------------------------------------------------- title page
 #page(header: none, numbering: none)[
@@ -78,7 +80,7 @@ The first line loads everything that is used most. The second loads a few closed
   [Dirac traces], [`form.dirac_trace`, `form.compute` (traces and contractions in Sage notation, converted to FORM)], [the pion (last chapter)],
 )
 
-These are only the functions this tutorial needs. feynsage has many more that the lecture did not reach. Some of them are one-loop tensor integrals in the style of Package-X (`loop`, `PVB`, `PVC`, `PVD`), closed forms of $C_0$ and $D_0$ in dilogarithms (`explicit`, `c0_closed`, `d0_closed`), infrared poles (the module `ir`), the finite-field reducer `reduce_ff`, `symmetries`, `diagram` (ready-made graphs like `"kite"`) and pictures of sectors (`draw_sectors`). All of them are listed with their arguments in `docs/REFERENCE.md` in the repository and the notebook `examples/feynsage_walkthrough.ipynb` uses most of them. `info(f)` explains any one of them.
+These are only the functions this tutorial needs. feynsage has many more that the lecture did not reach. Some of them are one-loop tensor integrals in the style of Package-X (`loop`, `PVB`, `PVC`, `PVD`), closed forms of $C_0$ and $D_0$ in dilogarithms (`explicit`, `c0_closed`, `d0_closed`), infrared poles (the module `ir`), the finite-field reducer `reduce_ff`, `symmetries`, `diagram` (ready-made graphs like `"kite"`) and pictures of sectors (`draw_sectors`). All of them are listed with their arguments in #reference in the repository and the notebook #walkthrough uses most of them. `info(f)` explains any one of them.
 
 Two normalisations appear and each is used in its own place.
 - The closed formulas and the families use the Euclidean measure of the lecture with the $pi^(D\/2)$ taken out, $integral dif^D k\/pi^(D\/2)$ with propagators $k^2 + m^2$.
@@ -498,7 +500,7 @@ Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi =
   feynsage is meant for small and medium problems and for studying. Every step is exact, can be checked and explains itself. For very large reductions Kira and FIRE remain the better choice. I may continue improving feynsage in the future.
 ]
 - #repo: the code and the latest version.
-- `examples/feynsage_walkthrough.ipynb`: a notebook that goes through the whole package.
+- #walkthrough: a notebook that goes through the whole package.
 - My notes of the lecture, _Feynman integrals at one loop_, with every derivation in full. They are not finished yet and will be shared once complete.
 - References used in the lecture
   - P. Ramond, _Field Theory: A Modern Primer_ (appendix A)

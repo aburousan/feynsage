@@ -10,6 +10,11 @@ is computed from the Feynman diagrams twice: with feynsage + FORM (`*.sage`) and
     wolframscript -file examples/chluba/compton_dc_feyncalc.wl
     wolframscript -file examples/chluba/ir_cancellation_feyncalc.wl
 
+The `.wl` files need FeynCalc and FeynHelpers in the Wolfram kernel that runs them. If `wolframscript`
+picks another kernel (the output then shows unevaluated `DiracTrace[...]`), run them with the kernel
+of the Mathematica that has FeynCalc, for example on macOS
+`/Applications/Wolfram.app/Contents/MacOS/WolframKernel -noprompt -script examples/chluba/compton_dc_feyncalc.wl`.
+
 | Result | feynsage + FORM | FeynCalc |
 |---|---|---|
 | Compton: sum of \|M\|^2 = 8 e^4 [...] (textbook) | exact | exact |

@@ -74,7 +74,7 @@ class Family(IntegralFamily):
             mom_text = " + ".join("%s*%s" % (c, a) if c != 1 else a for a, c in q.items()).replace("+ -", "- ")
             mass_text = "" if m2 == 0 else " %s %s" % ("+" if self.kin.euclidean else "-", m2)
             print("  D%d = (%s)^2%s" % (i + 1, mom_text, mass_text))
-        print("  An integral %s(a1,...,at) is  Int prod_r d^d l_r  prod_i D_i^(-a_i); a_i <= 0 are numerators."
+        print("  %s(a1,...,at) = Int prod_r d^d l_r prod_i D_i^(-a_i), a_i <= 0 is a numerator."
               % self.name)
 
 

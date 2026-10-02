@@ -1,0 +1,990 @@
+[
+ {
+  "case": "kite",
+  "r": 2,
+  "s": 1,
+  "targets": 15,
+  "masters": 2,
+  "fs_ff_1": {
+   "wall": 1.315617561340332,
+   "mem": 347.4921875,
+   "ok": true,
+   "reduce": 0.2129349708557129
+  },
+  "fs_ff_8": {
+   "wall": 1.4157533645629883,
+   "mem": 346.15625,
+   "ok": true,
+   "reduce": 0.2663693428039551
+  },
+  "fs_trimmed_1": {
+   "wall": 1.3157215118408203,
+   "mem": 342.03125,
+   "ok": true,
+   "reduce": 0.18616366386413574
+  },
+  "kira_fermat_1": {
+   "wall": 4.319694757461548,
+   "mem": 74.76953125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.771880626678467,
+   "mem": 105.01171875,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.217021942138672,
+   "mem": 41.6171875,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 2.9180984497070312,
+   "mem": 94.49609375,
+   "ok": true
+  }
+ },
+ {
+  "case": "kite",
+  "r": 4,
+  "s": 2,
+  "targets": 70,
+  "masters": 2,
+  "fs_ff_1": {
+   "wall": 1.6660106182098389,
+   "mem": 350.73828125,
+   "ok": true,
+   "reduce": 0.5322680473327637
+  },
+  "fs_ff_8": {
+   "wall": 1.6659042835235596,
+   "mem": 354.1328125,
+   "ok": true,
+   "reduce": 0.505436897277832
+  },
+  "fs_trimmed_1": {
+   "wall": 1.3657097816467285,
+   "mem": 351.01953125,
+   "ok": true,
+   "reduce": 0.27788233757019043
+  },
+  "kira_fermat_1": {
+   "wall": 4.469598054885864,
+   "mem": 81.91015625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.822376251220703,
+   "mem": 109.10546875,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.417330026626587,
+   "mem": 47.0,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.018317461013794,
+   "mem": 98.82421875,
+   "ok": true
+  }
+ },
+ {
+  "case": "kite",
+  "r": 6,
+  "s": 2,
+  "targets": 210,
+  "masters": 2,
+  "fs_ff_1": {
+   "wall": 2.767580032348633,
+   "mem": 371.8359375,
+   "ok": true,
+   "reduce": 1.6255345344543457
+  },
+  "fs_ff_8": {
+   "wall": 2.5672757625579834,
+   "mem": 368.109375,
+   "ok": true,
+   "reduce": 1.4258382320404053
+  },
+  "fs_trimmed_1": {
+   "wall": 1.6160070896148682,
+   "mem": 367.30859375,
+   "ok": true,
+   "reduce": 0.4850456714630127
+  },
+  "kira_fermat_1": {
+   "wall": 4.6709885597229,
+   "mem": 82.4453125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.922214031219482,
+   "mem": 121.1640625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.8681137561798096,
+   "mem": 54.9765625,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.2184202671051025,
+   "mem": 114.01171875,
+   "ok": true
+  }
+ },
+ {
+  "case": "kite",
+  "r": 8,
+  "s": 3,
+  "targets": 495,
+  "masters": 2,
+  "fs_ff_1": {
+   "wall": 7.373453855514526,
+   "mem": 428.84375,
+   "ok": true,
+   "reduce": 6.221178770065308
+  },
+  "fs_ff_8": {
+   "wall": 6.372319936752319,
+   "mem": 419.51953125,
+   "ok": true,
+   "reduce": 5.140487909317017
+  },
+  "fs_trimmed_1": {
+   "wall": 2.316959857940674,
+   "mem": 417.69921875,
+   "ok": true,
+   "reduce": 1.1393771171569824
+  },
+  "kira_fermat_1": {
+   "wall": 5.471385717391968,
+   "mem": 97.73828125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.323000431060791,
+   "mem": 164.34765625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 4.369772911071777,
+   "mem": 73.37109375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.869023323059082,
+   "mem": 163.10546875,
+   "ok": true
+  }
+ },
+ {
+  "case": "kite",
+  "r": 10,
+  "s": 4,
+  "targets": 1001,
+  "masters": 2,
+  "fs_ff_1": {
+   "wall": 17.536386728286743,
+   "mem": 542.54296875,
+   "ok": true,
+   "reduce": 16.305437088012695
+  },
+  "fs_ff_8": {
+   "wall": 14.633843183517456,
+   "mem": 534.23828125,
+   "ok": true,
+   "reduce": 13.357936143875122
+  },
+  "fs_trimmed_1": {
+   "wall": 4.019167900085449,
+   "mem": 525.90625,
+   "ok": true,
+   "reduce": 2.8163838386535645
+  },
+  "kira_fermat_1": {
+   "wall": 7.974881172180176,
+   "mem": 143.09765625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 7.474410772323608,
+   "mem": 292.09765625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 8.325269937515259,
+   "mem": 145.23828125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 5.521072864532471,
+   "mem": 289.796875,
+   "ok": true
+  }
+ },
+ {
+  "case": "vertex",
+  "r": 1,
+  "s": 1,
+  "targets": 6,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 1.516068696975708,
+   "mem": 351.01953125,
+   "ok": true,
+   "reduce": 0.40291500091552734
+  },
+  "fs_ff_8": {
+   "wall": 1.4656791687011719,
+   "mem": 348.75390625,
+   "ok": true,
+   "reduce": 0.3617589473724365
+  },
+  "fs_trimmed_1": {
+   "wall": 1.5157485008239746,
+   "mem": 347.0859375,
+   "ok": true,
+   "reduce": 0.39151883125305176
+  },
+  "kira_fermat_1": {
+   "wall": 4.47045636177063,
+   "mem": 156.29296875,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.871444940567017,
+   "mem": 200.7734375,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.367424488067627,
+   "mem": 44.60546875,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 2.968198776245117,
+   "mem": 96.1015625,
+   "ok": true
+  }
+ },
+ {
+  "case": "vertex",
+  "r": 2,
+  "s": 2,
+  "targets": 21,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 2.3672842979431152,
+   "mem": 384.08203125,
+   "ok": true,
+   "reduce": 1.2233021259307861
+  },
+  "fs_ff_8": {
+   "wall": 1.916494369506836,
+   "mem": 366.74609375,
+   "ok": true,
+   "reduce": 0.7855944633483887
+  },
+  "fs_trimmed_1": {
+   "wall": 2.2670629024505615,
+   "mem": 365.921875,
+   "ok": true,
+   "reduce": 1.146146535873413
+  },
+  "kira_fermat_1": {
+   "wall": 5.070619821548462,
+   "mem": 171.81640625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.073155164718628,
+   "mem": 210.97265625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.8681347370147705,
+   "mem": 59.58203125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.168064594268799,
+   "mem": 113.62109375,
+   "ok": true
+  }
+ },
+ {
+  "case": "vertex",
+  "r": 3,
+  "s": 2,
+  "targets": 56,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 4.9709508419036865,
+   "mem": 422.2734375,
+   "ok": true,
+   "reduce": 3.795307159423828
+  },
+  "fs_ff_8": {
+   "wall": 2.6672916412353516,
+   "mem": 395.86328125,
+   "ok": true,
+   "reduce": 1.4763107299804688
+  },
+  "fs_trimmed_1": {
+   "wall": 3.5180890560150146,
+   "mem": 396.55859375,
+   "ok": true,
+   "reduce": 2.403083562850952
+  },
+  "kira_fermat_1": {
+   "wall": 5.7712719440460205,
+   "mem": 188.7265625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.323359966278076,
+   "mem": 223.95703125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 3.519115686416626,
+   "mem": 64.73828125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.3681981563568115,
+   "mem": 145.83984375,
+   "ok": true
+  }
+ },
+ {
+  "case": "vertex",
+  "r": 4,
+  "s": 3,
+  "targets": 126,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 15.085511684417725,
+   "mem": 565.28515625,
+   "ok": true,
+   "reduce": 13.906251430511475
+  },
+  "fs_ff_8": {
+   "wall": 6.773003816604614,
+   "mem": 532.18359375,
+   "ok": true,
+   "reduce": 5.561895132064819
+  },
+  "fs_trimmed_1": {
+   "wall": 11.028127431869507,
+   "mem": 540.140625,
+   "ok": true,
+   "reduce": 9.920744180679321
+  },
+  "kira_fermat_1": {
+   "wall": 9.527022123336792,
+   "mem": 197.6484375,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 7.525066375732422,
+   "mem": 396.36328125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 6.873924732208252,
+   "mem": 151.21484375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 4.320082426071167,
+   "mem": 426.41015625,
+   "ok": true
+  }
+ },
+ {
+  "case": "vertex",
+  "r": 5,
+  "s": 3,
+  "targets": 252,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 31.708812713623047,
+   "mem": 714.125,
+   "ok": true,
+   "reduce": 30.550370931625366
+  },
+  "fs_ff_8": {
+   "wall": 13.13010859489441,
+   "mem": 699.89453125,
+   "ok": true,
+   "reduce": 11.863003015518188
+  },
+  "fs_trimmed_1": {
+   "wall": 23.09303617477417,
+   "mem": 716.71484375,
+   "ok": true,
+   "reduce": 21.890897274017334
+  },
+  "kira_fermat_1": {
+   "wall": 12.98092269897461,
+   "mem": 221.515625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 8.576582431793213,
+   "mem": 574.6015625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 9.827644348144531,
+   "mem": 212.3359375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 5.321666479110718,
+   "mem": 572.859375,
+   "ok": true
+  }
+ },
+ {
+  "case": "sunset",
+  "r": 2,
+  "s": 1,
+  "targets": 12,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 1.3156101703643799,
+   "mem": 345.765625,
+   "ok": true,
+   "reduce": 0.2131505012512207
+  },
+  "fs_ff_8": {
+   "wall": 1.4157662391662598,
+   "mem": 346.4765625,
+   "ok": true,
+   "reduce": 0.2740902900695801
+  },
+  "fs_trimmed_1": {
+   "wall": 1.2654335498809814,
+   "mem": 344.37109375,
+   "ok": true,
+   "reduce": 0.14359784126281738
+  },
+  "kira_fermat_1": {
+   "wall": 4.320041656494141,
+   "mem": 59.35546875,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.772143602371216,
+   "mem": 102.6171875,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.2169735431671143,
+   "mem": 35.52734375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 2.967803478240967,
+   "mem": 99.43359375,
+   "ok": true
+  }
+ },
+ {
+  "case": "sunset",
+  "r": 4,
+  "s": 2,
+  "targets": 45,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 7.023024320602417,
+   "mem": 355.1796875,
+   "ok": true,
+   "reduce": 5.889067888259888
+  },
+  "fs_ff_8": {
+   "wall": 5.471540212631226,
+   "mem": 357.46484375,
+   "ok": true,
+   "reduce": 4.351412057876587
+  },
+  "fs_trimmed_1": {
+   "wall": 415.7016704082489,
+   "mem": 6227.140625,
+   "ok": true,
+   "reduce": 46.35421109199524
+  },
+  "kira_fermat_1": {
+   "wall": 4.420603513717651,
+   "mem": 62.99609375,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.8214874267578125,
+   "mem": 99.953125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.4669668674468994,
+   "mem": 44.4765625,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.0681347846984863,
+   "mem": 102.97265625,
+   "ok": true
+  }
+ },
+ {
+  "case": "sunset",
+  "r": 6,
+  "s": 2,
+  "targets": 84,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 39.067607402801514,
+   "mem": 383.5,
+   "ok": true,
+   "reduce": 37.8531060218811
+  },
+  "fs_ff_8": {
+   "wall": 29.453226327896118,
+   "mem": 381.34375,
+   "ok": true,
+   "reduce": 28.242141008377075
+  },
+  "fs_trimmed_1": {
+   "wall": 3601.038885116577,
+   "mem": 56004.09375,
+   "ok": false
+  },
+  "kira_fermat_1": {
+   "wall": 4.620381593704224,
+   "mem": 62.703125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 5.922208070755005,
+   "mem": 100.1015625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 3.168170928955078,
+   "mem": 67.9453125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.268270969390869,
+   "mem": 108.578125,
+   "ok": true
+  }
+ },
+ {
+  "case": "sunset",
+  "r": 8,
+  "s": 3,
+  "targets": 180,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 247.7331109046936,
+   "mem": 466.4453125,
+   "ok": true,
+   "reduce": 246.32288122177124
+  },
+  "fs_ff_8": {
+   "wall": 189.90298199653625,
+   "mem": 463.890625,
+   "ok": true,
+   "reduce": 188.45893955230713
+  },
+  "kira_fermat_1": {
+   "wall": 5.7217631340026855,
+   "mem": 71.1171875,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.423070907592773,
+   "mem": 112.44921875,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 7.674237489700317,
+   "mem": 140.8125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 4.269768238067627,
+   "mem": 190.765625,
+   "ok": true
+  }
+ },
+ {
+  "case": "sunset",
+  "r": 10,
+  "s": 3,
+  "targets": 264,
+  "masters": 3,
+  "fs_ff_1": {
+   "wall": 802.1547746658325,
+   "mem": 586.99609375,
+   "ok": true,
+   "reduce": 800.3781342506409
+  },
+  "fs_ff_8": {
+   "wall": 664.0612835884094,
+   "mem": 573.58203125,
+   "ok": true,
+   "reduce": 662.2645576000214
+  },
+  "kira_fermat_1": {
+   "wall": 7.724509954452515,
+   "mem": 80.9453125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 7.274084568023682,
+   "mem": 127.140625,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 15.033203363418579,
+   "mem": 232.64453125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 5.721660137176514,
+   "mem": 285.7734375,
+   "ok": true
+  }
+ },
+ {
+  "case": "doublebox",
+  "r": 0,
+  "s": 1,
+  "targets": 2,
+  "masters": 1,
+  "fs_ff_1": {
+   "wall": 1.6659657955169678,
+   "mem": 349.921875,
+   "ok": true,
+   "reduce": 0.5236718654632568
+  },
+  "fs_ff_8": {
+   "wall": 1.7661030292510986,
+   "mem": 350.32421875,
+   "ok": true,
+   "reduce": 0.5967016220092773
+  },
+  "fs_trimmed_1": {
+   "wall": 1.6662957668304443,
+   "mem": 346.734375,
+   "ok": true,
+   "reduce": 0.518585205078125
+  },
+  "kira_fermat_1": {
+   "wall": 5.220848560333252,
+   "mem": 258.22265625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.172598123550415,
+   "mem": 298.9921875,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 2.9680206775665283,
+   "mem": 62.10546875,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.218008279800415,
+   "mem": 91.53125,
+   "ok": true
+  }
+ },
+ {
+  "case": "doublebox",
+  "r": 1,
+  "s": 1,
+  "targets": 14,
+  "masters": 8,
+  "fs_ff_1": {
+   "wall": 6.322515249252319,
+   "mem": 376.890625,
+   "ok": true,
+   "reduce": 5.051197528839111
+  },
+  "fs_ff_8": {
+   "wall": 3.6184659004211426,
+   "mem": 364.7421875,
+   "ok": true,
+   "reduce": 2.4814367294311523
+  },
+  "fs_trimmed_1": {
+   "wall": 3600.338002204895,
+   "mem": 30617.57421875,
+   "ok": false
+  },
+  "kira_fermat_1": {
+   "wall": 7.173938274383545,
+   "mem": 328.00390625,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 6.672955513000488,
+   "mem": 372.0078125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 4.920697450637817,
+   "mem": 74.09375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 3.66904616355896,
+   "mem": 142.4140625,
+   "ok": true
+  }
+ },
+ {
+  "case": "doublebox",
+  "r": 1,
+  "s": 2,
+  "targets": 21,
+  "masters": 8,
+  "fs_ff_1": {
+   "wall": 12.430765628814697,
+   "mem": 420.00390625,
+   "ok": true,
+   "reduce": 11.25551700592041
+  },
+  "fs_ff_8": {
+   "wall": 5.571303129196167,
+   "mem": 397.0546875,
+   "ok": true,
+   "reduce": 4.420388460159302
+  },
+  "kira_fermat_1": {
+   "wall": 13.532464265823364,
+   "mem": 416.703125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 8.175107479095459,
+   "mem": 449.46484375,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 10.727687120437622,
+   "mem": 135.87109375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 5.120671987533569,
+   "mem": 284.2890625,
+   "ok": true
+  }
+ },
+ {
+  "case": "doublebox",
+  "r": 2,
+  "s": 2,
+  "targets": 84,
+  "masters": 8,
+  "fs_ff_1": {
+   "wall": 58.090627670288086,
+   "mem": 558.09765625,
+   "ok": true,
+   "reduce": 56.883244037628174
+  },
+  "fs_ff_8": {
+   "wall": 21.397356510162354,
+   "mem": 582.18359375,
+   "ok": true,
+   "reduce": 20.16668701171875
+  },
+  "kira_fermat_1": {
+   "wall": 19.590715885162354,
+   "mem": 452.1328125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 9.927673101425171,
+   "mem": 505.2578125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 16.0858416557312,
+   "mem": 236.609375,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 6.8230695724487305,
+   "mem": 472.55078125,
+   "ok": true
+  }
+ },
+ {
+  "case": "doublebox",
+  "r": 3,
+  "s": 2,
+  "targets": 252,
+  "masters": 8,
+  "fs_ff_1": {
+   "wall": 189.6679310798645,
+   "mem": 799.19140625,
+   "ok": true,
+   "reduce": 188.36969542503357
+  },
+  "fs_ff_8": {
+   "wall": 70.40487694740295,
+   "mem": 780.171875,
+   "ok": true,
+   "reduce": 69.0763008594513
+  },
+  "kira_fermat_1": {
+   "wall": 34.81126666069031,
+   "mem": 451.33203125,
+   "ok": true
+  },
+  "agree": {
+   "kira_fermat_1": "IDENTICAL",
+   "kira_fermat_8": "IDENTICAL",
+   "kira_firefly_1": "IDENTICAL",
+   "kira_firefly_8": "IDENTICAL"
+  },
+  "kira_fermat_8": {
+   "wall": 13.88193941116333,
+   "mem": 744.76953125,
+   "ok": true
+  },
+  "kira_firefly_1": {
+   "wall": 32.30688405036926,
+   "mem": 384.26953125,
+   "ok": true
+  },
+  "kira_firefly_8": {
+   "wall": 11.42971158027649,
+   "mem": 749.390625,
+   "ok": true
+  }
+ }
+]

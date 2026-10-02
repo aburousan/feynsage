@@ -81,7 +81,28 @@ The exact reducer over all equations grows about linearly on hercules: 68 s for 
 154 s for 37 610, 246 s for 58 232, 464 s for 110 782, 663 s for 157 843. The trimmed method does one
 elimination modulo a prime to find the equations the targets need (859 here) and then runs the
 exact reducer on those only: exact arithmetic, no sampling, the same coefficients. Kira ran on
-another server with one thread, so its column is only a rough guide.
+another server with one thread, so its column is only a rough guide. The fair comparison is below.
+
+### Against Kira 3.1 on the same machine
+
+`benchmarks/` runs feynsage and Kira 3.1 (Fermat and FireFly) on one machine (AMD EPYC 9534) with
+the same targets, seeds and master integrals, and compares every coefficient. All 80 comparisons are
+identical. The full tables, with memory and 8-thread times, are in
+[`../benchmarks/results.md`](../benchmarks/results.md). One thread, wall-clock time of the whole run
+(feynsage includes about 2 s of Sage start-up):
+
+| family | largest size | targets | feynsage `ff` | feynsage exact (trimmed) | Kira (FireFly) |
+|---|---|---|---|---|---|
+| kite (two loops, massless) | r 10, s 4 | 1001 | 17.5 s | 4.0 s | 8.3 s |
+| planar two-loop vertex | r 5, s 3 | 252 | 31.7 s | 23.1 s | 9.8 s |
+| double box | r 3, s 2 | 252 | 190 s | more than 1 h | 32 s |
+| sunset, three equal masses | r 10, s 3 | 264 | 802 s | more than 1 h | 15 s |
+
+For small and medium systems feynsage is as fast as Kira or faster (Kira needs 2 to 4 s to start).
+The massive sunset is the weak case: its coefficients are polynomials of high degree in p^2, so the
+finite-field reconstruction needs many sample points. The exact trimmed reducer is the fastest for
+the kite but too slow for the sunset beyond r 4 and the double box beyond r 0. Run it again with
+`benchmarks/run_all.sh` (Kira and Fermat must be installed) and `python3 benchmarks/summarize.py`.
 
 Where the time goes in the rmax 9 run: building the equations with numpy (all seeds of one IBP
 template at once) 1.0 s; the first probe, a sparse elimination of all 157 843 equations in C

@@ -89,7 +89,7 @@ The tested results are checked against another program, a known answer or a dire
 | A0, B0, C and D tensors | Package-X 2.1.1, 190 points | every digit of its values |
 | IR-divergent C0, D0 | Package-X, 118 points; a photon mass where Package-X has no number | double precision |
 | D0, also with massless lines | Package-X (146 points), LoopTools, direct integration | 1e-9 (Package-X's own limit), 1e-15 against the others |
-| IBP reduction | Kira 3.1, LiteRed | identical |
+| IBP reduction | Kira 3.1 (80 runs: kite, vertex, sunset, double box, see [`benchmarks/results.md`](benchmarks/results.md)), LiteRed | identical, coefficient by coefficient |
 | U and F | sir's notebook (uf-new-short.nb); FeynCalc | identical |
 | QED | Peskin and Schroeder | Ward identity and F2(0) = alpha/2pi exactly |
 

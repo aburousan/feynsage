@@ -1,4 +1,4 @@
-# Collect work/*/ into results.md (tables) and results.json; plot.py makes the figure.
+# Collect work/*/ into results.md (tables) and results.json.
 #     python3 summarize.py
 import os, json, glob, re
 H = os.path.dirname(os.path.abspath(__file__))

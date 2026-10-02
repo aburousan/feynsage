@@ -22,7 +22,7 @@
   ]
   #v(1.0cm)
   #dbox("What this tutorial is", c-pink)[
-    It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "Feynman integral calculus" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction (the lifetime of the neutral pion) and compares it with experiment.
+    It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "An Introduction to Feynman Integrals" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction (the lifetime of the neutral pion) and compares it with experiment.
 
     Every grey box marked *In [n]* is real code. It was run, in this order, in one SageMath session (as in a Jupyter notebook) and the box under it marked *Out [n]* is what came out. Nothing in the output boxes was typed by hand. I am also writing up the lecture itself in full (my notes _Feynman integrals at one loop_). They are not finished yet and will be shared once they are complete.
   ]

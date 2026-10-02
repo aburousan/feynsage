@@ -1,5 +1,5 @@
-# The code cells of the feynsage tutorial, in order.  They follow sir's two lectures "Feynman
-# integral calculus" (NISER, 2026), part 1 and part 2.  Each is (id, code, options); the cells
+# The code cells of the feynsage tutorial, in order.  They follow sir's two lectures "An
+# Introduction to Feynman Integrals" (NISER, 2026), part 1 and part 2.  Each is (id, code, options); the cells
 # share one namespace, like a notebook.  Options: fig=<name> saves that matplotlib figure,
 # text=True shows the value as plain text.
 CELLS = [

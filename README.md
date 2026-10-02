@@ -12,7 +12,7 @@ Feynman integrals in SageMath, written from scratch.
 - **Dirac algebra with FORM**, gamma_5 included.
 - Every function can explain its own output: `explain=True` or `info(f)`.
 
-I wrote feynsage in 2024 for my MSc project. After the talk "Feynman integrals at one loop" by
+I wrote feynsage in 2024 for my MSc project. After the talk "An Introduction to Feynman Integrals" by
 Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
 talk and published.
 A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf).

@@ -242,7 +242,7 @@ $ (dif J)/(dif k^2) + 1/2 [1/k^2 - (D - 3)/(k^2 + 4m^2)] J = -(D - 2)/(4 m^2) [1
 #cell("bubde")
 == Solving the differential equation
 
-Now we solve it, with its boundary condition. Put $k^2 = 4 m^2 x$, so that $dif J\/dif x = 4 m^2 thin dif J\/dif k^2$. `partial_fraction` splits the coefficients into simple poles. The equation has singular points only at $x = 0$ ($k^2 = 0$) and $x = -1$ (the threshold $k^2 = -4m^2$ in this Euclidean metric):
+Now we solve it, with its boundary condition. Put $k^2 = 4 m^2 x$, so that $dif J\/dif x = 4 m^2 thin dif J\/dif k^2$. `partial_fraction` splits the coefficients into simple poles. For finite $x$ the equation is singular only at $x = 0$ ($k^2 = 0$) and $x = -1$ (the threshold $k^2 = -4m^2$ in this Euclidean metric):
 #cell("dex")
 #func("expr.subs(kk=...),  expr.subs({dd: D}),  expr.partial_fraction(x)", what: "Sage")[
   `subs` replaces a variable. The keyword form `subs(kk=...)` works when the Python name and the Sage name are the same. `dd` is the Sage variable printed `d`, so it goes in a dictionary. `partial_fraction(x)` writes a rational function of `x` as a sum of simple fractions.
@@ -341,7 +341,7 @@ The massless box with $p_i^2 = 0$, $s = (p_1 + p_2)^2$ and $t = (p_1 + p_3)^2$, 
 All six 2-trees. Only the two that cut the box into a left and a right half, or a top and a bottom half, carry momentum. The other four cut off a single corner, which receives only one $p_i$ with $p_i^2 = 0$, so they do not contribute (the grey pictures of the lecture). The small helper `momentum_in` adds up the momenta entering one piece:
 #cell("box2trees", fig: 72%)
 #note(title: "The labels matter")[
-  With lines 1 and 4 on top and bottom, erasing them separates $p_1, p_2$ from $p_3, p_4$ and gives $s thin alpha_1 alpha_4$. The board had $V = s thin alpha_1 alpha_3 + t thin alpha_2 alpha_4$, which is the same diagram with the lines numbered in order around the box (1 left, 2 top, 3 right, 4 bottom). The safe rule is to look at the picture. $s$ goes with the pair of lines whose removal separates $p_1, p_2$ from $p_3, p_4$.
+  With lines 1 and 4 on top and bottom, erasing them separates $p_1, p_2$ from $p_3, p_4$ and gives $s thin alpha_1 alpha_4$. The board had $V = s thin alpha_1 alpha_3 + t thin alpha_2 alpha_4$, which is the same diagram with the lines numbered in order around the box (1 top, 2 right, 3 bottom, 4 left). Then lines 1 and 3 are opposite and erasing them separates $p_1, p_2$ from $p_3, p_4$. The safe rule is to look at the picture. $s$ goes with the pair of lines whose removal separates $p_1, p_2$ from $p_3, p_4$.
 ]
 
 == Smirnov's two-loop example

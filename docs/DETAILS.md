@@ -13,7 +13,7 @@ Every function with its arguments is in [`REFERENCE.md`](REFERENCE.md).
 | `laporta.Reducer` | Laporta reduction with exact rational functions in d and the invariants, user-given symmetries, sector symmetries as in LiteRed and Kira (integrals without numerators are mapped by the canonical form of their sector polynomial U + F, so sectors that agree only after renaming lines, and automorphisms inside one sector, are identified; integrals with numerators are related by shifts of the loop momenta, with the external momenta permuted where their scalar products allow, added as extra equations when a master with numerators needs them) and the list of master integrals. Sectors are first sorted by a quick fingerprint of their polynomial, so only candidates are put in canonical form: 1.4 s per sector size for the 15-line three-loop triple-box family. |
 | `ff.reduce_ff` | The same reduction done the way FIRE and Kira do it: the IBP identities are written once with symbolic indices, the system is solved numerically modulo large primes, only the equations the targets need are kept after the first probe and the coefficients are rebuilt by Thiele interpolation in d (and one invariant) and rational reconstruction. |
 | `pv` | One-loop tensor integrals in the Package-X / LoopTools normalisation. `loop(numerator, [q, m], ...)` takes strings (l^mu, l.p, l^2, g(mu,nu)) and reduces to A0, B0, C0, D0 by projection on a symmetric basis, with the Gram matrix inverted exactly (adjugate over the polynomial ring) and all arithmetic in the field Q(d, invariants, masses). Rational terms come from d = 4 - 2 eps. Light-like two-point tensors (p^2 = 0) are done by Feynman parameters without a Gram matrix. `PVB`, `PVC`, `PVD` as Package-X's. A0 and B0 in closed form with the +i0 branch (`LogM`, `DiscB`). IR-finite C0 and D0 stay as symbols whose `.n()` gives more than 30 digits, and `explicit()` writes them in dilogarithms (`scalar.c0_closed`, `scalar.d0_closed`). If the kinematics make the Gram determinant vanish (all invariants zero, g-2 at q^2 = 0), the tensor coefficients come straight from Feynman parameters, exactly. `euclidean=True` for Euclidean integrals. |
-| `scalar` | Closed forms of C0 and D0 for real kinematics: logarithms and dilogarithms of exact algebraic numbers, every branch fixed by the +i0. C0 from its one-dimensional representation (Denner's twelve dilogarithms for lambda > 0, explicit branch bookkeeping for lambda < 0). D0 from Denner (1993) eq. (4.43) when no mass vanishes and from Denner and Dittmaier (2010) eqs. (3.76) to (3.84) for one to four massless lines. `c0_value`, `d0_value` give the numbers. |
+| `scalar` | Closed forms of C0 and D0 for real kinematics: logarithms and dilogarithms of exact algebraic numbers, every branch fixed by the +i0. C0 from its one-dimensional representation (Denner's twelve dilogarithms for lambda > 0, explicit branch bookkeeping for lambda < 0). D0 from Denner (1993) eq. (4.43) when no mass vanishes and from Denner and Dittmaier (2011) eqs. (3.76) to (3.84) for one to four massless lines. `c0_value`, `d0_value` give the numbers. |
 | `ir` | IR-divergent (soft or collinear) C0 and D0 in dimensional regularisation: the six triangles and sixteen boxes of Ellis and Zanderighi (2008), with every relabelling found automatically, written in Package-X's normalisation. `C0(...)` and `D0(...)` return c_-2/eps^2 + c_-1/eps + c_0 with mu for these, and `loop()`, `PVC`, `PVD` carry the poles through the reduction, keeping the d-dependence of the coefficients to second order. |
 | `easy` | `family(props, kin)`, `graph("A-B, A-B:m", legs, kin)`, `diagram(name)`, `symmetries(fam)` (automorphisms of U + F found with Sage's graph automorphism code: Pak's criterion) and `ibp_reduce(fam, targets)`, which picks the seed range and the reducer. |
 | `explain` | `info(f)` and `explain=True` on every public function print what it computes and what its output means. |
@@ -119,6 +119,32 @@ One-loop tensor reduction with everything symbolic (all masses and invariants sy
 rank-2 bubble 1.1 s, rank-1 triangle 1.6 s, C00 0.06 s, rank-3 triangle 4.7 s, rank-2 box 1.9 s.
 With numbers it is faster still; `quick_plot(..., nproc=4)` evaluates plot points in parallel.
 
+## Compared with Package-X
+
+feynsage's one-loop part was built to do what Package-X 2.1.1 does, in the same normalisation, and
+every piece is checked against it (`tests/test_px_parity.sage`, `tests/test_dirac_px.sage`).
+
+| Package-X | feynsage | Checked |
+|---|---|---|
+| LoopIntegrate, LoopRefine | `loop`, `PVA`, `PVB`, `PVC`, `PVD` | 190 points, every digit |
+| tensor reduction | Passarino-Veltman recursion with the small Gram matrix (Denner and Dittmaier); the old projection kept for a vanishing Gram determinant | identical to the projection; rank-4 box 3 s (Package-X 1.9 s) |
+| Weights (raised powers) | a propagator written twice, reduced by IBP | Package-X; finite differences where Package-X returns Indeterminate (two-mass bubble, triangle, box) |
+| LoopRefineSeries | `series=` (Feynman parameters about zero momenta) and `loop_series` (exact derivatives elsewhere) | Package-X's expansions of B0, B1, C0, D0; at an ordinary point Package-X returns Indeterminate |
+| Part -> Discontinuity[s], [s, t] | `disc=`, `LoopResult.discontinuity` (Cutkosky cuts; the double spectral function 2 pi i theta(det Y)/sqrt(det Y)) | B0, B1, C0, C1, D0, double spectral at equal and unequal masses |
+| PVX (five points) | pentagons through boxes (Melrose), tensors to rank 5 by the four-dimensional identity | LoopTools E0, Feynman parameters; Package-X does not evaluate PVX |
+| Kallen, Kibble, MandelstamRelations, DiscExpand, Ln, DiLog, ContinuedDiLog | `kallen`, `kibble`, `mandelstam`, `disc_expand`, `Ln`, `DiLog`, `continued_dilog` | values |
+| FermionLine, FermionLineExpand, Gordon identities | `dirac.line_expand` | the documented examples |
+| LoopIntegrate of a FermionLine or DiracMatrix | `dirac.loop_line`, `dirac.loop_matrix` | QED vertex and self-energy |
+| Projector, Spur | `dirac.projector`, `dirac.form_factor`, `dirac.spur` | F1, F2, F3, G1 of the QED vertex; each projector against its own structures |
+| Transverse, Longitudinal | `dirac.transverse`, `dirac.longitudinal` | vacuum polarisation |
+| ChisholmExpand, ChiralBasis | `dirac.chisholm`, `dirac.to_chiral`, `dirac.to_g5` | explicit 4x4 matrices |
+
+| FermionLineProduct | `dirac.line_product` | 120 random products against explicit 4x4 matrices; Package-X at d = 4 (its four-gamma 1 (x) 1 coefficient 27d^2 - 18d = 360 at d = 4 is wrong: explicit matrices give 40) |
+| C0Expand, D0Expand | `closed.c0_expand`, `d0_expand`, `expand_c0d0` | the numerical closed forms at hundreds of points, Package-X's C0Expand/D0Expand at 23 points |
+
+Not covered: the Organization and TargetScale options (presentation only) and a native Lorentz-tensor
+layer (LTensor, Contract): feynsage contracts through FORM (`form.compute`).
+
 ## Limits
 
 `reduce_ff` handles d and at most one kinematic invariant, so any other scale must be set to a
@@ -136,6 +162,10 @@ Cayley determinant vanishes, a leading Landau singularity, where the box itself 
 The Feynman-parameter route for a vanishing Gram determinant covers one group of lines with
 identical kinematics (any masses), or two groups with equal masses inside each group. Other
 cases raise an error; move off that point.
+Pentagons are written through boxes, which drops an O(eps) term: exact for the finite pentagon,
+for tensors up to rank 5 (the pentagon is ultraviolet finite there) and in Minkowski kinematics;
+six or more propagators are not reduced. The Chisholm identity is four-dimensional and is applied
+only to products of three gamma matrices.
 
 
 ## Install, in detail

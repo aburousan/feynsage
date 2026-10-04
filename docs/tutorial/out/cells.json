@@ -5,7 +5,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.03,
   "n": 1
  },
  "solidangle": {
@@ -32,7 +32,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.62,
+  "seconds": 0.8,
   "n": 4
  },
  "pole": {
@@ -41,16 +41,16 @@
   "latex": "\\frac{{\\epsilon} m_{2} \\log\\left(m_{2}\\right) - {\\left({\\epsilon} + 1\\right)} m_{2}}{{\\epsilon}}",
   "text": null,
   "fig": null,
-  "seconds": 0.01,
+  "seconds": 0.02,
   "n": 5
  },
  "phi4": {
   "code": "lam = var('lam', latex_name=r'\\lambda'); mu2 = var('mu2', latex_name=r'\\mu^2')\nw, e = var('omega e')\n# (1/2)(-lambda)(mu^2)^(2-w) Int d^(2w)l/(2 pi)^(2w) 1/(l^2 + m^2),\n# the integral done as above\nT = 1/2*(-lam)*mu2^(2 - w) * pi^w*gamma(1 - w)*m2^(w - 1)/(2*pi)^(2*w)\nTexp = T.subs({w: 2 - e}).series(e, 1).truncate()                          # e = 2 - omega\nlecture = lam*m2/(32*pi^2)*(1/e + psi(2) + log(4*pi*mu2/m2))\ngap = (Texp - lecture).canonicalize_radical().simplify_full()\nprint(\"minus the lecture's result:\", gap)\nTexp.collect(e)",
   "stdout": "minus the lecture's result: 0",
-  "latex": "\\frac{{\\lambda} m_{2} \\log\\left(\\pi\\right)}{32 \\, \\pi^{2}} - \\frac{{\\left(\\gamma_E - 1\\right)} {\\lambda} m_{2} - 2 \\, {\\lambda} m_{2} \\log\\left(2\\right) + {\\lambda} m_{2} \\log\\left(m_{2}\\right) - {\\lambda} m_{2} \\log\\left({\\mu^2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2}}{32 \\, \\pi^{2} e}",
+  "latex": "-\\frac{{\\left(\\gamma_E - 2 \\, \\log\\left(2\\right) - 1\\right)} {\\lambda} m_{2}}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left(\\pi\\right)}{32 \\, \\pi^{2}} - \\frac{{\\lambda} m_{2} \\log\\left(m_{2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left({\\mu^2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2}}{32 \\, \\pi^{2} e}",
   "text": null,
   "fig": null,
-  "seconds": 0.08,
+  "seconds": 0.15,
   "n": 6
  },
  "psi2": {
@@ -68,7 +68,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.03,
   "n": 8
  },
  "tadibp": {
@@ -83,10 +83,10 @@
  "tadred": {
   "code": "r = ibp_reduce(tad, [\"T(2)\", \"T(3)\", \"T(4)\"])\nr",
   "stdout": "",
-  "latex": "\\begin{aligned} T(2) &= \\frac{\\left(-\\frac{1}{2}\\right) \\cdot (d - 2)}{m^{2}}\\; T(1) \\\\ T(3) &= \\frac{\\left(\\frac{1}{8}\\right) \\cdot (d - 4) \\cdot (d - 2)}{m^{4}}\\; T(1) \\\\ T(4) &= \\frac{\\left(-\\frac{1}{48}\\right) \\cdot (d - 6) \\cdot (d - 4) \\cdot (d - 2)}{m^{6}}\\; T(1) \\end{aligned}",
+  "latex": "\\begin{aligned} T(2) &= -\\frac{(d - 2)}{2 m^{2}}\\; T(1) \\\\ T(3) &= \\frac{(d - 4) (d - 2)}{8 m^{4}}\\; T(1) \\\\ T(4) &= -\\frac{(d - 6) (d - 4) (d - 2)}{48 m^{6}}\\; T(1) \\end{aligned}",
   "text": null,
   "fig": null,
-  "seconds": 0.11,
+  "seconds": 0.14,
   "n": 10
  },
  "taddraw": {
@@ -95,7 +95,7 @@
   "latex": null,
   "text": null,
   "fig": "out/taddraw.svg",
-  "seconds": 0.04,
+  "seconds": 0.06,
   "n": 11
  },
  "tadcheck": {
@@ -131,7 +131,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.05,
+  "seconds": 0.04,
   "n": 15
  },
  "bubfam": {
@@ -155,7 +155,7 @@
  "bubred": {
   "code": "rb = ibp_reduce(bub, [\"J(2,1)\", \"J(1,2)\", \"J(0,2)\"])\nrb",
   "stdout": "",
-  "latex": "\\begin{aligned} J(2,1) &= \\frac{\\left(-1\\right) \\cdot (d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad + \\frac{(d - 2)}{\\left(-2\\right) \\cdot m^{2} \\cdot (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(1,2) &= \\frac{\\left(-1\\right) \\cdot (d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad + \\frac{(d - 2)}{\\left(-2\\right) \\cdot m^{2} \\cdot (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(0,2) &= \\frac{(d - 2)}{\\left(-2\\right) \\cdot m^{2}}\\; J(0,1) \\end{aligned}",
+  "latex": "\\begin{aligned} J(2,1) &= -\\frac{(d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad - \\frac{(d - 2)}{2 m^{2} (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(1,2) &= -\\frac{(d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad - \\frac{(d - 2)}{2 m^{2} (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(0,2) &= -\\frac{(d - 2)}{2 m^{2}}\\; J(0,1) \\end{aligned}",
   "text": null,
   "fig": null,
   "seconds": 0.01,
@@ -176,7 +176,7 @@
   "latex": null,
   "text": null,
   "fig": "out/bubdraw.svg",
-  "seconds": 0.03,
+  "seconds": 0.04,
   "n": 20
  },
  "bubde": {
@@ -212,7 +212,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.03,
   "n": 24
  },
  "denum": {
@@ -221,7 +221,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.87,
+  "seconds": 1.33,
   "n": 25
  },
  "hyp": {
@@ -230,7 +230,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.01,
   "n": 26
  },
  "feyntrick": {
@@ -275,7 +275,7 @@
   "latex": null,
   "text": null,
   "fig": "out/b0plot.svg",
-  "seconds": 0.15,
+  "seconds": 0.12,
   "n": 31
  },
  "bub2": {
@@ -284,12 +284,12 @@
   "latex": null,
   "text": null,
   "fig": "out/bub2.svg",
-  "seconds": 0.04,
+  "seconds": 0.05,
   "n": 32
  },
  "box": {
-  "code": "# Smirnov Fig. 3.6 as drawn in the lecture: line 1 on top, 2 on the left, 3 on the right,\n# 4 at the bottom; p1 and p2 enter on the left, p3 and p4 on the right,\n# s = (p1 + p2)^2, t = (p1 + p3)^2\nbox = graph(\"TL-TR, TL-BL, TR-BR, BL-BR\",\n            {\"TL\": \"p1\", \"BL\": \"p2\", \"TR\": \"p3\", \"BR\": \"-p1-p2-p3\"},\n            kin={\"p1^2\": 0, \"p2^2\": 0, \"p3^2\": 0,\n                 \"p1.p2\": \"s/2\", \"p1.p3\": \"t/2\", \"p2.p3\": \"-(s+t)/2\"},\n            euclidean=True)\nfig = box.plot(figsize=(2.8, 2.8))\nprint(\"U =\", box.U(), \"     V =\", box.F0())",
-  "stdout": "U = x1 + x2 + x3 + x4      V = t*x2*x3 + s*x1*x4",
+  "code": "# Smirnov (2006) Fig. 3.6: line 1 on top, 2 on the left, 3 at the bottom, 4 on the right;\n# p1 and p2 enter on the left, p3 and p4 on the right, s = (p1 + p2)^2, t = (p1 + p3)^2\nbox = graph(\"TL-TR, TL-BL, BL-BR, TR-BR\",\n            {\"TL\": \"p1\", \"BL\": \"p2\", \"TR\": \"p3\", \"BR\": \"-p1-p2-p3\"},\n            kin={\"p1^2\": 0, \"p2^2\": 0, \"p3^2\": 0,\n                 \"p1.p2\": \"s/2\", \"p1.p3\": \"t/2\", \"p2.p3\": \"-(s+t)/2\"},\n            euclidean=True)\nfig = box.plot(figsize=(2.8, 2.8))\nprint(\"U =\", box.U(), \"     V =\", box.F0())",
+  "stdout": "U = x1 + x2 + x3 + x4      V = s*x1*x3 + t*x2*x4",
   "latex": null,
   "text": null,
   "fig": "out/box.svg",
@@ -302,7 +302,7 @@
   "latex": null,
   "text": null,
   "fig": "out/box2trees.svg",
-  "seconds": 0.08,
+  "seconds": 0.1,
   "n": 34
  },
  "kite": {
@@ -320,7 +320,7 @@
   "latex": null,
   "text": null,
   "fig": "out/kitetrees.svg",
-  "seconds": 0.1,
+  "seconds": 0.12,
   "n": 36
  },
  "kite2trees": {
@@ -329,7 +329,7 @@
   "latex": null,
   "text": null,
   "fig": "out/kite2trees.svg",
-  "seconds": 0.12,
+  "seconds": 0.15,
   "n": 37
  },
  "fpformula": {
@@ -383,7 +383,7 @@
   "latex": null,
   "text": null,
   "fig": "out/piontrees.svg",
-  "seconds": 0.07,
+  "seconds": 0.08,
   "n": 43
  },
  "piondelta": {
@@ -419,7 +419,7 @@
   "latex": "-\\frac{i \\, I_{r}}{16 \\, \\pi^{2} m^{2}}",
   "text": null,
   "fig": null,
-  "seconds": 0.0,
+  "seconds": 0.01,
   "n": 47
  },
  "pionIr": {
@@ -428,7 +428,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.04,
+  "seconds": 0.05,
   "n": 48
  },
  "piontrace": {
@@ -455,12 +455,12 @@
   "latex": "2 \\, {\\rm dot}\\left(k_{1}, k_{2}\\right)^{2}",
   "text": null,
   "fig": null,
-  "seconds": 0.01,
+  "seconds": 0.02,
   "n": 51
  },
  "pionrate": {
-  "code": "mpi = var('m_pi')\nGamma = (A^2 * mpi^3 / (64*pi)).simplify_full()\nprint(\"Gamma =\", Gamma)\nvals = {alpha: 1/137.035999, mpi: 134.9768, f: 130.2/sqrt(2)}          # MeV (PDG values)\nhbar, BR = 6.582119569e-22, 0.98823                     # MeV s, BR(pi0 -> gamma gamma)\nG3 = (Gamma.subs(vals).subs({Nc: 3}) * 1e6).n()                        # eV\nG1 = (Gamma.subs(vals).subs({Nc: 1}) * 1e6).n()\ntau = lambda G: hbar*1e6*BR/G                                         # s, G in eV\nsig = lambda a, b, err: abs(a - b)/err                  # distance in standard deviations\nprint(\"width     feynsage %.2f eV    PrimEx-II (2020) 7.80 +- 0.12 eV     %.1f sigma\"\n      % (G3, sig(G3, 7.80, 0.12)))\nprint(\"lifetime  feynsage %.3g s  from the PrimEx-II width %.3g s\" % (tau(G3), tau(7.80)))\nprint(\"          PDG world average (8.43 +- 0.13)e-17 s            %.1f sigma\"\n      % sig(tau(G3), 8.43e-17, 0.13e-17))\nprint(\"the PDG lifetime as a width: %.2f eV (older measurements in it)\" % tau(8.43e-17))\nprint(\"with N_c = 1: %.2f eV, nine times too small\" % G1)\nvals_f = dict(vals); vals_f[f] = 1.01*130.2/sqrt(2)\nGf = (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n()\nprint(\"f_pi 1%% larger: Gamma = %.2f eV, 2%% lower (Gamma ~ 1/f_pi^2)\" % Gf)",
-  "stdout": "Gamma = 1/576*N_c^2*alpha^2*m_pi^3/(pi^3*f_pi^2)\nwidth     feynsage 7.79 eV    PrimEx-II (2020) 7.80 +- 0.12 eV     0.1 sigma\nlifetime  feynsage 8.35e-17 s  from the PrimEx-II width 8.34e-17 s\n          PDG world average (8.43 +- 0.13)e-17 s            0.6 sigma\nthe PDG lifetime as a width: 7.72 eV (older measurements in it)\nwith N_c = 1: 0.87 eV, nine times too small\nf_pi 1% larger: Gamma = 7.63 eV, 2% lower (Gamma ~ 1/f_pi^2)",
+  "code": "mpi = var('m_pi')\nGamma = (A^2 * mpi^3 / (64*pi)).simplify_full()\nprint(\"Gamma =\", Gamma)\nvals = {alpha: 1/137.035999, mpi: 134.9768, f: 130.2/sqrt(2)}          # MeV (PDG values)\nhbar, BR = 6.582119569e-22, 0.98823                     # MeV s, BR(pi0 -> gamma gamma)\nG3 = (Gamma.subs(vals).subs({Nc: 3}) * 1e6).n()                        # eV\nG1 = (Gamma.subs(vals).subs({Nc: 1}) * 1e6).n()\ntau = lambda G: hbar*1e6*BR/G                                         # s, G in eV\nsig = lambda a, b, err: abs(a - b)/err                  # distance in standard deviations\nprint(\"width     feynsage %.2f eV\" % G3)\nprint(\"lifetime  feynsage %.3g s   PDG world average (8.43 +- 0.13)e-17 s   %.1f sigma\"\n      % (tau(G3), sig(tau(G3), 8.43e-17, 0.13e-17)))\nprint(\"with N_c = 1: %.2f eV, nine times too small\" % G1)\nvals_f = dict(vals); vals_f[f] = 1.01*130.2/sqrt(2)\nGf = (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n()\nprint(\"f_pi 1%% larger: Gamma = %.2f eV, 2%% lower (Gamma ~ 1/f_pi^2)\" % Gf)",
+  "stdout": "Gamma = 1/576*N_c^2*alpha^2*m_pi^3/(pi^3*f_pi^2)\nwidth     feynsage 7.79 eV\nlifetime  feynsage 8.35e-17 s   PDG world average (8.43 +- 0.13)e-17 s   0.6 sigma\nwith N_c = 1: 0.87 eV, nine times too small\nf_pi 1% larger: Gamma = 7.63 eV, 2% lower (Gamma ~ 1/f_pi^2)",
   "latex": null,
   "text": null,
   "fig": null,

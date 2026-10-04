@@ -129,7 +129,7 @@ Near $D = 4$ the Gamma function has a pole.
   Puts $D = 4 - 2 epsilon$ into an expression with Gamma functions, multiplies by $e^(L epsilon gamma_E)$ ($L$ = `loops`, the usual convention that removes $gamma_E$) and expands in $epsilon$ up to $epsilon^"order"$. Gamma functions at negative integers are rewritten first, so the poles come out correctly.
 ]
 #cell("pole")
-This reads $-m^2\/epsilon - m^2 + m^2 log m^2$, a simple pole as the lecture said. In $lambda phi^4$ theory (Ramond, section A.4) the tadpole diagram is $1/2 (-lambda) (mu^2)^(2 - omega) integral dif^(2 omega) ell\/(2 pi)^(2 omega) thin 1\/(ell^2 + m^2)$. Put in the integral, expand around $omega = 2$ with $e = 2 - omega$ and compare with the lecture's result
+This reads $-m^2\/epsilon - m^2 + m^2 log m^2$, a simple pole as the lecture said. In $lambda phi^4$ theory (Ramond, Section 4.4, eq. (4.4.3)) the tadpole diagram is $1/2 (-lambda) (mu^2)^(2 - omega) integral dif^(2 omega) ell\/(2 pi)^(2 omega) thin 1\/(ell^2 + m^2)$. Put in the integral, expand around $omega = 2$ with $e = 2 - omega$ and compare with the lecture's result
 $ (lambda m^2)/(32 pi^2) {1/(2 - omega) + psi(2) + ln((4 pi mu^2)/(m^2)) + O(2 - omega)} $
 #func("expr.series(e, k).truncate()", what: "Sage")[
   The Laurent series of `expr` in `e` up to (not including) $e^k$, as an ordinary expression.
@@ -215,7 +215,7 @@ Passarino and Veltman showed that every one-loop integral is a combination of fo
 // ======================================================================== 6
 = Part 1: the bubble
 
-The lecture followed Argeri-Mastrolia and Ramond, with equal masses, external momentum $k$ and loop momentum $p$,
+The lecture followed Argeri-Mastrolia (Section 6 of their review) and Ramond, with equal masses, external momentum $k$ and loop momentum $p$ (Argeri and Mastrolia divide the measure by $(2 pi)^(D-2)$, which only changes the overall factor),
 $ J_(n_1 n_2) = integral dif^D p thin 1/(D_1^(n_1) D_2^(n_2)), quad D_1 = p^2 + m^2, quad D_2 = (p - k)^2 + m^2 $
 In `family` this is two massive propagators. The name `kk` is just $k^2$. A Sage variable name cannot contain `^`, so $k^2$ is written `kk` (and $k dot p$ would be `kp`):
 #cell("bubfam")
@@ -287,7 +287,7 @@ After the shift $ell -> ell + p(1 - x)$ the loop integral is a tadpole with mass
 
 == Ramond's expansion around $D = 4$
 
-Expanding around $omega = 2$ the finite part is $-integral_0^1 dif x ln(1 + x(1-x) p^2\/m^2)$, which Ramond writes as $2 - sqrt(1 + 4m^2\/p^2) thin ln[(sqrt(1 + 4m^2\/p^2) + 1)\/(sqrt(1 + 4m^2\/p^2) - 1)]$:
+Expanding around $omega = 2$ the finite part is $-integral_0^1 dif x ln(1 + x(1-x) p^2\/m^2)$, which Ramond (eqs. (4.4.15) and (4.4.16)) writes as $2 - sqrt(1 + 4m^2\/p^2) thin ln[(sqrt(1 + 4m^2\/p^2) + 1)\/(sqrt(1 + 4m^2\/p^2) - 1)]$:
 #cell("ramond")
 
 == Going to Minkowski space: the imaginary part
@@ -336,17 +336,17 @@ So $cal(U) = alpha_1 + alpha_2$, $V = alpha_1 alpha_2 p^2$ and $cal(F) = V + (m_
 
 == The box (Smirnov, Fig. 3.6)
 
-The massless box with $p_i^2 = 0$, $s = (p_1 + p_2)^2$ and $t = (p_1 + p_3)^2$, with the lines numbered as on the board. Line 1 is on top (between $p_1$ and $p_3$), 2 on the left (between $p_1$ and $p_2$), 3 on the right (between $p_3$ and $p_4$) and 4 at the bottom (between $p_2$ and $p_4$). feynsage draws the square turned by 45 degrees.
+The massless box with $p_i^2 = 0$, $s = (p_1 + p_2)^2$ and $t = (p_1 + p_3)^2$, with the lines numbered as in Smirnov's Fig. 3.6 (2006). Line 1 is on top (between $p_1$ and $p_3$), 2 on the left (between $p_1$ and $p_2$), 3 at the bottom (between $p_2$ and $p_4$) and 4 on the right (between $p_3$ and $p_4$). feynsage draws the square turned by 45 degrees.
 #cell("box", fig: 34%)
 All six 2-trees. Only the two that cut the box into a left and a right half, or a top and a bottom half, carry momentum. The other four cut off a single corner, which receives only one $p_i$ with $p_i^2 = 0$, so they do not contribute (the grey pictures of the lecture). The small helper `momentum_in` adds up the momenta entering one piece:
 #cell("box2trees", fig: 72%)
 #note(title: "The labels matter")[
-  With lines 1 and 4 on top and bottom, erasing them separates $p_1, p_2$ from $p_3, p_4$ and gives $s thin alpha_1 alpha_4$. The board had $V = s thin alpha_1 alpha_3 + t thin alpha_2 alpha_4$, which is the same diagram with the lines numbered in order around the box (1 top, 2 right, 3 bottom, 4 left). Then lines 1 and 3 are opposite and erasing them separates $p_1, p_2$ from $p_3, p_4$. The safe rule is to look at the picture. $s$ goes with the pair of lines whose removal separates $p_1, p_2$ from $p_3, p_4$.
+  Erasing the top and bottom lines 1 and 3 separates $p_1, p_2$ from $p_3, p_4$ and gives $s thin alpha_1 alpha_3$. Erasing the left and right lines 2 and 4 gives $t thin alpha_2 alpha_4$. So $V = s thin alpha_1 alpha_3 + t thin alpha_2 alpha_4$, as on the board and in Smirnov's eq. (3.28). His eq. (3.27) prints $s$ and $t$ the other way round, a misprint that does no harm when all powers are 1. The safe rule is to look at the picture. $s$ goes with the pair of lines whose removal separates $p_1, p_2$ from $p_3, p_4$.
 ]
 
 == Smirnov's two-loop example
 
-This is the two-loop propagator diagram of the lecture, with lines 1 and 2 on the left, 3 and 4 on the right and 5 in the middle.
+This is the two-loop propagator diagram of the lecture, Smirnov's Fig. 3.10 and Example 3.5 (2006), with the lines numbered as in the book. Lines 1 and 2 are on the left, 3 and 4 on the right and 5 in the middle. The polynomials below are his eqs. (3.44) and (3.45).
 #cell("kite", fig: 34%)
 Eight 1-trees, each erasing two lines, give $cal(U)$ of degree 2:
 #cell("kitetrees", fig: 100%)
@@ -438,7 +438,7 @@ $ "Tr"[ gamma_5 thin (gamma dot (q - x k_1 - (1 - y) k_2) + m) thin gamma^nu thi
   )
   - `vectors`: the names that are momenta (so that `'q'` means $gamma dot q$ and not an index)
   - `dim=4`: four dimensions, needed with $gamma_5$. A symbol such as `'D'` gives $D$ dimensions
-  - `levi_civita="usual"`: write the answer with the usual Levi-Civita symbol $epsilon^(mu nu rho sigma)$ (Peskin and Schroeder, $epsilon^(0123) = -1$), printed $epsilon$. The default `"form"` keeps FORM's own symbol, which is $-i$ times it.
+  - `levi_civita="usual"`: write the answer with the usual Levi-Civita symbol $epsilon^(mu nu rho sigma)$ (Peskin and Schroeder, $epsilon^(0123) = +1$, so $"Tr"[gamma^mu gamma^nu gamma^rho gamma^sigma gamma_5] = -4 i epsilon^(mu nu rho sigma)$, their eq. (5.5)), printed $epsilon$. The default `"form"` keeps FORM's own symbol, which is $-i$ times it.
   - returns a Sage expression. `g(mu,nu)` is $g^(mu nu)$ and `dot(p,q)` is $p dot q$. In $epsilon(dots)$ a momentum in a slot means it is contracted there, so $epsilon(k_1, k_2, mu, nu) = epsilon^(rho sigma mu nu) k_(1 rho) k_(2 sigma)$.
 ]
 #cell("piontrace")
@@ -480,15 +480,13 @@ Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi =
   #table(columns: 3, inset: 6pt, align: (left, center, center),
     stroke: (x, y) => if y == 0 { (bottom: 0.6pt + ink2) } else { none },
     [], [*feynsage*], [*experiment*],
-    [width $Gamma(pi^0 -> gamma gamma)$], [$7.79$ eV], [$7.80 plus.minus 0.12$ eV (PrimEx-II, 2020): $0.1 sigma$],
-    [lifetime from that width], [$8.35 times 10^(-17)$ s], [$8.34 times 10^(-17)$ s],
+    [width $Gamma(pi^0 -> gamma gamma)$], [$7.79$ eV], [],
     [lifetime, world average], [$8.35 times 10^(-17)$ s], [$(8.43 plus.minus 0.13) times 10^(-17)$ s (PDG): $0.6 sigma$],
     [the same with $N_c = 1$], [$0.87$ eV], [ruled out],
   )
 ]
 #physics(title: "Reading the comparison")[
-  - The width agrees with the most precise measurement, PrimEx-II, to $0.1 sigma$. The lifetime it implies is the same as ours to the last digit shown.
-  - Why 8.35 and not 8.43? The two experimental numbers come from different measurements. The PrimEx-II width alone corresponds to a lifetime of $8.34 times 10^(-17)$ s, which is ours. The PDG lifetime is a world average that also contains older experiments, earlier Primakoff measurements and a direct measurement of the decay length at CERN (1985) that found a longer lifetime. They pull the average to a width of $7.72$ eV, so the average lifetime is a little longer. Our lifetime is $1%$ shorter than this average, which is $0.6$ of its standard deviation. There is no tension.
+  - Our lifetime is $1%$ shorter than the world average of the Particle Data Group, which is $0.6$ of its standard deviation. There is no tension.
   - The prediction has its own small uncertainty. Since $Gamma prop 1\/f_pi^2$, so $1%$ in $f_pi$ moves it by $2%$. The corrections left out (the masses of the $u$ and $d$ quarks, mixing with $eta$ and $eta'$) are of a few per cent as well.
   - With one colour the rate would be nine times smaller and the pion would live nine times longer, against every measurement. This decay was one of the early pieces of evidence that quarks come in three colours. The quark mass does not matter (Step 4), which is the content of the anomaly.
 ]
@@ -503,12 +501,11 @@ Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi =
 - #walkthrough: a notebook that goes through the whole package.
 - My notes of the lecture, _Feynman integrals at one loop_, with every derivation in full. They are not finished yet and will be shared once complete.
 - References used in the lecture
-  - P. Ramond, _Field Theory: A Modern Primer_ (appendix A)
-  - M. Argeri and P. Mastrolia, _Feynman diagrams and differential equations_
-  - V. A. Smirnov, _Analytic Tools for Feynman Integrals_ (chapter 3)
-  - S. Weinzierl, _Feynman Integrals_
-  - T. Rauh's lecture notes
+  - P. Ramond, _Field Theory: A Modern Primer_ (2nd ed.), Sections 4.3 and 4.4 and Appendix B
+  - M. Argeri and P. Mastrolia, _Feynman diagrams and differential equations_, Int. J. Mod. Phys. A 22 (2007) 4375 (arXiv:0707.4037)
+  - V. A. Smirnov, _Feynman Integral Calculus_ (Springer 2006), chapter 3
+  - S. Weinzierl, _Feynman Integrals_ (Springer 2022, arXiv:2201.03593), Section 2.5 and Chapter 3
+  - T. Rauh, _Introduction to Feynman integrals and multiloop techniques_ (lecture notes, 2019). They follow Smirnov's later book, _Analytic Tools for Feynman Integrals_ (Springer 2012)
 - For the pion
   - S. L. Adler (1969) and J. S. Bell and R. Jackiw (1969)
-  - PrimEx-II Collaboration, Science 368 (2020) 506
   - Particle Data Group, Review of Particle Physics

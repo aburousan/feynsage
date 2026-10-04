@@ -120,8 +120,26 @@ def vlog(z):
     return V(n, log(z.e))
 
 
+def _li2(z):
+    """Li2(z) for an mpmath complex at the working precision, computed by PARI (compiled, about 15 times
+    faster than mpmath's polylog here) with mpmath as the fallback.  The numbers go through decimal
+    strings at full precision: same value as mpmath to ~1e-84 at 80 digits and the same side of the
+    cut [1, oo) for arguments with a tiny imaginary part."""
+    try:
+        from sage.all import ComplexField, RealField, pari
+        bits = mp.mp.prec + 10
+        RF, CF = RealField(bits), ComplexField(bits)
+        dig = int(bits / 3.32) + 5
+        zz = CF(RF(mp.nstr(mp.re(z), dig, min_fixed=-10**9, max_fixed=10**9)),
+                RF(mp.nstr(mp.im(z), dig, min_fixed=-10**9, max_fixed=10**9)))
+        w = CF(pari(zz).dilog(precision=bits).sage())
+        return mp.mpc(mp.mpf(w.real().str(truncate=False)), mp.mpf(w.imag().str(truncate=False)))
+    except Exception:
+        return mp.polylog(2, z)
+
+
 def vli2(z):
-    n = mp.polylog(2, z.n)
+    n = _li2(mp.mpc(z.n))
     if z.e is None:
         return V(n, None)
     if _on_cut(z, 'gt1'):                      # on the cut [1, oo)
@@ -390,6 +408,11 @@ def _quad_roots(a, b, c, d, exact):
         raise ZeroDivisionError("a root at x = 0 in this labelling")
     if abs(a.n) < mp.mpf(10) ** -(DPS // 2) * max(1, abs(b.n), abs(c.n)):
         raise ZeroDivisionError("a = 0 in this labelling")
+    # a vanishing discriminant (x1 = x2) is a vanishing Cayley determinant, a leading Landau singularity of
+    # the box: decided on the unperturbed numbers, since the i eps alone separates the roots by sqrt(eps)
+    disc0 = b.n * b.n - 4 * a.n * c.n
+    if abs(disc0) < mp.mpf(10) ** -(DPS // 2) * max(abs(b.n) ** 2, abs(a.n * c.n), mp.mpf(10) ** -300):
+        raise ZeroDivisionError("x1 = x2 (vanishing Cayley determinant)")
     cc = c.n + 1j * ED * d.n
     D = mp.sqrt(b.n * b.n - 4 * a.n * cc)
     nums = [(-b.n + D) / (2 * a.n), (-b.n - D) / (2 * a.n)]
@@ -426,10 +449,17 @@ def _d0_denner(P, M, exact):
                 K[(i, j)] = (M[i] * M[i] + M[j] * M[j] - pp(i, j)) / (M[i] * M[j])
     k = lambda i, j: K[(i, j)]
     rt, r = {}, {}
+    k02n = mp.re(k(0, 2).n)
     for ij in ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)):
         kk = k(*ij)
         kn = kk.n - 1j * ED
         rtn = (kn + mp.sqrt(kn * kn - 4)) / 2
+        # With r_02 and r_13 both real, (4.43) holds only when |r_02| and |r_13| lie on the same side of
+        # the unit circle (Im r~_02 and Im r~_13 of the same sign); this root formula has |r| > 1 for
+        # k > 2, so for k_02 k_13 < 0 the other root is taken for r_13.  (With r_13 complex every
+        # choice gives the same value.)  Found by comparing all labellings with Package-X.
+        if ij == (1, 3) and abs(mp.re(kk.n)) > 2 and abs(k02n) >= 2 and mp.re(kk.n) * k02n < 0:
+            rtn = (kn - mp.sqrt(kn * kn - 4)) / 2
         r0 = [(kk.n + mp.sqrt(kk.n * kk.n - 4)) / 2, (kk.n - mp.sqrt(kk.n * kk.n - 4)) / 2]
         r0n = min(r0, key=lambda z: abs(z - rtn))
         cands = [(kk.e + sqrt(kk.e ** 2 - 4)) / 2, (kk.e - sqrt(kk.e ** 2 - 4)) / 2] if exact else None
@@ -673,3 +703,15 @@ def d0_value(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, full=False):
     with mp.workdps(DPS):
         v = _chop(_d0_terms(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, exact=False).n)
         return v if full else complex(v)
+
+
+def c0_values(arglist, nproc=None):
+    """[c0_value(*args) for args in arglist], on every core when the list is long enough."""
+    from .parallel import pmap
+    return pmap(lambda a: c0_value(*a), list(arglist), nproc=nproc)
+
+
+def d0_values(arglist, nproc=None):
+    """[d0_value(*args) for args in arglist], on every core when the list is long enough."""
+    from .parallel import pmap
+    return pmap(lambda a: d0_value(*a), list(arglist), nproc=nproc)

@@ -4,7 +4,9 @@ Feynman integrals in SageMath, written from scratch.
 
 - **One loop, like Package-X.** Tensor integrals reduced to A0, B0, C0, D0, exactly, in the same
   conventions. C0 and D0 in closed form (logarithms and dilogarithms). Soft and collinear poles
-  written out. Works also when the Gram determinant is zero.
+  written out. Works also when the Gram determinant is zero. Raised propagator powers, Taylor
+  series, discontinuities and double spectral functions, pentagons, fermion lines with the Dirac
+  equation and the Gordon identities, form-factor projectors, transverse and longitudinal parts.
 - **Many loops, like LiteRed, FIRE and Kira.** Integral families from strings, IBP reduction
   (exact, or with finite fields), symmetries found by itself, master integrals.
 - **Graphs.** The Symanzik polynomials U and F from spanning trees and 2-forests, checked against
@@ -16,6 +18,7 @@ I wrote feynsage in 2024 for my MSc project. After the talk "An Introduction to 
 Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
 talk and published.
 A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf).
+My lecture note of the talk, "Feynman integrals at one loop", is in [`docs/lecture_note/feynman_integrals_one_loop.pdf`](docs/lecture_note/feynman_integrals_one_loop.pdf).
 
 ## Who it is for
 
@@ -62,6 +65,8 @@ returns. `info(f)` prints the same for one function inside Sage.
 
 ## Notebooks
 
+- [`docs/lecture_note/feynman_integrals_one_loop.pdf`](docs/lecture_note/feynman_integrals_one_loop.pdf): my lecture note of the
+  talk (121 pages). Every formula in it was checked with Mathematica, FeynCalc, LiteRed and Kira.
 - [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial, in the
   style of the lecture note. It follows the topics of the talk (the tadpole, IBP, the bubble and its
   differential equation solved with its boundary condition, Feynman parameters, graph polynomials) and
@@ -92,6 +97,8 @@ The tested results are checked against another program, a known answer or a dire
 | IBP reduction | Kira 3.1 (80 runs: kite, vertex, sunset, double box, see [`benchmarks/results.md`](benchmarks/results.md)), LiteRed | identical, coefficient by coefficient |
 | U and F | sir's notebook (uf-new-short.nb); FeynCalc | identical |
 | QED | Peskin and Schroeder | Ward identity and F2(0) = alpha/2pi exactly |
+| Series, discontinuities, raised powers, fermion lines, projectors | Package-X 2.1.1 (`tests/test_px_parity.sage`, `tests/test_dirac_px.sage`); finite differences where Package-X gives Indeterminate | every digit printed |
+| Pentagons | LoopTools 2.16 (E0), direct Feynman-parameter integration | 1e-14 |
 
 Package-X and LoopTools both fail at one point we found (C0(-4,-3,-1; 0,0,1)). See
 `tests/looptools/README.md`.

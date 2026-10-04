@@ -87,7 +87,7 @@
 #import "@preview/mitex:0.2.7": mitex
 #let _cells = json("out/cells.json")
 #let _prompt(body, col) = text(7.5pt, fill: col, font: "Menlo")[#body]
-#let _codebox(body) = block(width: 100%, inset: (x: 7pt, y: 5pt), radius: 3pt, fill: rgb("#f5f6fa"),
+#let _codebox(body) = block(width: 100%, inset: (x: 7pt, y: 5pt), radius: 3pt, fill: rgb("#f5f6fa"), breakable: false,
   stroke: 0.4pt + c-violet.lighten(70%))[#set text(font: "Menlo", size: 7.6pt); #set par(justify: false); #body]
 #let _outbox(body) = block(width: 100%, inset: (x: 7pt, y: 4pt), radius: 3pt, fill: white,
   stroke: (left: 1.6pt + c-pink.lighten(45%)))[#set par(justify: false); #body]

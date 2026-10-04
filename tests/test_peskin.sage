@@ -1,7 +1,7 @@
 # Two textbook one-loop results of QED (Peskin and Schroeder), computed with feynsage and
 # checked against the book's formulas:
 #   1. vacuum polarisation Pi(q^2) (section 7.5): Ward identity, the Feynman-parameter
-#      formula (7.90), and the leptonic running of alpha up to M_Z;
+#      formula (7.91) for Pi(q^2) - Pi(0), and the leptonic running of alpha up to M_Z;
 #   2. the anomalous magnetic moment F2(0) = alpha/(2 pi) (section 6.3), with U and F read
 #      off the vertex graph, the Dirac algebra in FORM and the integrals done exactly.
 import sys, time; sys.path.insert(0, '.')

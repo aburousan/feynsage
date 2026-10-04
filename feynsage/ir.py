@@ -44,7 +44,7 @@ def _li2c_mp(zs):
         P *= z ** e
     L = sum(e * mp.log(z) for z, e in zs)
     if abs(P) <= 1:
-        return mp.polylog(2, 1 - P) + mp.log(1 - P) * (mp.log(P) - L)
+        return S._li2(1 - P) + mp.log(1 - P) * (mp.log(P) - L)
     return -_li2c_mp([(z, -e) for z, e in zs]) - L * L / 2
 
 
@@ -544,7 +544,7 @@ def _box_matches(t, p, s, M):
 
 
 def _ir_divergent(P, M):
-    """Soft or collinear divergence (Kinoshita's rules, as in Denner-Dittmaier sec. 4), with
+    """Soft or collinear divergence (Kinoshita's rules, as in Denner and Dittmaier, Nucl. Phys. B 844 (2011) 199, sec. 4), with
     P[(i, j)] = (q_i - q_j)^2 for every pair of lines (adjacent and, for boxes, diagonal):
     collinear if P_ij = 0 with m_i = m_j = 0; soft at a massless line i if P_ij = m_j^2 and
     P_ik = m_k^2 for two other lines j, k."""
@@ -667,7 +667,7 @@ def ir_value(kind, args):
 def _irf_evalf(kind):
     def ev(self, k, *args, parent=None, algorithm=None):
         v = ir_value(kind, [RR(a).simplest_rational() if not SR(a).is_integer() else Integer(a) for a in args])
-        out = v[{-2: 0, -1: 1, 0: 2}[int(k)]]
+        out = v[{-2: 0, -1: 1, 0: 2}[int(round(float(SR(k).real_part())))]]   # k may come in as a complex number
         return parent(out) if parent is not None else out
     return ev
 

@@ -24,4 +24,15 @@ from . import oneloop, form, plotting, pv, easy
 from .explain import info, _install
 _install()
 from .pv import A0, B0, C0, D0, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, explicit
+from .pv import PVA, loop_diff, loop_series, kallen, kibble, mandelstam, disc_expand, Ln, DiLog, continued_dilog
+from . import dirac
+from .dirac import (line_expand, loop_line, loop_matrix, projector, form_factor, transverse, longitudinal,
+                    chisholm, to_chiral, to_g5, line_product)
+from . import closed
+from .closed import c0_expand, d0_expand, expand_c0d0, Conditional
+from . import parallel
+from .parallel import pmap, cores, set_nproc
+from .pv import loop_many
+from .scalar import c0_values, d0_values
+from .plotting import scan
 from .ff import reduce_ff

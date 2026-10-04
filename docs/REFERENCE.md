@@ -18,6 +18,7 @@ Two normalisations are used.
 Contents: [easy](#easy-families-graphs-and-reduction) ·
 [oneloop](#oneloop-closed-formulas) ·
 [pv](#pv-one-loop-integrals-in-the-package-x-normalisation) ·
+[dirac](#dirac-fermion-lines-projectors-package-xs-fermionline-layer) ·
 [scalar](#scalar-c0-and-d0-in-closed-form) ·
 [ir](#ir-infrared-divergent-triangles-and-boxes) ·
 [form](#form-dirac-algebra-with-form) ·
@@ -85,10 +86,13 @@ Euclidean, measure d^D l / pi^(D/2). `D` is the symbol of the dimension (`from f
 | `B0(s, m1, m2)` **(top)** | the two-point function at p^2 = s: 1/eps plus the finite part in closed form, with `LogM` and `DiscB` |
 | `C0(s1, s12, s2, m0, m1, m2)` **(top)** | the scalar triangle. Propagators (l, m0), (l + p1, m1), (l + p2, m2), s1 = p1^2, s2 = p2^2, s12 = (p1 - p2)^2. IR finite: the symbol `C0(...)`, whose `.n()` gives more than 30 digits. IR divergent: the poles and the finite part. |
 | `D0(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3)` **(top)** | the scalar box in the Package-X / LoopTools order, the same behaviour as `C0` |
-| `PVB(r, n, s, m1, m2, explain=False)` **(top)** | the Passarino-Veltman coefficient as Package-X's `PVB[r, n, ...]`: `PVB(0,0)` = B0, `PVB(0,1)` = B1, `PVB(1,0)` = B00 |
+| `PVA(r, m)` **(top)** | the tadpole coefficient as Package-X's `PVA[r, m]`: `PVA(0, m)` = A0, `PVA(1, m)` = A00 |
+| `PVB(r, n, s, m1, m2, explain=False, series=None, disc=None)` **(top)** | the Passarino-Veltman coefficient as Package-X's `PVB[r, n, ...]`: `PVB(0,0)` = B0, `PVB(0,1)` = B1, `PVB(1,0)` = B00. `series=(x, x0, n)` gives the Taylor series to order (x - x0)^n (Package-X's LoopRefineSeries), `disc=s` the discontinuity across the cut in s (Package-X's Part -> Discontinuity[s]). The same two options exist for `PVC` and `PVD`; `PVD` also takes `disc=(s, t)` for the double spectral function. |
 | `PVC(r, n1, n2, s1, s12, s2, m0, m1, m2, explain=False)` **(top)** | the same for triangles, as `PVC[r, n1, n2, ...]` |
 | `PVD(r, n1, n2, n3, s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, explain=False)` **(top)** | the same for boxes, as `PVD[...]` |
-| `loop(numerator, *props, kin=None, euclidean=False, explain=False)` **(top)** | a one-loop tensor integral reduced to A0, B0, C0, D0. A propagator is `["l + p", "m"]`. The numerator may contain `l^2`, `l.p`, `l^mu`, `g(mu,nu)` and products. Returns a `LoopResult`. |
+| `loop(numerator, *props, kin=None, euclidean=False, explain=False)` **(top)** | a one-loop tensor integral reduced to A0, B0, C0, D0. A propagator is `["l + p", "m"]`; writing the same propagator twice raises its power (reduced by integration by parts). Up to five propagators: a pentagon is written through boxes (exact up to O(eps), tensors up to rank 5). The numerator may contain `l^2`, `l.p`, `l^mu`, `g(mu,nu)` and products. Returns a `LoopResult`. |
+| `loop_diff(expr, x)` **(top)** | d expr/dx for an expression with A0, B0, C0, D0, written again in the same functions; the derivatives of C0 and D0 are exact (integration by parts) |
+| `loop_series(expr, (x, x0, n), ...)` **(top)** | the Taylor series of a result about a point where its closed form is regular. About zero external momenta use the `series=` option of `PVB`, `PVC`, `PVD`, which expands the Feynman-parameter integral. |
 | `explicit(expr)` **(top)** | every `C0(...)` and `D0(...)` with numerical arguments replaced by its closed form in dilogarithms |
 | `finite_part(expr, mu_value=None)` **(top)** | the eps^0 part. `mu_value` sets the scale mu to a number. |
 | `uv_part(expr)` **(top)** | the coefficient of 1/eps |
@@ -99,7 +103,45 @@ Euclidean, measure d^D l / pi^(D/2). `D` is the symbol of the dimension (`from f
 | `eps`, `mu` **(top)** | the symbols eps (D = 4 - 2 eps) and mu (the scale) |
 
 **`LoopResult`**: what `loop` returns. `.coefficients()` gives the coefficient of each tensor structure,
-`.masters()` the same before the eps expansion (exact in d), `.info()` a summary.
+`.masters()` the same before the eps expansion (exact in d), `.discontinuity(s)` (or `(s, t)`) the cut, `.info()` a summary.
+
+Kinematic helpers and branch-aware functions, with Package-X's meaning:
+
+| Function | What it returns |
+|---|---|
+| `kallen(a, b, c)` **(top)** | the Kallen function a^2 + b^2 + c^2 - 2ab - 2ac - 2bc |
+| `kibble(s1, s2, s3, s4, s12, s23)` **(top)** | the Kibble polynomial of a four-point function |
+| `mandelstam(momenta, masses, stu)` **(top)** | the scalar products of p1 + p2 -> p3 + p4 in s, t, u, as a `kin` dictionary |
+| `disc_expand(expr)` **(top)** | DiscB replaced by its definition with sqrt and log |
+| `Ln(x, a)`, `DiLog(x, a)` **(top)** | log(x + i a 0) and Li2(x + i a 0) for real x, the side of the cut given by the sign of a |
+| `continued_dilog(x1, a1, x2, a2)` **(top)** | the Beenakker-Denner continued dilogarithm, as a number |
+
+`LogM`, `DiscB`, `Ln`, `DiLog` evaluate to any precision asked for with `.n(digits=...)`.
+
+---
+
+## dirac: fermion lines, projectors (Package-X's FermionLine layer)
+
+`from feynsage import dirac`. Dirac matrices are lists of factors as in `form.dirac_trace`: an index `"mu"`,
+slashed momenta plus a mass `"p - k + m"`, `"g5"`, `"PL"`, `"PR"`. d-dimensional algebra with an
+anticommuting gamma_5. A spinor is `("u" or "v", momentum, mass)`. Results are dictionaries
+`{(structure, chirality): coefficient}` with the structures `()` (the unit matrix), `(("i", mu),)` (gamma^mu),
+`("sigma", a, b)` (sigma^{ab}, a and b an index or a momentum) and ordered products; the chirality is
+`"1"`, `"5"`, `"L"` or `"R"`. In the coefficients `p__mu` is p^mu and `g__mu__nu` is g^{mu nu}.
+
+| Function | What it does |
+|---|---|
+| `line_expand(left, factors, right, sp=None, gordon=True)` **(top)** | Package-X's FermionLineExpand: contractions, the Dirac equation at both ends, on-shell momenta, sigma basis and (by default) the Gordon identities |
+| `loop_line(left, factors, right, *props, kin=None, gordon=True)` **(top)** | a one-loop integral over a fermion line (Package-X's LoopIntegrate + LoopRefine of a FermionLine). The factors may contain the loop momentum `l`; the line is simplified exactly in d before the eps expansion. Returns a `LineResult`. |
+| `loop_matrix(factors, *props, kin=None)` **(top)** | the same without spinors (a self-energy matrix) |
+| `projector(name, mu, p1, m1, p2, m2, q2="q2")` **(top)** | Package-X's Projector: vertex form factors F1 (Dirac), F2 (Pauli), F3, G1 (Anapole), G2 (EDM), G3, SachsElectric, SachsMagnetic, the chiral AL ... CR; with `mu=None` the densities S, P; with `p=..., m=...` the self-energy A, B, C, E and AL, BL, AR, BR. Built by linear algebra, exact in d. |
+| `form_factor(factors, P, *props, kin=None)` **(top)** | Int Tr[M(l) P]/prod D_i: a form factor of a loop, the projection done before the integral |
+| `spur(M, P, momenta, sp)`, `trace(factors, momenta, sp)` | traces of products and of sums of products |
+| `transverse(T, v, vsq)`, `longitudinal(T, v, vsq)` **(top)** | Package-X's Transverse and Longitudinal for a rank-2 `loop()` result |
+| `chisholm(result)` **(top)** | the four-dimensional Chisholm identity on products of three gamma matrices, + i eps^{a b c s} g_s g5 with eps^{0123} = +1 (Peskin and Schroeder, Package-X) |
+| `to_chiral(result)`, `to_g5(result)` **(top)** | switch between the 1, g5 and PL, PR forms |
+
+| `line_product(*lines, chisholm=True, gordon=True, on_shell=True)` **(top)** | Package-X's FermionLineProduct with FermionLineExpand: each line is `(left, factors, right)` as in `line_expand`; an index in two lines is summed. Lines are reduced in the d-dimensional antisymmetric basis and contracted in d dimensions; `chisholm=True` maps rank 3 and 4 to their four-dimensional duals (eps^{0123} = +1, eps.eps contracted with the d-dimensional metric). Exact at d = 4; away from d = 4 Package-X keeps different evanescent terms for some index orders. Returns a `LineProduct` {((structure, chiral), ...): coefficient}, summed indices renamed fs1, fs2, ... |
 
 ---
 
@@ -111,6 +153,19 @@ Euclidean, measure d^D l / pi^(D/2). `D` is the symbol of the dimension (`from f
 | `c0_value(s1, s12, s2, m0, m1, m2, full=False)` | the high-precision complex value from the same construction |
 | `d0_closed(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, check=True)` | D0 in closed form (16 dilogarithms with all masses nonzero, fewer when masses vanish). IR-finite boxes only. |
 | `d0_value(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, full=False)` | the high-precision complex value (about 30 digits) |
+| `c0_values(arglist, nproc=None)`, `d0_values(arglist, nproc=None)` **(top)** | many triangles or boxes at once, on every core |
+
+---
+
+## closed: C0 and D0 with symbols (Package-X's C0Expand and D0Expand)
+
+| Function | What it returns |
+|---|---|
+| `c0_expand(s1, s12, s2, m0, m1, m2)` **(top)** | C0 as an explicit formula in the arguments (Denner's twelve dilogarithms). The i0 is written in as the symbol fs_eps; named intermediates (alpha, y0_i, x_i+-) come in `.defs`. A `Conditional`, valid where lambda(s1, s12, s2) > 0. |
+| `d0_expand(s1, ..., s23, m0, ..., m3, pair=(1, 3))` **(top)** | D0 as an explicit formula: Denner's sixteen dilogarithms with all masses nonzero (needs a real r for the line pair `pair`; the default is Package-X's condition on s23), Denner and Dittmaier's formulas when masses vanish (all real kinematics) |
+| `expand_c0d0(expr)` **(top)** | every C0(...) and D0(...) inside expr replaced (C0Expand and D0Expand together) |
+| `Conditional` | `.value`, `.defs`, `.conditions`; `.n(point)` the value (fs_eps, fs_del -> 0 at 600 bits), `.n_many(points)` on every core, `.holds(point)`, `.inline()` one expression, `.subs(...)` |
+| `SqrtL`, `Eta`, `EtaT`, `ReSign` | the small functions of the formulas: the limit square root, eta, Denner's eta-tilde, the sign of a real part |
 
 ---
 
@@ -136,7 +191,7 @@ the scalar product, `comp(p,mu)` the component p^mu, `eps(a,b,c,d)` the Levi-Civ
 
 | Function | What it returns |
 |---|---|
-| `compute(expr="1", vectors=(), lines=(), rules=None, dim=4, show_code=False, levi_civita="form")` | traces and index contractions without writing FORM code. `expr` is a product such as `"eps(mu,nu,rho,sigma)*k1(rho)*k2(sigma)"`, `lines` the fermion lines to trace (each a list of factors as in `dirac_trace`), `rules` the scalar products to put in, for example `{"k1.k1": 0}`. Repeated indices are summed. `show_code=True` prints the FORM program. `levi_civita="usual"` uses the epsilon of Peskin and Schroeder (eps^0123 = -1), written `Eps`. The default `"form"` keeps FORM's `e_` = -i epsilon. Returns a Sage expression. |
+| `compute(expr="1", vectors=(), lines=(), rules=None, dim=4, show_code=False, levi_civita="form")` | traces and index contractions without writing FORM code. `expr` is a product such as `"eps(mu,nu,rho,sigma)*k1(rho)*k2(sigma)"`, `lines` the fermion lines to trace (each a list of factors as in `dirac_trace`), `rules` the scalar products to put in, for example `{"k1.k1": 0}`. Repeated indices are summed. `show_code=True` prints the FORM program. `levi_civita="usual"` uses the epsilon of Peskin and Schroeder (eps^0123 = +1, Tr[g^mu g^nu g^rho g^sigma g5] = -4i eps^{mu nu rho sigma}), written `Eps`. The default `"form"` keeps FORM's `e_` = -i epsilon. Returns a Sage expression. |
 | `dirac_trace(factors, vectors, dim=4, levi_civita="form")` | the trace of one product. A factor is `"g5"`, an index such as `"mu"`, or a linear expression such as `"q - x*k1 + m"` (slashed momenta plus a mass). `dim=4` allows gamma_5, a symbol such as `"D"` works in D dimensions. |
 | `trace(indices, dim="D")` | the trace of gamma_{i1} ... gamma_{in} in `dim` dimensions |
 | `to_loop(expr)` | a `dirac_trace` result as a numerator string for `loop` |
@@ -226,6 +281,19 @@ The Laporta reducer behind `ibp_reduce`, for users who want to control the seeds
 | `reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False)` | exact Laporta on only the equations the targets need (found by one modular probe) |
 | `ibp_templates(fam)` | the IBP identities with symbolic powers, derived once |
 | `IBPSystem(reducer, rmax, smax=0)` | all identities of the seeds with polynomial coefficients. `.sample(targets, p, point)` solves them modulo p at one point. |
+
+---
+
+## parallel: every core
+
+| Function | What it returns |
+|---|---|
+| `pmap(f, items, nproc=None)` **(top)** | `[f(x) for x in items]` on worker processes (fork); f may be a lambda or a closure. Runs serially when the items are too few or too fast to pay for the workers. |
+| `cores()`, `set_nproc(n)` **(top)** | the number of workers (set_nproc, else FEYNSAGE_NPROC, else all cores); `set_nproc(1)` switches parallel work off |
+| `scan(expr, var, values, nproc=None)` **(top)** | the values of an expression (with DiscB, LogM, C0, D0) at many points |
+| `loop_many(jobs, nproc=None)` **(top)** | many `loop()` calls: jobs are (numerator, propagators, options) |
+
+Used by default (nproc=None): `ibp_reduce`/`reduce_ff` sample points, `quick_plot`, `scan`, `c0_values`, `d0_values`, `Conditional.n_many`, `loop_many`. FORM: `form.run_form(code, threads=n)` runs `tform -w n` (default from FEYNSAGE_FORM_THREADS, else 1).
 
 ---
 

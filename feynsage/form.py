@@ -27,11 +27,33 @@ def _find_form():
 FORM = _find_form()
 
 
-def run_form(code):
+def _tform():
+    """FORM's multi-threaded version, next to the form binary (or on the PATH), or None."""
+    import shutil
+    if FORM:
+        cand = os.path.join(os.path.dirname(FORM), 'tform')
+        if os.path.exists(cand):
+            return cand
+    return shutil.which('tform')
+
+
+def run_form(code, threads=None):
+    """Run a FORM program and return its output.  threads > 1 runs tform -w threads (FORM's
+    multi-threaded version) if it is installed; threads=None reads FEYNSAGE_FORM_THREADS (default 1:
+    the traces feynsage writes are small, and FORM's workers pay only for big expressions)."""
+    if threads is None:
+        try:
+            threads = int(os.environ.get('FEYNSAGE_FORM_THREADS', '1'))
+        except ValueError:
+            threads = 1
+    cmd = [FORM, '-q']
+    tf = _tform() if threads and threads > 1 else None
+    if tf:
+        cmd = [tf, '-q', '-w%d' % threads]
     with tempfile.TemporaryDirectory() as tmp:
         f = os.path.join(tmp, 'job.frm')
         open(f, 'w').write(code)
-        r = subprocess.run([FORM, '-q', f], capture_output=True, text=True, cwd=tmp)
+        r = subprocess.run(cmd + [f], capture_output=True, text=True, cwd=tmp)
         if r.returncode != 0:
             raise RuntimeError(r.stdout + r.stderr)
         return r.stdout
@@ -73,7 +95,8 @@ def dirac_trace(factors, vectors, dim=4, levi_civita="form"):
     any other value is a symbolic dimension (no g5 then).
 
     levi_civita="usual" writes the answer with the usual epsilon of Peskin and Schroeder,
-    Eps (= i e_, eps^0123 = -1); the pion trace is then 4*I*m*Eps(k1, k2, mu, nu).
+    Eps = i e_ (eps^0123 = +1, so Tr[g^mu g^nu g^rho g^sigma g5] = -4 i Eps(mu, nu, rho, sigma),
+    their eq. (5.5)); the pion trace is then -4*I*m*Eps(k1, k2, mu, nu).
 
     Returns a Sage expression with g(mu, nu) for the metric, dot(p, q) for p.q,
     comp(p, mu) for the component p^mu and eps(a, b, c, d) for FORM's e_.  FORM's e_ is -i times the usual Levi-Civita tensor
@@ -233,7 +256,7 @@ def compute(expr="1", vectors=(), lines=(), rules=None, dim=4, show_code=False, 
     dim      4 (trace4, needed with g5) or a symbol such as 'D' (tracen)
     show_code=True prints the FORM program that was run.
     levi_civita="usual": eps(...) in expr and Eps(...) in the answer are the usual Levi-Civita
-             symbol of Peskin and Schroeder (eps^0123 = -1), so that Tr[g5 g^mu g^nu g^rho g^sigma]
+             symbol of Peskin and Schroeder (eps^0123 = +1), so that Tr[g5 g^mu g^nu g^rho g^sigma]
              = -4 i Eps(mu,nu,rho,sigma) and Eps.Eps = -24; the default "form" keeps FORM's
              e_ = -i epsilon, printed eps.
 

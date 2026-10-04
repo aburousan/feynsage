@@ -516,7 +516,7 @@ def _auto_relations(once, reducer, *args, **kw):
     return out
 
 
-def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1):
+def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=None):
     r"""
     Reduce the targets with finite fields (see _reduce_ff_once); with the reducer's
     numerator_relations="auto" the reduction is repeated with the momentum-shift relations
@@ -525,12 +525,13 @@ def reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1
     return _auto_relations(_reduce_ff_once, reducer, targets, rmax, smax=smax, point=point, verbose=verbose, nproc=nproc)
 
 
-def _reduce_ff_once(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1):
+def _reduce_ff_once(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=None):
     r"""
     Reduce the targets with finite fields.  The reducer's kinematics may have the
     variable d and at most one invariant.  Returns {target: {master: coefficient}}
     with coefficients in the fraction field of the family's polynomial ring.
-    nproc > 1 evaluates the sample points in parallel worker processes (fork); the
+    The sample points are evaluated in parallel worker processes (fork) when one sample is slow
+    enough for that to pay; nproc = None uses parallel.cores(), nproc = 1 keeps it serial.  The
     first probe, which trims the system, runs before the workers start.
     """
     import time
@@ -550,13 +551,47 @@ def _reduce_ff_once(reducer, targets, rmax, smax=0, point=None, verbose=False, n
     results_prev = None
     # univariate: 62-bit primes (plain Python ints); two variables: Singular gcd needs p < 2^29
     pool = None
-    if nproc and nproc > 1:
-        import multiprocessing as mproc
+    from .parallel import resolve
+    nproc = resolve(nproc)
+    if nproc > 1:
         global _POOL_SYS
         p0 = next(_primes(2**62 if nv == 1 else 2**29))
+        t1 = time.time()
         sysm.sample(targets, p0, [GF(p0).random_element() for _ in range(nv)])   # trim first
-        _POOL_SYS = sysm
-        pool = mproc.get_context('fork').Pool(nproc)
+        t2 = time.time()
+        sysm.sample(targets, p0, [GF(p0).random_element() for _ in range(nv)])   # one sample on the trimmed system
+        # workers pay only if one sample costs more than starting them (about 20 ms) over the points
+        if time.time() - t2 > 0.005:
+            import multiprocessing as mproc
+            _POOL_SYS = sysm
+            pool = mproc.get_context('fork').Pool(nproc)
+        else:
+            nproc = 1
+    try:
+        res = _ff_primes(sysm, targets, R, K, nv, nproc, pool)
+    except BaseException:
+        if pool is not None:
+            pool.terminate()
+            pool.join()
+        _POOL_SYS = None
+        raise
+    if pool is not None:
+        pool.close()
+        pool.join()
+    _POOL_SYS = None
+    out = {tuple(t): {} for t in targets}
+    for (t, m), val in res[0].items():
+        if val != 0:
+            out.setdefault(t, {})[m] = val
+    if verbose:
+        print("primes used: %d, total %.1fs" % (res[1], time.time() - t0))
+    return out
+
+
+def _ff_primes(sysm, targets, R, K, nv, nproc, pool):
+    """The loop over primes of _reduce_ff_once: (result, number of primes)."""
+    residues = []
+    results_prev = None
     for p in _primes(2**62 if nv == 1 else 2**29):
         F = GF(p)
         Rp = PolynomialRing(F, [str(g) for g in R.gens()])
@@ -574,16 +609,7 @@ def _reduce_ff_once(reducer, targets, rmax, smax=0, point=None, verbose=False, n
         if res is not None and res == results_prev:
             break
         results_prev = res
-    out = {tuple(t): {} for t in targets}
-    for (t, m), val in res.items():
-        if val != 0:
-            out.setdefault(t, {})[m] = val
-    if pool is not None:
-        pool.close()
-        pool.join()
-    if verbose:
-        print("primes used: %d, total %.1fs" % (len(residues), time.time() - t0))
-    return out
+    return res, len(residues)
 
 
 def _bivariate(sysm, targets, p, F, Rp, mapper=None):

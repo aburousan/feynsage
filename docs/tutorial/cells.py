@@ -266,10 +266,9 @@ print("F = V + (m1^2 x1 + m2^2 x2) U =", g2.F())
 """, {"fig": "fig"}),
 
 ("box", """
-# Smirnov Fig. 3.6 as drawn in the lecture: line 1 on top, 2 on the left, 3 on the right,
-# 4 at the bottom; p1 and p2 enter on the left, p3 and p4 on the right,
-# s = (p1 + p2)^2, t = (p1 + p3)^2
-box = graph("TL-TR, TL-BL, TR-BR, BL-BR",
+# Smirnov (2006) Fig. 3.6: line 1 on top, 2 on the left, 3 at the bottom, 4 on the right;
+# p1 and p2 enter on the left, p3 and p4 on the right, s = (p1 + p2)^2, t = (p1 + p3)^2
+box = graph("TL-TR, TL-BL, BL-BR, TR-BR",
             {"TL": "p1", "BL": "p2", "TR": "p3", "BR": "-p1-p2-p3"},
             kin={"p1^2": 0, "p2^2": 0, "p3^2": 0,
                  "p1.p2": "s/2", "p1.p3": "t/2", "p2.p3": "-(s+t)/2"},
@@ -488,12 +487,9 @@ G3 = (Gamma.subs(vals).subs({Nc: 3}) * 1e6).n()                        # eV
 G1 = (Gamma.subs(vals).subs({Nc: 1}) * 1e6).n()
 tau = lambda G: hbar*1e6*BR/G                                         # s, G in eV
 sig = lambda a, b, err: abs(a - b)/err                  # distance in standard deviations
-print("width     feynsage %.2f eV    PrimEx-II (2020) 7.80 +- 0.12 eV     %.1f sigma"
-      % (G3, sig(G3, 7.80, 0.12)))
-print("lifetime  feynsage %.3g s  from the PrimEx-II width %.3g s" % (tau(G3), tau(7.80)))
-print("          PDG world average (8.43 +- 0.13)e-17 s            %.1f sigma"
-      % sig(tau(G3), 8.43e-17, 0.13e-17))
-print("the PDG lifetime as a width: %.2f eV (older measurements in it)" % tau(8.43e-17))
+print("width     feynsage %.2f eV" % G3)
+print("lifetime  feynsage %.3g s   PDG world average (8.43 +- 0.13)e-17 s   %.1f sigma"
+      % (tau(G3), sig(tau(G3), 8.43e-17, 0.13e-17)))
 print("with N_c = 1: %.2f eV, nine times too small" % G1)
 vals_f = dict(vals); vals_f[f] = 1.01*130.2/sqrt(2)
 Gf = (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n()

@@ -21,6 +21,7 @@ from .momenta import Kinematics, mom
 from .family import IntegralFamily
 from .graph import FeynmanGraph
 from .laporta import Reducer, weight
+from ._parse import sr
 
 
 # ---------------------------------------------------------------------------- parsing helpers
@@ -29,7 +30,7 @@ def _names(text):
 
 
 def _mom(text, names):
-    e = SR(str(text))
+    e = sr(str(text))
     out = {}
     for n in names:
         c = e.coefficient(SR.var(n))
@@ -43,7 +44,7 @@ def _kin_pairs(kin):
     for key, val in (kin or {}).items():
         k = key.replace(' ', '')
         a, b = (k[:-2], k[:-2]) if k.endswith('^2') else k.split('.')
-        out[(a, b)] = SR(val)
+        out[(a, b)] = sr(val)
     return out
 
 
@@ -57,7 +58,7 @@ def kinematics(externals, kin=None, euclidean=False, extra=()):
             if v is None:
                 v = SR.var(a + '2' if a == b else a + b)
             rules[(a, b)] = v
-    invariants = sorted({str(x) for v in rules.values() for x in v.variables()} | {str(x) for e in extra for x in SR(e).variables()})
+    invariants = sorted({str(x) for v in rules.values() for x in v.variables()} | {str(x) for e in extra for x in sr(e).variables()})
     return Kinematics(list(externals), invariants, {k: str(v) for k, v in rules.items()}, euclidean=euclidean)
 
 
@@ -99,9 +100,9 @@ def family(props, kin=None, loops=None, euclidean=False, name="F", explain=False
     elif isinstance(loops, str):
         loops = loops.replace(',', ' ').split()
     externals = sorted((names - set(loops)) | set(ext))
-    masses = [SR(m) for _, m in items]
+    masses = [sr(m) for _, m in items]
     K = kinematics(externals, kin, euclidean, extra=masses)
-    fam_props = [(_mom(q, list(loops) + externals), str(SR(m) ** 2)) for q, m in items]
+    fam_props = [(_mom(q, list(loops) + externals), str(sr(m) ** 2)) for q, m in items]
     f = Family(name, list(loops), K, fam_props)
     return f
 
@@ -126,7 +127,7 @@ def graph(edges, legs, kin=None, euclidean=False, explain=False):
     for e in edges:
         uv, _, m = e.partition(':')
         u, v = [x.strip() for x in uv.split('-')]
-        m = SR(m.strip()) if m.strip() else SR(0)
+        m = sr(m.strip()) if m.strip() else sr(0)
         lines.append((u, v, str(m ** 2)))
         masses.append(m)
     names = sorted(set().union(*[_names(q) for q in legs.values()]) if legs else set())
@@ -240,12 +241,16 @@ class Reduction:
         rows = []
         for t, row in self.table.items():
             terms = []
-            for mm, c in row.items():
-                c = c if not hasattr(c, 'numerator') else c
-                cl = (r'\frac{%s}{%s}' % (latex(c.numerator().factor()), latex(c.denominator().factor()))
-                      if hasattr(c, 'denominator') and c.denominator() != 1 else latex(c.factor() if hasattr(c, 'factor') else c))
-                terms.append(r'%s\; %s' % (cl, self._lab(mm)))
-            rows.append(r'%s &= %s' % (self._lab(t), r' \\ &\quad + '.join(terms) if terms else '0'))
+            body = ''
+            for k, (mm, c) in enumerate(row.items()):
+                term = r'%s\; %s' % (_latex_ratio(c), self._lab(mm))
+                if k == 0:
+                    body = term
+                elif term.startswith('-'):
+                    body += r' \\ &\quad - ' + term[1:]
+                else:
+                    body += r' \\ &\quad + ' + term
+            rows.append(r'%s &= %s' % (self._lab(t), body or '0'))
         return r'$$\begin{aligned} %s \end{aligned}$$' % r' \\[6pt] '.join(rows)
 
     def _latex_(self):
@@ -260,6 +265,28 @@ class Reduction:
         return "\n".join(lines)
 
 
+def _latex_ratio(c):
+    """A rational function as  k N / D  in LaTeX with N and D factored and one rational constant k
+    (factoring numerator and denominator apart leaves a constant in each, e.g. (-16) ... / (-16) ...)."""
+    from sage.all import latex, QQ
+    from sage.structure.factorization import Factorization
+    if not (hasattr(c, 'numerator') and hasattr(c, 'denominator')):
+        return latex(c.factor() if hasattr(c, 'factor') else c)
+    try:
+        fN, fD = c.numerator().factor(), c.denominator().factor()
+        k = QQ(fN.unit()) / QQ(fD.unit())
+    except (TypeError, ValueError, ArithmeticError, AttributeError):
+        return latex(c)
+    N, Dn = list(fN), list(fD)
+    sign = '-' if k < 0 else ''
+    k = abs(k)
+    num = ' '.join(([latex(k.numerator())] if k.numerator() != 1 or not N else []) +
+                   [latex(Factorization([(p, e)])) for p, e in N])
+    den = ' '.join(([latex(k.denominator())] if k.denominator() != 1 else []) +
+                   [latex(Factorization([(p, e)])) for p, e in Dn])
+    return sign + (r'\frac{%s}{%s}' % (num, den) if den else num)
+
+
 def _target(t):
     """'T(2,1)' or 'F(2,1)' (any family name) or (2, 1) -> (2, 1)."""
     if isinstance(t, str):
@@ -268,7 +295,7 @@ def _target(t):
     return tuple(t)
 
 
-def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain=False, verbose=False):
+def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=None, explain=False, verbose=False):
     r"""
     Reduce integrals of a family to master integrals.
 
@@ -280,7 +307,8 @@ def ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain
     (Laporta with exact rational functions on every seeded equation) or "trimmed" (exact
     Laporta on only the equations the targets need, found by one modular probe: exact
     arithmetic, much faster than "exact").  "auto" picks ff when it can.
-    nproc > 1 samples the finite-field system in parallel.
+    The finite-field samples run on every core when the system is big enough (nproc=None);
+    nproc=1 keeps it serial.
     """
     import time
     if explain:

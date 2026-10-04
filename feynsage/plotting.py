@@ -14,7 +14,7 @@ from itertools import permutations
 from math import atan2, cos, pi, sin, sqrt
 
 import matplotlib as mpl
-from sage.all import latex
+from sage.all import latex, SR
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch
@@ -336,7 +336,7 @@ def _eval_point(args):
 
 
 def quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=None, ylim=None,
-               nproc=1, figsize=None, mu_value=1, explain=False):
+               nproc=None, figsize=None, mu_value=1, explain=False):
     r"""
     Plot one or more expressions over a range, with no set-up.
 
@@ -348,7 +348,8 @@ def quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=No
     +i0 prescription), a Python function, or a list of these.  var_range = (variable, a, b).
     Expressions with a 1/eps pole are plotted through their eps^0 part at mu = mu_value.
     parts: "auto" draws the imaginary part in a second panel only if it is not zero;
-    "real" or "both" force it.  nproc > 1 evaluates the points in parallel.
+    "real" or "both" force it.  The points are evaluated on every core when each one is slow
+    enough for that to pay (nproc=None); nproc=1 keeps it serial.
     Returns the matplotlib Figure (save it with fig.savefig("name.svg")).
     """
     if explain:
@@ -371,12 +372,8 @@ def quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=No
     var, a, b = var_range
     xs = np.linspace(float(a), float(b), points)
     tasks = [(f, var, float(x)) for f in exprs for x in xs]
-    if nproc and nproc > 1:
-        import multiprocessing as mproc
-        with mproc.get_context('fork').Pool(nproc) as pool:
-            vals = pool.map(_eval_point, tasks)
-    else:
-        vals = [_eval_point(t) for t in tasks]
+    from .parallel import pmap
+    vals = pmap(_eval_point, tasks, nproc=nproc)
     vals = np.array(vals).reshape(len(exprs), points)
     has_imag = np.nanmax(np.abs(vals.imag)) > 1e-12 if np.isfinite(vals.imag).any() else False
     two = parts == "both" or (parts == "auto" and has_imag)
@@ -464,3 +461,17 @@ def draw_reduction(table, g, targets=None, rename=None, size=1.5, fontsize=12):
                          ha='center', va='center', fontsize=fontsize, transform=axc.transAxes)
                 _integral_panel(axd, g, tuple(m))
     return fig
+
+
+def scan(expr, var, values, nproc=None, prec=53):
+    r"""
+    The values of expr at var = each of values (complex numbers; nan where it cannot be evaluated),
+    computed on every core when the points are slow enough for that to pay.  expr may contain
+    DiscB, LogM, C0, D0 (each evaluated with its +i0), or be a Python function.
+
+        scan(B0(s, 1, 2), s, srange(-5, 20, 0.1))
+    """
+    from .parallel import pmap
+    if prec == 53:
+        return pmap(_eval_point, [(expr, var, x) for x in values], nproc=nproc)
+    return pmap(lambda x: complex(SR(expr).subs({var: x}).n(prec=prec)), list(values), nproc=nproc)

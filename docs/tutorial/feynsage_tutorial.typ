@@ -7,10 +7,10 @@
 
 // ---------------------------------------------------------------- title page
 #page(header: none, numbering: none)[
-  #v(1.2cm)
+  #v(0.2cm)
   #align(center)[
     #text(10pt, fill: ink2, tracking: 1.5pt)[A STEP-BY-STEP TUTORIAL WITH CODE AND OUTPUT]
-    #v(0.8cm)
+    #v(0.5cm)
     #text(28pt, weight: "semibold", fill: c-blue.darken(15%))[feynsage]
     #v(0.1cm)
     #text(15pt, fill: ink2, style: "italic")[Feynman integrals in SageMath,\ the lecture in code and a real prediction]
@@ -19,8 +19,12 @@
     #text(10pt, fill: ink2)[School of Physical Sciences, NISER, Bhubaneswar] \
     #v(0.35cm)
     #text(11pt)[Source code and install instructions at #repo]
+    #v(0.4cm)
+    #image("cover_drawing.jpg", width: 74%)
+    #v(-0.15cm)
+    #text(8pt, fill: ink2)[Drawing by Kazi Abu Rousan]
   ]
-  #v(1.0cm)
+  #v(0.3cm)
   #dbox("What this tutorial is", c-pink)[
     It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "An Introduction to Feynman Integrals" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction, the rate at which the neutral pion decays into two photons.
 

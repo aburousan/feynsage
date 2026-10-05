@@ -1,12 +1,17 @@
-# Double Compton scattering e(P) + gamma(K0) -> e(P') + gamma(K1) + gamma(K2) from its six Feynman
-# diagrams, with FORM for the traces (m = 1, exact rational kinematics). Used by compton_dc.sage and
-# by section 18 of examples/feynsage_walkthrough.ipynb:
-#     load("examples/chluba/double_compton.sage")
-#     tab = dc_table(p.k0, p.k1, p.k2, k0.k1, k0.k2)
-#     dc_msq(tab)            sum over spins and polarisations of |M|^2 / e^6
-#     mandl_skyrme_X(tab)    Mandl and Skyrme's X (Chluba's thesis eq. D.1)
-#     eikonal(tab)           the soft-photon factor S of the photon K2
+"""
+Double Compton scattering e(P) + gamma(K0) -> e(P') + gamma(K1) + gamma(K2) from its six Feynman
+diagrams, with FORM for the traces (m = 1, exact rational kinematics).
+
+Used by the notebooks in this folder and by section 18 of examples/feynsage_walkthrough.ipynb:
+
+    from double_compton import dc_table, dc_msq, mandl_skyrme_X, eikonal
+    tab = dc_table(pk0, pk1, pk2, k0k1, k0k2)     # P.K0, P.K1, P.K2, K0.K1, K0.K2
+    dc_msq(tab)            # sum over spins and polarisations of |M|^2 / e^6
+    mandl_skyrme_X(tab)    # Mandl and Skyrme's X (Chluba's thesis eq. D.1)
+    eikonal(tab)           # the soft-photon factor S of the photon K2
+"""
 import itertools
+from sage.all import SR, function, var
 from feynsage import form
 
 DC_VECTORS = ['p', 'pp', 'k0', 'k1', 'k2']
@@ -60,10 +65,13 @@ def mandl_skyrme_X(table):
     d = lambda a, b: table[tuple(sorted((a, b)))]
     k0, k1, k2 = -d('p', 'k0'), d('p', 'k1'), d('p', 'k2')
     k0p, k1p, k2p = d('pp', 'k0'), -d('pp', 'k1'), -d('pp', 'k2')
-    a = 1 / k0 + 1 / k1 + 1 / k2; b = 1 / k0p + 1 / k1p + 1 / k2p
+    a = 1 / k0 + 1 / k1 + 1 / k2
+    b = 1 / k0p + 1 / k1p + 1 / k2p
     c = 1 / (k0 * k0p) + 1 / (k1 * k1p) + 1 / (k2 * k2p)
-    x = k0 + k1 + k2; z = k0 * k0p + k1 * k1p + k2 * k2p
-    A = k0 * k1 * k2; B = k0p * k1p * k2p
+    x = k0 + k1 + k2
+    z = k0 * k0p + k1 * k1p + k2 * k2p
+    A = k0 * k1 * k2
+    B = k0p * k1p * k2p
     rho = k0 / k0p + k0p / k0 + k1 / k1p + k1p / k1 + k2 / k2p + k2p / k2
     return (2 * (a * b - c) * ((a + b) * (2 + x) - (a * b - c) - 8) - 2 * x * (a ** 2 + b ** 2)
             - 2 * (a * b + c * (1 - x)) * rho - 8 * c

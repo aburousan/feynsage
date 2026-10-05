@@ -2,11 +2,18 @@
 
 J. Chluba, *Spectral distortions of the cosmic microwave background* (2005) uses Compton and double
 Compton scattering and meets the infrared divergence of double Compton emission. Here each QED result
-is computed from the Feynman diagrams twice: with feynsage + FORM (`*.sage`) and with FeynCalc
-(`*.wl`, FeynHelpers/Package-X for the loop). Run from the repository root:
+is computed from the Feynman diagrams twice: with feynsage + FORM (Jupyter notebooks) and with FeynCalc
+(`*.wl`, FeynHelpers/Package-X for the loop).
 
-    sage examples/chluba/compton_dc.sage
-    sage examples/chluba/ir_cancellation.sage
+- `compton_double_compton.ipynb`: Compton scattering (Peskin (5.87), Klein-Nishina, Thomson), double
+  Compton with its six diagrams (Mandl and Skyrme's X) and the soft limit
+- `ir_cancellation.ipynb`: the infrared pole of the vertex against the soft-photon pole, F2 = alpha/2pi,
+  Lightman's law
+- `double_compton.py`: the bookkeeping of the six double Compton diagrams, used by the first notebook
+  and by section 18 of `../feynsage_walkthrough.ipynb`
+
+Open the notebooks with the SageMath kernel. The FeynCalc versions run from the repository root:
+
     wolframscript -file examples/chluba/compton_dc_feyncalc.wl
     wolframscript -file examples/chluba/ir_cancellation_feyncalc.wl
 
@@ -28,4 +35,4 @@ of the Mathematica that has FeynCalc, for example on macOS
 So the thesis's |M|^2 = e^6 X is the average over the 2 x 2 initial states, and its lowest-frequency
 cutoff is what dimensional regularisation (or a photon mass) turns into a log of the energy resolution:
 the infrared divergence cancels against the one-loop virtual correction (Bloch-Nordsieck).
-The outputs go to `examples/chluba/out/`.
+The FeynCalc outputs go to `examples/chluba/out/`.

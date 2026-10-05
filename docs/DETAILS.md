@@ -109,15 +109,24 @@ template at once) 1.0 s; the first probe, a sparse elimination of all 157 843 eq
 (`csrc/elim.c`, compiled with the system `cc` on first use and loaded with ctypes) 0.9 s; it
 keeps only the 895 equations the targets need and every later probe on those takes 8 ms in
 Python. Without a C compiler the same steps run in pure Python, about ten times slower.
-`nproc > 1` (in `reduce_ff` and `ibp_reduce`) evaluates the sample points in parallel worker
-processes and gives the same result. On hercules (an older 192-core server) the rmax 9 kite goes
+By default (`nproc=None`) `reduce_ff` and `ibp_reduce` time one sample point and, when it takes
+more than about 5 ms, evaluate the rest in parallel worker processes on all cores; `nproc=1` switches
+this off and the result is the same either way. On hercules (an older 192-core server) the rmax 9 kite goes
 from 11.6 s with one process to 8.1 s with four and 7.9 s with eight: the build and the first
 probe (about 5 s there) are still serial, so the gain grows with the size of the trimmed system
 (`tests/bench_parallel.sage`).
 
 One-loop tensor reduction with everything symbolic (all masses and invariants symbols, on the laptop):
 rank-2 bubble 1.1 s, rank-1 triangle 1.6 s, C00 0.06 s, rank-3 triangle 4.7 s, rank-2 box 1.9 s.
-With numbers it is faster still; `quick_plot(..., nproc=4)` evaluates plot points in parallel.
+With numbers it is faster still; `quick_plot` evaluates the plot points on all cores.
+
+Many one-loop numbers at once (`c0_values`, `d0_values`, `scan`, `loop_many`, all built on `pmap`)
+run on every core by default. A short timing probe decides first whether the work is big enough to
+pay for the worker processes, so small jobs stay serial. 10 000 boxes take 75.8 s with one worker and
+2.4 s with 48 workers on ADRISHTA (AMD EPYC 9534); on the M2 laptop (4 performance and 4 efficiency
+cores) the gain is about 3.6 times. The dilogarithm is taken from PARI, which brought one numerical
+D0 from 28.5 ms to 8.2 ms and one C0 from 31 ms to 3.6 ms. The kite reduction with many dots stops
+at about 4.4 times faster, because the build and the first probe stay serial.
 
 ## Compared with Package-X
 

@@ -481,15 +481,10 @@ form.compute("eps(mu,nu,rho,sigma)*eps(mu,nu,al,be)*k1(rho)*k2(sigma)*k1(al)*k2(
 mpi = var('m_pi')
 Gamma = (A^2 * mpi^3 / (64*pi)).simplify_full()
 print("Gamma =", Gamma)
-vals = {alpha: 1/137.035999, mpi: 134.9768, f: 130.2/sqrt(2)}          # MeV (PDG values)
-hbar, BR = 6.582119569e-22, 0.98823                     # MeV s, BR(pi0 -> gamma gamma)
+vals = {alpha: 1/137.035999, mpi: 134.9768, f: 130.2/sqrt(2)}          # MeV
 G3 = (Gamma.subs(vals).subs({Nc: 3}) * 1e6).n()                        # eV
 G1 = (Gamma.subs(vals).subs({Nc: 1}) * 1e6).n()
-tau = lambda G: hbar*1e6*BR/G                                         # s, G in eV
-sig = lambda a, b, err: abs(a - b)/err                  # distance in standard deviations
 print("width     feynsage %.2f eV" % G3)
-print("lifetime  feynsage %.3g s   PDG world average (8.43 +- 0.13)e-17 s   %.1f sigma"
-      % (tau(G3), sig(tau(G3), 8.43e-17, 0.13e-17)))
 print("with N_c = 1: %.2f eV, nine times too small" % G1)
 vals_f = dict(vals); vals_f[f] = 1.01*130.2/sqrt(2)
 Gf = (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n()

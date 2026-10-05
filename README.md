@@ -16,7 +16,8 @@ Feynman integrals in SageMath, written from scratch.
 
 I wrote feynsage in 2024 for my MSc project. After the talk "An Introduction to Feynman Integrals" by
 Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
-talk and published.
+talk and published. His introductory lectures on the same topic at IMSc, Chennai, are on YouTube:
+[Introductory lectures on Feynman Integrals Part1](https://youtu.be/tvCBzU9GWeI).
 A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf).
 
 ## Who it is for
@@ -24,8 +25,9 @@ A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tu
 feynsage is meant for small and medium problems and for studying: every step is exact, can be
 checked and explains itself. On such problems it runs in the same range as the established tools
 and sometimes a little faster. For very large reductions (millions of equations, several scales)
-Kira and FIRE remain the better choice: they are multi-threaded and much more economical with
-memory. I may continue improving feynsage in the future.
+Kira and FIRE remain the better choice: they are built for that scale and are much more economical
+with memory. feynsage uses all cores for the parts that parallelise (sample points of the
+finite-field reduction, many one-loop numbers at once, plots). I may continue improving feynsage in the future.
 
 ## Install
 
@@ -64,16 +66,20 @@ returns. `info(f)` prints the same for one function inside Sage.
 
 ## Notebooks
 
+- `examples/feynsage_first_steps.ipynb`: for a first course in QFT. The recipe of every Feynman calculation and
+  one short, explained step for each part: a tree diagram ($e^+e^- \to \mu^+\mu^-$), the tadpole and the bubble,
+  the running coupling of $\lambda\varphi^4$, tensor integrals, triangles and boxes, the electron $g - 2$,
+  Feynman parameters and a two-loop reduction. Every result is checked against Peskin and Schroeder or a second method.
 - [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial, in the
   style of the lecture note. It follows the topics of the talk (the tadpole, IBP, the bubble and its
   differential equation solved with its boundary condition, Feynman parameters, graph polynomials) and
-  ends with a real prediction, the neutral pion lifetime. Every step has its code, its real output and
+  ends with a real prediction, the decay rate of the neutral pion into two photons. Every step has its code, its real output and
   an explanation of each function used. Reductions can be drawn as equations of diagrams (`r.draw`).
 - `examples/feynsage_walkthrough.ipynb`: the whole package step by step, with a picture for every
   step: graph polynomials (up to a three-loop box), IBP reduction (finite fields and fast exact)
   with reductions drawn as diagrams, Dirac traces from Sage notation with FORM, the bubble
   differential equation solved from its boundary condition, one-loop integrals with IR poles, a real
-  prediction (the neutral pion lifetime, 8.35e-17 s against the measured 8.43e-17 s) and the QED of
+  prediction (the decay rate of the neutral pion into two photons, 7.79 eV) and the QED of
   Chluba's thesis (Compton, double Compton, the infrared divergence and its cancellation), with
   Feynman diagrams.
 - `examples/peskin_examples.ipynb`: vacuum polarisation and the electron g-2 from Peskin and

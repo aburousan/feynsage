@@ -40,7 +40,7 @@ The short front ends. Everything is written as plain strings.
 | `family(props, kin=None, loops=None, euclidean=False, name="F", explain=False)` **(top)** | An integral family from a list of propagators. A propagator is a momentum `"l + p"` or a pair `("l + p", "m")` for a massive line. `kin` gives the external scalar products, for example `{"p^2": "s"}`. A Sage name cannot contain `^`, so write a value like k^2 as a symbol such as `"kk"`. `loops` names the loop momenta (by default every name that is not external). Returns a `Family`. |
 | `graph(edges, legs, kin=None, euclidean=False, explain=False)` **(top)** | A Feynman graph. `edges` is `"A-B, A-B:m"` (`:m` gives the line a mass), `legs` the incoming momentum at each vertex, for example `{"A": "p", "B": "-p"}`. Lines are numbered x1, x2, ... in the order written. Returns a `FeynmanGraph`. |
 | `diagram(name=None)` **(top)** | A ready-made `FeynmanGraph`: `tadpole`, `bubble`, `bubble_mass`, `triangle`, `box`, `sunset`, `kite`, `phi4_two`, `vertex2`, `banana3`, `ladder3`, `triplebox`. `diagram()` prints the list. |
-| `ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=1, explain=False, verbose=False)` **(top)** | Reduces the target integrals to master integrals. `targets` is a list like `["F(2,1)", (1,2)]`, the integral named by its powers (the letter is the family name). `method` is `"ff"` (finite fields, fast, at most one symbolic invariant besides d), `"trimmed"` (exact, only the equations the targets need) or `"exact"` (exact on every seeded equation). `"auto"` chooses. `nproc > 1` samples in parallel. Returns a `Reduction`. |
+| `ibp_reduce(fam, targets, method="auto", symmetries_="auto", nproc=None, explain=False, verbose=False)` **(top)** | Reduces the target integrals to master integrals. `targets` is a list like `["F(2,1)", (1,2)]`, the integral named by its powers (the letter is the family name). `method` is `"ff"` (finite fields, fast, at most one symbolic invariant besides d), `"trimmed"` (exact, only the equations the targets need) or `"exact"` (exact on every seeded equation). `"auto"` chooses. `nproc > 1` samples in parallel. Returns a `Reduction`. |
 | `symmetries(fam)` **(top)** | The permutations of the propagators that leave U + F unchanged (Pak's criterion), as generators. `ibp_reduce` calls it by itself. |
 | `kinematics(externals, kin=None, euclidean=False, extra=())` **(top)** | A `Kinematics` object from `{"p^2": "s", "p1.p2": "t/2"}`. A product that is not given becomes a new symbol. |
 
@@ -208,7 +208,7 @@ explains FORM itself.
 
 | Function | What it draws |
 |---|---|
-| `quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=None, ylim=None, nproc=1, figsize=None, mu_value=1, explain=False)` | one or more expressions over `(variable, a, b)`, real part and (if not zero) imaginary part. Expressions with `DiscB`, `LogM`, `C0`, `D0` and 1/eps poles work directly. |
+| `quick_plot(exprs, var_range, labels=None, points=160, parts="auto", title=None, ylim=None, nproc=None, figsize=None, mu_value=1, explain=False)` | one or more expressions over `(variable, a, b)`, real part and (if not zero) imaginary part. Expressions with `DiscB`, `LogM`, `C0`, `D0` and 1/eps poles work directly. |
 | `draw_graph(g, labels=True, dots=None, momenta=True, figsize=(2.8, 2.8), R=1.0, removed=(), ax=None, title=None, names=None)` | one diagram. Massive lines thick and blue, line i labelled x_i, `dots={i: n}` puts n dots on line i, `removed` dashes lines. `g.plot()` calls it. |
 | `draw_panels(g, removed_sets, titles=None, ncols=5, size=1.9, **kw)` | copies of a diagram side by side, each with its own removed lines (all spanning trees or all 2-forests) |
 | `draw_sectors(g, sectors, titles=None, ncols=5, size=1.9, **kw)` | sectors of a diagram, with the lines of index 0 shrunk to points |
@@ -277,7 +277,7 @@ The Laporta reducer behind `ibp_reduce`, for users who want to control the seeds
 
 | Function | What it does |
 |---|---|
-| `reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=1)` **(top)** | the reduction done modulo large primes and rebuilt by Thiele interpolation and rational reconstruction, the way FIRE and Kira do it. Returns `{target: {master: coefficient}}`. |
+| `reduce_ff(reducer, targets, rmax, smax=0, point=None, verbose=False, nproc=None)` **(top)** | the reduction done modulo large primes and rebuilt by Thiele interpolation and rational reconstruction, the way FIRE and Kira do it. Returns `{target: {master: coefficient}}`. |
 | `reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False)` | exact Laporta on only the equations the targets need (found by one modular probe) |
 | `ibp_templates(fam)` | the IBP identities with symbolic powers, derived once |
 | `IBPSystem(reducer, rmax, smax=0)` | all identities of the seeds with polynomial coefficients. `.sample(targets, p, point)` solves them modulo p at one point. |

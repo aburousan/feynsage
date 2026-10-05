@@ -86,7 +86,9 @@ def _discb_num(s, m1, m2, prec=53):
         z = s + 1j * mp.mpf(2) ** (-prec - 30) * max(1, abs(s), m1 ** 2, m2 ** 2)
         lam = z ** 2 + m1 ** 4 + m2 ** 4 - 2 * z * m1 ** 2 - 2 * z * m2 ** 2 - 2 * m1 ** 2 * m2 ** 2
         r = mp.sqrt(lam)
-        return r / z * mp.log((m1 ** 2 + m2 ** 2 - z + r) / (2 * m1 * m2))
+        val = r / z * mp.log((m1 ** 2 + m2 ** 2 - z + r) / (2 * m1 * m2))
+        # below the threshold (m1 + m2)^2 DiscB is real: drop the rounding left by the tiny i0
+        return mp.mpc(val.real, 0) if s < (abs(m1) + abs(m2)) ** 2 else val
 
 
 def _discb_evalf(self, s, m1, m2, parent=None, algorithm=None):

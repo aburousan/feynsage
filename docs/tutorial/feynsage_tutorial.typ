@@ -22,7 +22,7 @@
   ]
   #v(1.0cm)
   #dbox("What this tutorial is", c-pink)[
-    It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "An Introduction to Feynman Integrals" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction (the lifetime of the neutral pion) and compares it with experiment.
+    It teaches the package feynsage by doing with it the calculations of Prof. B. Ananthanarayan's two-part lecture "An Introduction to Feynman Integrals" (NISER, 2026). These are the tadpole, integration by parts, the bubble and its differential equation, Feynman parameters and the graph polynomials $cal(U)$ and $cal(F)$. Each function is explained in a violet box the first time it is used. The box says what the function takes, what it gives back and what it saves you from doing by hand. The last chapter puts the pieces together for a real prediction, the rate at which the neutral pion decays into two photons.
 
     Every grey box marked *In [n]* is real code. It was run, in this order, in one SageMath session (as in a Jupyter notebook) and the box under it marked *Out [n]* is what came out. Nothing in the output boxes was typed by hand. I am also writing up the lecture itself in full (my notes _Feynman integrals at one loop_). They are not finished yet and will be shared once they are complete.
   ]
@@ -80,7 +80,7 @@ The first line loads everything that is used most. The second loads a few closed
   [Dirac traces], [`form.dirac_trace`, `form.compute` (traces and contractions in Sage notation, converted to FORM)], [the pion (last chapter)],
 )
 
-These are only the functions this tutorial needs. feynsage has many more that the lecture did not reach. Some of them are one-loop tensor integrals in the style of Package-X (`loop`, `PVB`, `PVC`, `PVD`), closed forms of $C_0$ and $D_0$ in dilogarithms (`explicit`, `c0_closed`, `d0_closed`), infrared poles (the module `ir`), the finite-field reducer `reduce_ff`, `symmetries`, `diagram` (ready-made graphs like `"kite"`) and pictures of sectors (`draw_sectors`). All of them are listed with their arguments in #reference in the repository and the notebook #walkthrough uses most of them. `info(f)` explains any one of them.
+These are only the functions this tutorial needs. feynsage has many more that the lecture did not reach. Some of them are one-loop tensor integrals in the style of Package-X (`loop`, `PVB`, `PVC`, `PVD`), closed forms of $C_0$ and $D_0$ in dilogarithms (`explicit`, `c0_closed`, `d0_closed`), the same closed forms with symbolic invariants and masses (`c0_expand`, `d0_expand`), products of two fermion lines (`line_product`), many integrals at once on all cores (`c0_values`, `d0_values`, `loop_many`, `scan`, `pmap`), infrared poles (the module `ir`), the finite-field reducer `reduce_ff`, `symmetries`, `diagram` (ready-made graphs like `"kite"`) and pictures of sectors (`draw_sectors`). All of them are listed with their arguments in #reference in the repository and the notebook #walkthrough uses most of them. `info(f)` explains any one of them.
 
 Two normalisations appear and each is used in its own place.
 - The closed formulas and the families use the Euclidean measure of the lecture with the $pi^(D\/2)$ taken out, $integral dif^D k\/pi^(D\/2)$ with propagators $k^2 + m^2$.
@@ -203,7 +203,7 @@ Sage solves the equation and the integral gives back $U(n)$ (here $D = 2.6$, $n 
 // ======================================================================== 5
 = Part 1: the basis of one-loop integrals
 
-Passarino and Veltman showed that every one-loop integral is a combination of four scalar functions, $A$ (tadpole), $B$ (bubble), $C$ (triangle) and $D$ (box). Package-X computes them in Mathematica and FeynCalc uses it through FeynHelpers. FIRE and Kira do the IBP reduction for many loops.
+Every one-loop integral can be reduced (up to terms of order $epsilon$) to four scalar functions, $A$ (tadpole), $B$ (bubble), $C$ (triangle) and $D$ (box). The method is called Passarino-Veltman reduction. Package-X computes them in Mathematica and FeynCalc uses it through FeynHelpers. FIRE and Kira do the IBP reduction for many loops.
 #func("A0(m), B0(s, m1, m2), C0(s1, s12, s2, m0, m1, m2), D0(...)")[
   The four scalar one-loop functions in the Package-X normalisation (Minkowski space). `B0(s, m1, m2)` has propagators $(ell, m_1)$ and $(ell + p, m_2)$ with $p^2 = s$. $A_0$ and $B_0$ come back as formulas with the pole $1\/epsilon$ and the scale $mu$. A finite $C_0$ or $D_0$ stays a symbol until `.n()` asks for its number (more than 30 digits are available).
 ]
@@ -389,9 +389,9 @@ The notebook's own examples, the triangle, the bubble with two masses and the bo
 #cell("sirnb")
 
 // ======================================================================== 9
-= A real prediction: the lifetime of the neutral pion
+= A real prediction: the decay rate of the neutral pion
 
-Now put the tools together for a number that is measured in a laboratory. The neutral pion lives for about $8.4 times 10^(-17)$ s and in $98.8%$ of the cases decays into two photons. It has no charge, so the photons cannot attach to it directly. The decay goes through a *triangle* of charged quarks. The physics is explained below as we go and every step is done with feynsage, with the graph method of Part 2 at its centre.
+Now put the tools together for a number that can be measured in a laboratory, the rate at which the neutral pion decays into two photons. It has no charge, so the photons cannot attach to it directly. The decay goes through a *triangle* of charged quarks. The physics is explained below as we go and every step is done with feynsage, with the graph method of Part 2 at its centre.
 
 #physics(title: "The model")[
   The quarks $u$ and $d$ ($Q_u = 2\/3$, $Q_d = -1\/3$) come in $N_c$ colours. They couple to the photon with charge $Q e$ and to the pion through $g thin overline(q) i gamma_5 tau_3 q thin pi^0$ ($tau_3 = +1$ for $u$, $-1$ for $d$), with $g = m\/f_pi$ (the Goldberger-Treiman relation, $f_pi approx 92$ MeV). For each quark there are two triangle diagrams, one for each order of the photons. The photons have $k_1^2 = k_2^2 = 0$ and the pion $(k_1 + k_2)^2 = m_pi^2$.
@@ -450,7 +450,7 @@ $ 4 i m thin epsilon(k_1, k_2, mu, nu) = 4 i m thin epsilon^(mu nu rho sigma) k_
 
 Collect the factors of one quark. They are $N_c$ colours, $(e Q)^2$ from the photon vertices, $g$ from the pion vertex, $4 m$ from the trace (Step 3), $I\/(16 pi^2 m^2)$ from the integral (Step 2) and a factor 2 for the two orders of the photons. Then put in $g = m\/f_pi$ and add $u$ and $d$ (with $tau_3 = plus.minus 1$):
 #cell("pionamp")
-The $m$ of the coupling cancels the $1\/m$ of the loop. A heavier quark couples more strongly and propagates less. The answer knows only the charges and the number of colours, $A = N_c (Q_u^2 - Q_d^2) e^2\/(4 pi^2 f_pi) = alpha\/(pi f_pi)$ for $N_c = 3$. This is the axial anomaly of Adler, Bell and Jackiw.
+The $m$ of the coupling cancels the $1\/m$ of the loop. A heavier quark couples more strongly and propagates less. The answer knows only the charges and the number of colours, $A = N_c (Q_u^2 - Q_d^2) e^2\/(4 pi^2 f_pi) = alpha\/(pi f_pi)$ for $N_c = 3$. This is the axial anomaly (Adler 1969).
 
 == Step 5: the decay rate
 
@@ -473,22 +473,21 @@ The printed program shows what was done for us. It has FORM's `e_` for $epsilon$
 
 With the two-body phase space $1\/(8 pi)$, a factor $1\/2$ for the two identical photons and $1\/(2 m_pi)$ for the decaying pion,
 $ Gamma = 1/(2 m_pi) dot 1/2 dot 1/(8 pi) dot A^2 (m_pi^4)/2 = (A^2 m_pi^3)/(64 pi) $
-Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi = 130.2\/sqrt(2)$ MeV (Particle Data Group), against the measurements. The lifetime follows from the width as $tau = ℏ thin "BR"(gamma gamma)\/Gamma$:
+Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi = 130.2\/sqrt(2)$ MeV:
 #cell("pionrate")
 
-#dbox("Result: the pion lifetime from one triangle", c-blue, breakable: false)[
-  #table(columns: 3, inset: 6pt, align: (left, center, center),
+#dbox("Result: the pion decay rate from one triangle", c-blue, breakable: false)[
+  #table(columns: 2, inset: 6pt, align: (left, center),
     stroke: (x, y) => if y == 0 { (bottom: 0.6pt + ink2) } else { none },
-    [], [*feynsage*], [*experiment*],
-    [width $Gamma(pi^0 -> gamma gamma)$], [$7.79$ eV], [],
-    [lifetime, world average], [$8.35 times 10^(-17)$ s], [$(8.43 plus.minus 0.13) times 10^(-17)$ s (PDG): $0.6 sigma$],
-    [the same with $N_c = 1$], [$0.87$ eV], [ruled out],
+    [], [*feynsage*],
+    [width $Gamma(pi^0 -> gamma gamma)$, $N_c = 3$], [$7.79$ eV],
+    [the same with $N_c = 1$], [$0.87$ eV],
   )
 ]
-#physics(title: "Reading the comparison")[
-  - Our lifetime is $1%$ shorter than the world average of the Particle Data Group, which is $0.6$ of its standard deviation. There is no tension.
-  - The prediction has its own small uncertainty. Since $Gamma prop 1\/f_pi^2$, so $1%$ in $f_pi$ moves it by $2%$. The corrections left out (the masses of the $u$ and $d$ quarks, mixing with $eta$ and $eta'$) are of a few per cent as well.
-  - With one colour the rate would be nine times smaller and the pion would live nine times longer, against every measurement. This decay was one of the early pieces of evidence that quarks come in three colours. The quark mass does not matter (Step 4), which is the content of the anomaly.
+#physics(title: "Reading the result")[
+  - The prediction has its own small uncertainty. Since $Gamma prop 1\/f_pi^2$, $1%$ in $f_pi$ moves it by $2%$.
+  - With one colour the rate would be nine times smaller. Adler already saw this mismatch in 1969. From the measured lifetime he found $|S| = 0.44$ for the number $S = sum_j g_j Q_j^2$ that multiplies the amplitude, while the quark model with one colour gives $S = 1\/6$, about three times too small. Three colours give $S = 1\/2$.
+  - The quark mass does not matter (Step 4), which is the content of the anomaly.
 ]
 
 // ======================================================================== end
@@ -506,6 +505,6 @@ Now the numbers, with $alpha = 1\/137.036$, $m_(pi^0) = 134.977$ MeV and $f_pi =
   - V. A. Smirnov, _Feynman Integral Calculus_ (Springer 2006), chapter 3
   - S. Weinzierl, _Feynman Integrals_ (Springer 2022, arXiv:2201.03593), Section 2.5 and Chapter 3
   - T. Rauh, _Introduction to Feynman integrals and multiloop techniques_ (lecture notes, 2019). They follow Smirnov's later book, _Analytic Tools for Feynman Integrals_ (Springer 2012)
+- Sir's lectures on the same topic at IMSc, Chennai: #link("https://youtu.be/tvCBzU9GWeI")[_Introductory lectures on Feynman Integrals Part1_] (video, IMSc YouTube channel)
 - For the pion
-  - S. L. Adler (1969) and J. S. Bell and R. Jackiw (1969)
-  - Particle Data Group, Review of Particle Physics
+  - S. L. Adler, _Axial-vector vertex in spinor electrodynamics_, Phys. Rev. 177 (1969) 2426

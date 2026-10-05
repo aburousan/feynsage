@@ -15,7 +15,7 @@ Minkowski propagators are (k^2 - m^2), euclidean=True gives (k^2 + m^2).
 """
 import re
 from itertools import permutations
-from sage.all import SR, QQ, Graph
+from sage.all import SR, QQ, ZZ, Graph, gcd, lcm
 
 from .momenta import Kinematics, mom
 from .family import IntegralFamily
@@ -206,10 +206,29 @@ def symmetries(fam):
 
 
 # ---------------------------------------------------------------------------- reduction
+def _tidy_coefficient(c):
+    """A rational function with its common factors cancelled: numerator and denominator with
+    integer coefficients and no common number (Sage's fraction fields of several variables keep
+    factors like 2^22 in both)."""
+    try:
+        n, d = c.numerator(), c.denominator()
+        g = n.gcd(d)
+        n, d = n // g, d // g
+        L = lcm([QQ(x).denominator() for x in list(n.coefficients()) + list(d.coefficients())])
+        n, d = n * L, d * L
+        G = gcd([ZZ(x) for x in list(n.coefficients()) + list(d.coefficients())])
+        if d.lc() < 0:
+            G = -G
+        return c.parent()(n / G) / c.parent()(d / G)
+    except (AttributeError, TypeError, ValueError, ArithmeticError):
+        return c
+
+
 class Reduction:
     """What ibp_reduce() returns: {target: {master: coefficient}} with printing and .info()."""
 
     def __init__(self, table, masters, method, seconds, fam):
+        table = {t: {m: _tidy_coefficient(c) for m, c in row.items()} for t, row in table.items()}
         self.table, self.masters, self.method, self.seconds, self.fam = table, masters, method, seconds, fam
 
     def __getitem__(self, target):

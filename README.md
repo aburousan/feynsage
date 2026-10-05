@@ -18,7 +18,6 @@ I wrote feynsage in 2024 for my MSc project. After the talk "An Introduction to 
 Prof. B. Ananthanarayan (NISER, 2026) it was refined, checked against the lecture notes of that
 talk and published.
 A step-by-step tutorial with real computations is in [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf).
-My lecture note of the talk, "Feynman integrals at one loop", is in [`docs/lecture_note/feynman_integrals_one_loop.pdf`](docs/lecture_note/feynman_integrals_one_loop.pdf).
 
 ## Who it is for
 
@@ -65,8 +64,6 @@ returns. `info(f)` prints the same for one function inside Sage.
 
 ## Notebooks
 
-- [`docs/lecture_note/feynman_integrals_one_loop.pdf`](docs/lecture_note/feynman_integrals_one_loop.pdf): my lecture note of the
-  talk (121 pages). Every formula in it was checked with Mathematica, FeynCalc, LiteRed and Kira.
 - [`docs/tutorial/feynsage_tutorial.pdf`](docs/tutorial/feynsage_tutorial.pdf): the step-by-step tutorial, in the
   style of the lecture note. It follows the topics of the talk (the tadpole, IBP, the bubble and its
   differential equation solved with its boundary condition, Feynman parameters, graph polynomials) and

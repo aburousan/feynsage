@@ -21,12 +21,15 @@ Contents: [easy](#easy-families-graphs-and-reduction) ·
 [dirac](#dirac-fermion-lines-projectors-package-xs-fermionline-layer) ·
 [scalar](#scalar-c0-and-d0-in-closed-form) ·
 [ir](#ir-infrared-divergent-triangles-and-boxes) ·
+[qft](#qft-dirac-lorentz-and-colour-algebra-in-textbook-notation) ·
 [form](#form-dirac-algebra-with-form) ·
 [plotting](#plotting-figures-and-diagrams) ·
 [graph](#graph-feynmangraph) ·
 [family](#family-integralfamily) ·
 [laporta](#laporta-reducer) ·
 [ff](#ff-finite-field-reduction) ·
+[methods](#methods-expansions-differential-equations-sectors-and-polylogarithms) ·
+[diagrams](#diagrams-topologies-fields-and-amplitudes-like-feynarts) ·
 [tex, explain, momenta](#tex-explain-and-momenta)
 
 ---
@@ -56,7 +59,7 @@ The short front ends. Everything is written as plain strings.
 | `r.masters` | the list of master integrals |
 | `r.method`, `r.seconds` | the method used and the time it took |
 | `r.info()` | a summary |
-| `r.draw(graph, targets=None, rename=None, size=1.5)` | the reduction as equations of diagrams. `targets` as `"J(2,1)"` or `(2, 1)`. `graph` must have its lines in the order of the propagators. A line with power 0 is shrunk to a point, each extra power is a dot, `rename={"kk": "k^2"}` prints a variable under another name. Returns a matplotlib figure. |
+| `r.draw(graph, targets=None, rename=None, size=1.5, fontsize=12)` | the reduction as equations of diagrams. `targets` as `"J(2,1)"` or `(2, 1)`. `graph` must have its lines in the order of the propagators. A line with power 0 is shrunk to a point, each extra power is a dot, `rename={"kk": "k^2"}` prints a variable under another name. Returns a matplotlib figure. |
 
 In a notebook a `Reduction` prints as typeset equations.
 
@@ -184,6 +187,33 @@ The six triangles and sixteen boxes of Ellis and Zanderighi (2008), in the Packa
 
 ---
 
+## qft: Dirac, Lorentz and colour algebra in textbook notation
+
+All names are **(top)**. FORM does the algebra; nothing is written in FORM. The tutorial is
+[`dirac_algebra.md`](dirac_algebra.md). Conventions of Peskin and Schroeder: gamma5 = i g^0 g^1 g^2 g^3,
+Tr[g^mu g^nu g^rho g^sigma g5] = -4i eps^{mu nu rho sigma}, eps^{0123} = +1.
+
+| Function | What it does |
+|---|---|
+| `momenta("p q")`, `lorentz_indices("mu nu")` | Sage symbols marked as four-vectors or Lorentz indices |
+| `gamma(mu)`, `slash(p)`, `gamma5()`, `PL()`, `PR()`, `sigma(mu, nu)`, `one()` | Dirac matrices; they multiply in the order written. `gamma` of anything that is not an index is Euler's Gamma, `sigma` of numbers is Sage's divisor function |
+| `u(p, m)`, `v(p, m)`, `ubar(p, m)`, `vbar(p, m)` | spinors; a line with a spinor at both ends is a number |
+| `dot(p, q)`, `comp(p, mu)`, `metric(mu, nu)`, `epsilon(a, b, c, d)` | p.q, p^mu, g^{mu nu}, the Levi-Civita tensor; printed as `Dot`, `Comp`, `Metric`, `Epsilon` (also accepted as input) |
+| `dirac_trace(expr, dim=4, rules=None, contract=True, euclidean=None, gamma5_scheme="NDR", eps_in_d=False, debug=False, threads=None)` | the trace (Tr 1 = 4); a list gives a list from one FORM run. In d dimensions gamma5 only where NDR is unambiguous |
+| `contract(expr, rules=None, dim=4, euclidean=None, eps_in_d=False, debug=False)` | sums repeated indices of a Sage expression (also `form.compute` output); on Dirac matrices it calls `simplify_dirac` |
+| `simplify_dirac(expr, dim=4, rules=None)` | open lines: tensors into the gamma matrices (FORM), then ordering, repeated indices, p/ p/ = p^2, Dirac equation at spinors (`feynsage.dirac`) |
+| `conjugate(M, complex_symbols=())` | complex conjugate of an amplitude: gamma^0 G^dagger gamma^0 on each line, summed indices renamed, eps(k) <-> eps*(k), (T^a)_ij -> (T^a)_ji; other objects go to Sage's `conjugate` |
+| `dirac_bar(G)` | gamma^0 G^dagger gamma^0 of a matrix |
+| `spin_sum(expr, dim=4, rules=None, ...)` | sum over spins with u ubar = p/ + m, v vbar = p/ - m; one trace per closed loop of spinors |
+| `polarization(name, k, mass=0)`, `polarization_sum(expr, e, gauge="feynman", n=None)` | polarization vectors (conjugate named `name_c`) and their sums: -g, the physical sum with reference vector n, or -g + k k/M^2 |
+| `color_indices`, `quark_colors`, `T_color(a, i, j)`, `f_color(a, b, c)`, `color_trace(...)`, `color_chain(..., i=, j=)`, `color_factor(expr, N=None)` | SU(N) colour with Tr(T^a T^b) = delta^{ab}/2, reduced by the Fierz identity; open indices as `Kron` |
+| `set_convention("standard" or "note", euclidean=False)`, `convention()`, `spacetime_dimension()` | Peskin and Schroeder (dimension d) or the lecture note (D = 4 - 2 eps); Euclidean algebra with delta and eps_{1234} = +1 |
+| `to_euclidean(expr)`, `to_minkowski(expr)` | scalar products p.q = -p_E.q_E |
+| `set_backend("persistent" or "subprocess")` | keep one FORM process (default) or start one per call; also `FEYNSAGE_BACKEND` |
+| `FormError`, `DiracError` | errors; `FormError.program` and `.output` hold the FORM program and FORM's reply |
+
+---
+
 ## form: Dirac algebra with FORM
 
 FORM must be installed (`install.sh` does it). Sage-side notation: `g(mu,nu)` the metric, `dot(p,q)`
@@ -245,6 +275,8 @@ Made by `family(...)`.
 |---|---|
 | `fam.UF(sector=None, names="x")` | (U, F) by completing the square: U = det M, F = U (J - Q.M^-1.Q) in Euclidean signature. `sector` is a 0/1 tuple, by default all lines. |
 | `fam.ibp(a)` | all L(L + E) IBP identities for the power vector `a`, each a dict `{powers: coefficient}` |
+| `fam.ibp_eq(a=None)` | the same identities as equations between integrals `J(...)`; with no `a` they have symbolic powers a1, ..., at |
+| `fam.integral(*a)` | the integral with powers `a` as a symbol, `J(1,1)` |
 | `fam.is_zero_sector(sector)` | `True` if the sector integrals vanish (Lee's criterion) |
 | `fam.dot(u, v)` | the scalar product of two momenta in terms of the loop scalar products and the kinematics |
 | `fam.sp_in_dens(j)` | scalar product number j written through the propagators |
@@ -281,6 +313,55 @@ The Laporta reducer behind `ibp_reduce`, for users who want to control the seeds
 | `reduce_exact_trimmed(reducer, targets, rmax, smax=0, verbose=False)` | exact Laporta on only the equations the targets need (found by one modular probe) |
 | `ibp_templates(fam)` | the IBP identities with symbolic powers, derived once |
 | `IBPSystem(reducer, rmax, smax=0)` | all identities of the seeds with polynomial coefficients. `.sample(targets, p, point)` solves them modulo p at one point. |
+
+---
+
+## methods: expansions, differential equations, sectors and polylogarithms
+
+The tools of the lecture note *Feynman integrals at one loop* (Mellin-Barnes, differential equations,
+sector decomposition, expansion by regions, counting masters).
+
+| Function | What it returns |
+|---|---|
+| `laurent(expr, eps, order=0)` **(top)** | the Laurent series up to eps^order, also at poles of Gamma and psi; `laurent(expr, [(delta, 0), (eps, 0)])` expands in delta first, then in eps |
+| `residue(expr, z, z0)` **(top)** | the residue at z = z0 (z0 may depend on eps), for Mellin-Barnes integrals |
+| `feynman_parametrize(fam, powers=None, dim=None)` **(top)** | (prefactor, integrand, parameters) of the Feynman-parameter form; powers may be symbols |
+| `derivative(fam, target, x)` **(top)** | d target / dx as a combination of integrals (x an invariant or a mass) |
+| `diff_reduce(fam, target, x)` **(top)** | the same reduced to master integrals |
+| `differential_equation(fam, masters, x)` **(top)** | the matrix A in dm/dx = A m for the chosen masters |
+| `read_kira(path, family_name=None)` **(top)** | Kira's `kira_*.m` result file as `{powers: coefficient}` per integral |
+| `critical_points(G, xs)` **(top)** | the number of critical points of G = U + F with all x_i and G non-zero (masters of one sector, Lee and Pomeransky) |
+| `master_count(fam, sectors, values)` **(top)** | `{sector: number of masters}` at a numerical point |
+| `sector_decompose(polys, xs)` **(top)** | the sectors of Int prod dx delta(1 - sum x) prod P^e; `polys` is `[(P, exponent)]` |
+| `integrate_sectors(sectors, eps, order=0, values=None, exact=False)` **(top)** | the sum of the sectors expanded in eps; numerical (tanh-sinh, about 12 digits) unless `exact=True` |
+| `delta_integrate(f, g, x, a, b)` **(top)** | Int_a^b f delta(g) dx |
+| `principal_value(f, x, a, b, c)` **(top)** | the principal value of Int_a^b f dx with a pole at c |
+| `integrate_termwise(expr, x, *bounds)` **(top)** | the integral of a sum done term by term (Maxima handles logarithm branches better that way) |
+| `gpl.GPL`, `gpl.solve_canonical(prev, x_part, y_part, boundary)` | Goncharov polylogarithms G(w; x) G(w'; y) and one order in eps of a canonical system df = eps dA f, path (0,0) -> (x,0) -> (x,y) |
+| `gpl.to_log(word, z)`, `gpl.at_one(e)` | weight <= 2 words in logarithms and dilogarithms; the value at x = y = 1 from `gpl.TABLE_AT_ONE` |
+| `notation(**extra)` **(top)** | prints mu2 as mu^2, pp as p^2, lam as lambda and so on in LaTeX output |
+
+Tests: `tests/test_methods.sage`.
+
+---
+
+## diagrams: topologies, fields and amplitudes (like FeynArts)
+
+Diagrams made from a model, as FeynArts' `CreateTopologies`, `InsertFields` and `CreateFeynAmp` do, with
+the amplitudes in the textbook notation of the `qft` layer (squared with FORM).
+
+| Function | What it returns |
+|---|---|
+| `topologies(loops, n_in, n_out, degrees=(3, 4), exclude=())` **(top)** | all topologies; `exclude` may hold `"tadpoles"` and `"wf"` (self-energies on external legs). Counts checked against FeynArts. |
+| `SM(qcd=True, xi=1)`, `QED()` **(top)** | models. `SM` is the tree-level part of FeynArts' `SM.mod` and `SMQCD.mod` (Denner's conventions, no quark mixing). Field names: `e mu ta ne nm nt u d c s t b` and their antiparticles with `~`, `A Z W+ W- H G0 G+ G- g`, ghosts `uA uZ u+ u- ug`; also `e-`, `e+`, `mu-`, `mu+`, `gamma`. Couplings and masses: `feynsage.models.EL, SW, CW, MW, MZ, MH, GS, ME, MM, ...` |
+| `insert_fields(tops, fields_in, fields_out, model, exclude_fields=())` **(top)** | a `DiagramList` of all diagrams (particle level). `.counts()` per topology, `.draw()` a figure. |
+| `diags.amplitude(p_in, p_out, gauge=None, widths=None)` | the sum of the tree amplitudes M (not iM). `gauge="feynman"` or `"unitary"`; `widths={"Z": GZ}` puts q^2 - M^2 + i M Gamma in those propagators. |
+| `diags.amplitudes(p_in, p_out, ...)` | the amplitude of each diagram |
+| `diags.squared(p_in, p_out, ...)` | M times its conjugate, summed over fermion spins; then `polarization_sum` and `color_factor` for vectors and colour |
+| `conjugate_amplitude(M, keep=())` **(top)** | the complex conjugate of an amplitude without spinors, with its summed indices renamed |
+
+Tests: `tests/test_diagrams.sage` (topology and diagram counts against FeynArts; e+e- -> mu+mu-, Bhabha against
+FeynCalc; e+e- -> W+W- against an explicit helicity sum; u ubar -> g g and g g -> g g against the standard results).
 
 ---
 

@@ -43,6 +43,11 @@ class Kinematics:
         self.invariants = list(invariants)
         self.euclidean = euclidean
         self.R = PolynomialRing(QQ, ['d'] + self.invariants + list(extra_vars))
+        try:                         # print the invariants the way notation() or var(..., latex_name=) asks
+            from sage.all import SR, latex
+            self.R._latex_names = ['{%s}' % latex(SR.var(str(g))) for g in self.R.gens()]
+        except Exception:
+            pass
         self.K = self.R.fraction_field()
         self.rules = {}
         for (a, b), e in rules.items():

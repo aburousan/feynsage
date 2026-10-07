@@ -1,6 +1,7 @@
 """
 Double Compton scattering e(P) + gamma(K0) -> e(P') + gamma(K1) + gamma(K2) from its six Feynman
-diagrams, with FORM for the traces (m = 1, exact rational kinematics).
+diagrams, with FORM for the traces (m = 1, exact rational kinematics).  The chains are written as in
+the book, gamma(mu1) * (slash(p' + q) + m) * ..., and all 36 traces go to FORM in one call.
 
 Used by the notebooks in this folder and by section 18 of examples/feynsage_walkthrough.ipynb:
 
@@ -11,17 +12,19 @@ Used by the notebooks in this folder and by section 18 of examples/feynsage_walk
     eikonal(tab)           # the soft-photon factor S of the photon K2
 """
 import itertools
-from sage.all import SR, function, var
-from feynsage import form
+from sage.all import SR, var
+from feynsage import momenta, lorentz_indices, gamma, slash, dirac_trace, dot
 
 DC_VECTORS = ['p', 'pp', 'k0', 'k1', 'k2']
-_dot = function('dot')
+P, PP, K0, K1, K2 = momenta("p pp k0 k1 k2")
+MU1, MU2, MU3 = lorentz_indices("mu1 mu2 mu3")
 _m = var('m')
 
 
 def dc_evaluate(expr, table):
-    """Put the numbers of `table` into the scalar products of a FORM result (m = 1)."""
-    return expr.substitute_function(_dot, lambda a, b: table[tuple(sorted((str(a), str(b))))]).subs({_m: 1}).expand()
+    """Put the numbers of `table` into the scalar products of a trace (m = 1)."""
+    vec = dict(zip(DC_VECTORS, (P, PP, K0, K1, K2)))
+    return SR(expr).subs({dot(vec[a], vec[b]): val for (a, b), val in table.items()}).subs({_m: 1}).expand()
 
 
 def dc_table(pk0, pk1, pk2, k0k1, k0k2):
@@ -46,17 +49,18 @@ def _square(expr, table):
 
 def dc_msq(table):
     """Sum over spins and polarisations of |M|^2 / e^6, all six orders of the three photons."""
-    ph = {'a': ('-k0', 'mu1'), 'b': ('k1', 'mu2'), 'c': ('k2', 'mu3')}     # photons as outgoing momenta
+    ph = {'a': (-K0, MU1, '-k0'), 'b': (K1, MU2, 'k1'), 'c': (K2, MU3, 'k2')}   # photons as outgoing momenta
     chains = []
     for o in itertools.permutations('abc'):
-        (q1, i1), (q2, i2), (q3, i3) = (ph[x] for x in o)
-        chains.append(([i1, 'pp + %s + m' % q1, i2, 'p - (%s) + m' % q3, i3],
-                       _square('pp + %s' % q1, table) * _square('p - (%s)' % q3, table)))
-    tot = 0
-    for c1, d1 in chains:
-        for c2, d2 in chains:
-            tr = form.dirac_trace(['pp + m'] + c1 + ['p + m'] + c2[::-1], vectors=DC_VECTORS)
-            tot += dc_evaluate(tr, table) / (d1 * d2)
+        (q1, i1, s1), (q2, i2, s2), (q3, i3, s3) = (ph[x] for x in o)
+        line = gamma(i1) * (slash(PP + q1) + _m) * gamma(i2) * (slash(P - q3) + _m) * gamma(i3)
+        back = gamma(i3) * (slash(P - q3) + _m) * gamma(i2) * (slash(PP + q1) + _m) * gamma(i1)
+        chains.append((line, back, _square('pp + %s' % s1, table) * _square('p - (%s)' % s3, table)))
+    # all 36 traces Tr[(p'/ + m) chain_1 (p/ + m) reversed chain_2] in one FORM run
+    exprs = [(slash(PP) + _m) * c1 * (slash(P) + _m) * b2 for c1, _, _ in chains for _, b2, _ in chains]
+    dens = [d1 * d2 for _, _, d1 in chains for _, _, d2 in chains]
+    traces = dirac_trace(exprs)
+    tot = sum(dc_evaluate(tr, table) / d for tr, d in zip(traces, dens))
     return -tot                                       # (-g) for each of the three photons
 
 

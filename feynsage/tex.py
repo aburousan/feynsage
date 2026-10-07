@@ -139,3 +139,20 @@ def eq(lhs, expr, per_line=2):
         display(Math(body))
     except ImportError:
         print('%s = %s' % (lhs, expr))
+
+
+_NOTATION = {'mu2': r'\mu^2', 'pp': 'p^2', 'p2': 'p^2', 'lam': r'\lambda', 'Q2': 'Q^2',
+             'mm1': 'm_1^2', 'mm2': 'm_2^2', 'mm3': 'm_3^2', 'm1s': 'm_1^2', 'm2s': 'm_2^2', 'q2': 'q^2',
+             'qq': 'q^2', 'M2': 'M^2', 'kk': 'k^2', 'ep': r'\epsilon', 'de': r'\delta', 'th': r'\theta',
+             'alpha': r'\alpha', 'al': r'\alpha', 'be': r'\beta', 'beta_': r'\beta', 'mpi': r'm_\pi', 'w': r'\omega', 'eta': r'\eta'}
+
+
+def notation(**extra):
+    r"""Print the usual names the way they are written by hand: pp and p2 as p^2,
+    mu2 as mu^2, lam as lambda, Q2 as Q^2, mm1 as m_1^2, ...  extra=dict(name='latex') adds more.
+    Only the printing changes; the symbols are the same Sage variables."""
+    from sage.all import SR
+    names = dict(_NOTATION)
+    names.update(extra)
+    for n, tex in names.items():
+        SR.var(n, latex_name=tex)

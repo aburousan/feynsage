@@ -449,13 +449,13 @@ print("m = 330 MeV:  2 I(r) =", (2*closed.subs(r=(134.9768/330)^2)).n(digits=5))
 """, {}),
 
 ("piontrace", """
-# Tr[ g5 (q - x k1 - (1-y) k2 + m) g^nu (q - x k1 + y k2 + m) g^mu
-#      (q + (1-x) k1 + y k2 + m) ]
-# each momentum combination stands for gamma.(that momentum);
-# the answer with the usual epsilon
-form.dirac_trace(['g5', 'q - x*k1 - (1-y)*k2 + m', 'nu', 'q - x*k1 + y*k2 + m', 'mu',
-                  'q + (1-x)*k1 + y*k2 + m'],
-                 vectors=['q', 'k1', 'k2'], levi_civita="usual")
+# the trace above, written as on paper; FORM does the work
+q, k1, k2 = momenta("q k1 k2")
+mu, nu = lorentz_indices("mu nu")
+m = var('m')
+dirac_trace(gamma5() * (slash(q - x*k1 - (1-y)*k2) + m) * gamma(nu)
+            * (slash(q - x*k1 + y*k2) + m) * gamma(mu)
+            * (slash(q + (1-x)*k1 + y*k2) + m))
 """, {}),
 
 ("pionamp", """
@@ -471,10 +471,9 @@ print("u and d, e^2 = 4 pi alpha:", A.simplify_full())
 """, {}),
 
 ("pioneps", """
-# Sage-style input; feynsage writes the FORM program, runs it and reads the answer back
-form.compute("eps(mu,nu,rho,sigma)*eps(mu,nu,al,be)*k1(rho)*k2(sigma)*k1(al)*k2(be)",
-             vectors=["k1", "k2"], rules={"k1.k1": 0, "k2.k2": 0},
-             levi_civita="usual", show_code=True)
+# the contraction above, written as on paper
+contract(epsilon(mu, nu, k1, k2) * epsilon(mu, nu, k1, k2),
+         rules={dot(k1, k1): 0, dot(k2, k2): 0}, debug=True)
 """, {}),
 
 ("pionrate", """
@@ -491,4 +490,75 @@ Gf = (Gamma.subs(vals_f).subs({Nc: 3})*1e6).n()
 print("f_pi 1%% larger: Gamma = %.2f eV, 2%% lower (Gamma ~ 1/f_pi^2)" % Gf)
 """, {}),
 
+]
+
+CELLS += [
+("fa_tops", """
+tops = topologies(0, 2, 2)                 # tree level, 2 -> 2
+len(tops), [len(topologies(L, a, b)) for (L, a, b) in ((0, 2, 3), (1, 2, 2), (2, 1, 1))]
+""", {}),
+
+("fa_insert", """
+sm = SM()                                  # FeynArts' {"SM", "SMQCD"}, Feynman gauge
+diags = insert_fields(tops, ["e-", "e+"], ["mu-", "mu+"], sm)
+diags.counts(), [d.propagator_fields() for d in diags]
+""", {}),
+
+("fa_draw", """
+fig = diags.draw(size=1.9)
+""", {"fig": "fig"}),
+
+("fa_loop", """
+one_loop = insert_fields(topologies(1, 2, 2, exclude=("tadpoles", "wf")), ["e-", "e+"], ["mu-", "mu+"], sm)
+len(one_loop)
+""", {}),
+
+("fa_m2", """
+from feynsage.models import EL, SW, CW, MW, MZ, MH, ME, MM
+p1, p2, p3, p4 = momenta("p1 p2 p3 p4")
+s, t, u = var('s t u')
+mandelstam = {dot(p1, p1): ME^2, dot(p2, p2): ME^2, dot(p3, p3): MM^2, dot(p4, p4): MM^2,
+              dot(p1, p2): (s - 2*ME^2)/2, dot(p3, p4): (s - 2*MM^2)/2,
+              dot(p1, p3): (ME^2 + MM^2 - t)/2, dot(p2, p4): (ME^2 + MM^2 - t)/2,
+              dot(p1, p4): (ME^2 + MM^2 - u)/2, dot(p2, p3): (ME^2 + MM^2 - u)/2}
+M2 = (diags.squared([p1, p2], [p3, p4]) / 4).subs(mandelstam)       # spins summed, 1/4 for the average
+len(M2.expand().operands())
+""", {"text": True}),
+
+("fa_numbers", """
+values = {EL: sqrt(4*pi/137.036), ME: 0.000511, MM: 0.105658, MZ: 91.1876, MW: 80.379, MH: 125.25,
+          SW: sqrt(0.23122), CW: sqrt(1 - 0.23122)}
+def point(rs, c, me=0.000511, mmu=0.105658):
+    sv = rs^2; pin = sqrt(sv/4 - me^2); pout = sqrt(sv/4 - mmu^2)
+    tv = me^2 + mmu^2 - sv/2 + 2*pin*pout*c
+    return {s: sv, t: tv, u: 2*me^2 + 2*mmu^2 - sv - tv}
+[M2.subs(values).subs(point(70, c)).n(digits=9) for c in (0.5, -0.5)]
+""", {}),
+
+("fa_gauge", """
+M2u = (diags.squared([p1, p2], [p3, p4], gauge="unitary") / 4).subs(mandelstam)
+(M2u - M2).subs({MW: MZ*CW}).subs({SW: sqrt(1 - CW^2)}).subs(u=2*ME^2 + 2*MM^2 - s - t).simplify_rational()
+""", {}),
+
+("fa_sigma", """
+GZ = var('GZ')
+M2w = (diags.squared([p1, p2], [p3, p4], widths={"Z": GZ, "G0": GZ}) / 4).subs(mandelstam)
+f = M2w.subs(values).subs({GZ: 2.4952})
+c = var('c')
+def sigma_pb(rs, me=0.000511, mmu=0.105658):
+    sv = rs^2; pin = sqrt(sv/4 - me^2); pout = sqrt(sv/4 - mmu^2)
+    g = fast_callable(f.subs(point(rs, c)), vars=[c], domain=CDF)
+    return 3.894e8/(32*pi.n()*sv) * (pout/pin) * numerical_integral(lambda x: g(x).real(), -1, 1)[0]
+[round(sigma_pb(rs), 2) for rs in (20, 60, 91.1876, 160)]
+""", {}),
+
+("fa_plot", """
+import numpy as np, matplotlib.pyplot as plt
+roots = np.linspace(20, 160, 141)
+fig, ax = plt.subplots(figsize=(5.2, 3.0))
+ax.semilogy(roots, [sigma_pb(x) for x in roots], color="C3", lw=1.6, label=r"$\\gamma + Z + H + G^0$")
+ax.semilogy(roots, [4*np.pi/(3*x**2)/137.036**2*3.894e8 for x in roots], color="C0", ls="--", lw=1, label=r"$4\\pi\\alpha^2/(3s)$")
+ax.set_xlabel(r"$\\sqrt{s}$ (GeV)"); ax.set_ylabel(r"$\\sigma$ (pb)"); ax.legend(fontsize=8)
+fig.tight_layout()
+""", {"fig": "fig"}),
 ]

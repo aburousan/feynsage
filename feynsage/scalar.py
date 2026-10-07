@@ -219,7 +219,7 @@ def _R_complex(y0, x):
             res = res + two_pi_i_times(k) * (vlog(V.of(1) - y0) - vlog(-y0))
         return res
     # split at y_c: approach the cut from each side
-    h = mp.mpf(10) ** -30
+    h = mp.mpf(10) ** -(DPS - 15)                  # far below the result, still resolved at DPS digits
     tl = V(t(V(ycn - h, 0)).n, t(yc).e)
     tr = V(t(V(ycn + h, 0)).n, t(yc).e)
     res = vli2(t0) - vli2(tl) + vli2(tr) - vli2(t1)
@@ -324,8 +324,42 @@ def c0_value(s1, s12, s2, m0, m1, m2, full=False):
             return _chop(v) if full else complex(_chop(v))
         val, lam = _c0_terms(*args, exact=False)
         if val is None:
-            raise ZeroDivisionError("lambda(s1, s12, s2) = 0: use pv.c0_numeric")
+            val = _c0_gram_zero(args)
+            return _chop(val) if full else complex(_chop(val))
         return _chop(val.n) if full else complex(_chop(val.n))
+
+
+def _c0_gram_zero(args, rel=None):
+    r"""
+    C0 where lambda(s1, s12, s2) = 0 (for example the vertex at q^2 = 0 with p1^2 = p2^2, the g - 2
+    kinematics), where the closed form divides by sqrt(lambda).  C0 is analytic in the invariants
+    there (unless one sits exactly on a threshold), so it is extrapolated from the closed form at one
+    invariant shifted by +-delta and +-2 delta:  C0(0) = [4 C(delta) - C(2 delta)]/3 with C the mean
+    of the two signs, an error of order delta^4.  delta is 10^GRAM_DELTA times the smallest non-zero
+    scale (|s_i| or m_i^2), so it stays far below every threshold.
+    """
+    nums = [mp.mpf(str(SR(x).n(prec=300))) for x in args]
+    scales = [abs(SR(x)) for x in args[:3] if not SR(x).is_trivial_zero()] + \
+             [SR(x) ** 2 for x in args[3:] if not SR(x).is_trivial_zero()]
+    small = min(scales, key=lambda z: z.n(prec=300)) if scales else SR(1)
+    s1, s12, s2 = nums[:3]
+    grads = [abs(2 * s1 - 2 * s12 - 2 * s2), abs(2 * s12 - 2 * s1 - 2 * s2), abs(2 * s2 - 2 * s1 - 2 * s12)]
+    k = max(range(3), key=lambda i: grads[i])
+    delta = small * QQ(10) ** (rel if rel is not None else GRAM_DELTA)
+    def mean_at(h):
+        vals = []
+        for sign in (1, -1):
+            a = list(args)
+            a[k] = SR(a[k]) + sign * h
+            v, lam = _c0_terms(*a, exact=False)
+            if v is None:
+                raise ZeroDivisionError("lambda(s1, s12, s2) = 0 and no shift helps here")
+            vals.append(v.n)
+        return (vals[0] + vals[1]) / 2
+    return (4 * mean_at(delta) - mean_at(2 * delta)) / 3
+
+
+GRAM_DELTA = -12                 # delta = 10^GRAM_DELTA times the smallest scale
 
 
 def _c0_zero_momenta(m0, m1, m2):

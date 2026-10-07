@@ -83,6 +83,8 @@ def _discb_num(s, m1, m2, prec=53):
     mp = _mp()
     with mp.workprec(prec + 40):
         s, m1, m2 = _mpf(s, prec + 40), _mpf(m1, prec + 40), _mpf(m2, prec + 40)
+        if s == 0 and m1 ** 2 == m2 ** 2 and m1 != 0:
+            return mp.mpc(-2, 0)                    # the limit s -> 0 of beta log((beta - 1)/(beta + 1))
         z = s + 1j * mp.mpf(2) ** (-prec - 30) * max(1, abs(s), m1 ** 2, m2 ** 2)
         lam = z ** 2 + m1 ** 4 + m2 ** 4 - 2 * z * m1 ** 2 - 2 * z * m2 ** 2 - 2 * m1 ** 2 * m2 ** 2
         r = mp.sqrt(lam)

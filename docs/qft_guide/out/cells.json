@@ -1,0 +1,920 @@
+{
+ "import": {
+  "code": "from feynsage import *",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 1
+ },
+ "symbols": {
+  "code": "p, q, k = momenta(\"p q k\")\nmu, nu, rho, tau = lorentz_indices(\"mu nu rho tau\")\nm = var('m')",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 2
+ },
+ "first": {
+  "code": "slash(p) * gamma(mu) * (slash(q) + m)",
+  "stdout": "",
+  "latex": "{\\not{p}} \\gamma^{\\mu} \\left({\\not{q}} + m\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 3
+ },
+ "order": {
+  "code": "gamma(mu) * gamma(nu) - gamma(nu) * gamma(mu)",
+  "stdout": "",
+  "latex": "\\gamma^{\\mu} \\gamma^{\\nu} - \\gamma^{\\nu} \\gamma^{\\mu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 4
+ },
+ "eulergamma": {
+  "code": "gamma(5), gamma(1/2)",
+  "stdout": "",
+  "latex": "\\left(24, \\sqrt{\\pi}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 5
+ },
+ "tr2": {
+  "code": "dirac_trace(gamma(mu) * gamma(nu))",
+  "stdout": "",
+  "latex": "4 \\, g^{\\mu \\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 6
+ },
+ "tr4": {
+  "code": "dirac_trace(gamma(mu) * gamma(nu) * gamma(rho) * gamma(tau))",
+  "stdout": "",
+  "latex": "4 \\, g^{\\mu \\tau} g^{\\nu \\rho} - 4 \\, g^{\\mu \\rho} g^{\\nu \\tau} + 4 \\, g^{\\mu \\nu} g^{\\rho \\tau}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 7
+ },
+ "tr3": {
+  "code": "dirac_trace(gamma(mu) * gamma(nu) * gamma(rho))",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 8
+ },
+ "trpq": {
+  "code": "dirac_trace(slash(p) * slash(q))",
+  "stdout": "",
+  "latex": "4 \\, \\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 9
+ },
+ "trmix": {
+  "code": "dirac_trace(slash(p) * gamma(mu) * slash(q) * gamma(nu))",
+  "stdout": "",
+  "latex": "4 \\, {p}^{\\nu} {q}^{\\mu} + 4 \\, {p}^{\\mu} {q}^{\\nu} - 4 \\, \\left({p} \\cdot {q}\\right) g^{\\mu \\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 10
+ },
+ "trmass": {
+  "code": "dirac_trace((slash(p) + m) * gamma(mu) * (slash(q) + m) * gamma(nu))",
+  "stdout": "",
+  "latex": "4 \\, m^{2} g^{\\mu \\nu} + 4 \\, {p}^{\\nu} {q}^{\\mu} + 4 \\, {p}^{\\mu} {q}^{\\nu} - 4 \\, \\left({p} \\cdot {q}\\right) g^{\\mu \\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 11
+ },
+ "method": {
+  "code": "expr = slash(p) * slash(q) * slash(p) * slash(q)\nexpr.trace()",
+  "stdout": "",
+  "latex": "8 \\, \\left({p} \\cdot {q}\\right)^{2} - 4 \\, {{p}^{2}} {{q}^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 12
+ },
+ "batch": {
+  "code": "dirac_trace([gamma(mu) * gamma(mu), slash(p) * slash(p), 7])",
+  "stdout": "",
+  "latex": "\\left[16, 4 \\, {{p}^{2}}, 28\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 13
+ },
+ "dots": {
+  "code": "dot(p + k, q)",
+  "stdout": "",
+  "latex": "\\left({k} \\cdot {q}\\right) + \\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 14
+ },
+ "dotsym": {
+  "code": "dot(q, p) - dot(p, q)",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 15
+ },
+ "subs": {
+  "code": "s = var('s')\nr = dirac_trace(slash(p) * slash(q) * slash(p) * slash(q))\nr.subs({dot(p, p): m^2, dot(q, q): 0, dot(p, q): s/2})",
+  "stdout": "",
+  "latex": "2 \\, s^{2}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 16
+ },
+ "rules": {
+  "code": "dirac_trace(slash(p) * slash(q) * slash(p) * slash(q),\n            rules={dot(p, p): m^2, dot(q, q): 0, dot(p, q): s/2})",
+  "stdout": "",
+  "latex": "2 \\, s^{2}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 17
+ },
+ "momrule": {
+  "code": "p1, p2, k1, k2 = momenta(\"p1 p2 k1 k2\")\ndirac_trace(slash(k2) * slash(p1), rules={k2: p1 + p2 - k1})",
+  "stdout": "",
+  "latex": "-4 \\, \\left({k_{1}} \\cdot {p_{1}}\\right) + 4 \\, {{p_{1}}^{2}} + 4 \\, \\left({p_{1}} \\cdot {p_{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 18
+ },
+ "contract1": {
+  "code": "contract(metric(mu, nu) * comp(p, mu) * comp(q, nu))",
+  "stdout": "",
+  "latex": "\\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 19
+ },
+ "contract2": {
+  "code": "T = dirac_trace(slash(p) * gamma(mu) * slash(q) * gamma(nu))\ncontract(T * comp(k, mu) * comp(k, nu))",
+  "stdout": "",
+  "latex": "8 \\, \\left({k} \\cdot {p}\\right) \\left({k} \\cdot {q}\\right) - 4 \\, {{k}^{2}} \\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 20
+ },
+ "epseps": {
+  "code": "contract(epsilon(mu, nu, rho, tau) * epsilon(mu, nu, rho, tau))",
+  "stdout": "",
+  "latex": "-24",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 21
+ },
+ "epseps2": {
+  "code": "contract(epsilon(tau, nu, rho, mu) * epsilon(tau, nu, rho, k))",
+  "stdout": "",
+  "latex": "-6 \\, {k}^{\\mu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 22
+ },
+ "open1": {
+  "code": "contract(gamma(mu) * gamma(nu) * gamma(mu))",
+  "stdout": "",
+  "latex": "-2 \\gamma^{\\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 23
+ },
+ "open2": {
+  "code": "contract(gamma(mu) * gamma(nu) * gamma(rho) * gamma(mu))",
+  "stdout": "",
+  "latex": "4 \\, g^{\\nu \\rho}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.61,
+  "n": 24
+ },
+ "open3": {
+  "code": "contract(gamma(mu) * slash(p) * slash(q) * gamma(mu))",
+  "stdout": "",
+  "latex": "4 \\, \\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 25
+ },
+ "ddim": {
+  "code": "d = var('d')\ncontract(gamma(mu) * gamma(nu) * gamma(mu), dim=d)",
+  "stdout": "",
+  "latex": "\\left(-d + 2\\right) \\gamma^{\\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 26
+ },
+ "ddimtr": {
+  "code": "dirac_trace(gamma(mu) * gamma(nu) * gamma(mu) * gamma(nu), dim=d)",
+  "stdout": "",
+  "latex": "-4 \\, d^{2} + 8 \\, d",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 27
+ },
+ "g5tr": {
+  "code": "dirac_trace(gamma(mu) * gamma(nu) * gamma(rho) * gamma(tau) * gamma5())",
+  "stdout": "",
+  "latex": "-4 i \\, \\epsilon^{\\mu \\nu \\rho \\tau}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 28
+ },
+ "g5slash": {
+  "code": "dirac_trace(slash(p) * gamma(mu) * gamma5() * slash(q) * gamma(nu))",
+  "stdout": "",
+  "latex": "4 i \\, \\epsilon^{\\mu \\nu p q}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 29
+ },
+ "projectors": {
+  "code": "PL()",
+  "stdout": "",
+  "latex": "\\left(\\frac{1}{2} - \\frac{1}{2} \\gamma^{5}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 30
+ },
+ "plpr": {
+  "code": "contract(PL() * PR()), contract(PL() * PL())",
+  "stdout": "",
+  "latex": "\\left(0, -\\frac{1}{2} \\gamma^{5} + \\frac{1}{2}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 31
+ },
+ "ndr": {
+  "code": "dirac_trace(PL() * gamma(mu) * PR() * gamma(nu), dim=d)",
+  "stdout": "",
+  "latex": "2 \\, g^{\\mu \\nu}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 32
+ },
+ "ndrerror": {
+  "code": "try:\n    dirac_trace(gamma(mu) * gamma(nu) * gamma(rho) * gamma(tau) * gamma5(), dim=d)\nexcept DiracError as err:\n    print(err)",
+  "stdout": "a trace with gamma5 and 4 other gamma matrices in d dimensions is ambiguous with an anticommuting gamma5 (NDR).  Use dim=4, or do the gamma5 part in 4 dimensions.",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 33
+ },
+ "spinor": {
+  "code": "J = ubar(p2, m) * gamma(mu) * u(p1, m)\nJ",
+  "stdout": "",
+  "latex": "\\left[\\bar{u}(p_{2}) \\gamma^{\\mu} u(p_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 34
+ },
+ "conj": {
+  "code": "conjugate(J)",
+  "stdout": "",
+  "latex": "\\left[\\bar{u}(p_{1}) \\gamma^{\\mu} u(p_{2})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 35
+ },
+ "diraceq": {
+  "code": "contract(ubar(p2, m) * slash(p2) * gamma(mu) * slash(p1) * u(p1, m))",
+  "stdout": "",
+  "latex": "m^{2} \\left[\\bar{u}(p_{2}) \\gamma^{\\mu} u(p_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 36
+ },
+ "diraceqv": {
+  "code": "contract(vbar(p2, m) * gamma(mu) * gamma5() * slash(p1) * v(p1, m))",
+  "stdout": "",
+  "latex": "-m \\left[\\bar{v}(p_{2}) \\gamma^{\\mu} \\gamma^{5} v(p_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 37
+ },
+ "wrongorder": {
+  "code": "try:\n    gamma(mu) * ubar(p, m)\nexcept DiracError as err:\n    print(err)",
+  "stdout": "ubar(p, m) is a row spinor; it must stand at the left end of a line",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 38
+ },
+ "ee_M": {
+  "code": "M_mu = var('M_mu')\nM = vbar(p2) * gamma(mu) * u(p1) * ubar(k1, M_mu) * gamma(mu) * v(k2, M_mu)\nM",
+  "stdout": "",
+  "latex": "\\left[\\bar{v}(p_{2}) \\gamma^{\\mu} u(p_{1})\\right] \\left[\\bar{u}(k_{1}) \\gamma^{\\mu} v(k_{2})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 39
+ },
+ "ee_Mc": {
+  "code": "conjugate(M)",
+  "stdout": "",
+  "latex": "\\left[\\bar{u}(p_{1}) \\gamma^{\\mu_{c}} v(p_{2})\\right] \\left[\\bar{v}(k_{2}) \\gamma^{\\mu_{c}} u(k_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 40
+ },
+ "ee_sum": {
+  "code": "Msq = spin_sum(M * conjugate(M)) / 4\nMsq",
+  "stdout": "",
+  "latex": "8 \\, M_{\\mu}^{2} \\left({p_{1}} \\cdot {p_{2}}\\right) + 8 \\, \\left({k_{1}} \\cdot {p_{2}}\\right) \\left({k_{2}} \\cdot {p_{1}}\\right) + 8 \\, \\left({k_{1}} \\cdot {p_{1}}\\right) \\left({k_{2}} \\cdot {p_{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 41
+ },
+ "ee_frame": {
+  "code": "E, K, c, e = var('E K c e')        # beam energy, |k|, cos(theta), charge\nassume(E > M_mu, M_mu > 0)\nframe = {dot(p1, p2): 2*E^2,\n         dot(k1, p1): E^2 - E*K*c, dot(k2, p2): E^2 - E*K*c,\n         dot(k2, p1): E^2 + E*K*c, dot(k1, p2): E^2 + E*K*c}\nmsq = (e^4 / (4*E^2)^2 * Msq).subs(frame).subs(K=sqrt(E^2 - M_mu^2))\nmsq.full_simplify()",
+  "stdout": "",
+  "latex": "\\frac{{\\left({\\left(E^{2} - M_{\\mu}^{2}\\right)} c^{2} + E^{2} + M_{\\mu}^{2}\\right)} e^{4}}{E^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 42
+ },
+ "ee_check511": {
+  "code": "peskin_511 = e^4 * ((1 + M_mu^2/E^2) + (1 - M_mu^2/E^2) * c^2)\n(msq - peskin_511).full_simplify()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 43
+ },
+ "ee_dsigma": {
+  "code": "a_em = var('a_em', latex_name=r'\\alpha')\nEcm = 2*E\ndsigma = 1/(2*Ecm^2) * sqrt(E^2 - M_mu^2)/(16*pi^2*Ecm) * msq.subs(e=sqrt(4*pi*a_em))\nsigma_tot = (2*pi * integrate(dsigma, c, -1, 1)).full_simplify()\nsigma_tot",
+  "stdout": "",
+  "latex": "\\frac{{\\left(2 \\, \\pi E^{2} + \\pi M_{\\mu}^{2}\\right)} \\sqrt{E^{2} - M_{\\mu}^{2}} {\\alpha}^{2}}{6 \\, E^{5}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 44
+ },
+ "ee_check513": {
+  "code": "peskin_513 = 4*pi*a_em^2/(3*Ecm^2) * sqrt(1 - M_mu^2/E^2) * (1 + M_mu^2/(2*E^2))\n(sigma_tot - peskin_513).canonicalize_radical()       # E > 0, so sqrt(E^2) = E",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 45
+ },
+ "ee_plot": {
+  "code": "from feynsage import plotting\nx = var('x')                    # x = E / M_mu\nratio = (sigma_tot / (4*pi*a_em^2/(3*Ecm^2))).subs(E=x*M_mu).full_simplify()\nfig = plotting.quick_plot([ratio], (x, 1, 4), labels=[r\"$\\sigma / \\sigma_{\\rm massless}$\"])",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/ee_plot.svg",
+  "seconds": 0.1,
+  "n": 46
+ },
+ "c_pol": {
+  "code": "kp, pp = momenta(\"kp pp\", latex_name=[\"k'\", \"p'\"])\ne_in = polarization(\"e_in\", k, latex_name=r\"\\epsilon\")       # photon in\ne_out = polarization(\"e_out\", kp, latex_name=r\"\\epsilon'\")   # photon out\neo = conjugate_vector(e_out)                  # eps*(k')\neo",
+  "stdout": "",
+  "latex": "{{\\epsilon'}^{*}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 47
+ },
+ "c_M": {
+  "code": "Mc = (ubar(pp, m) * slash(eo) * (slash(p) + slash(k) + m) * slash(e_in) * u(p, m) / (2*dot(p, k))\n      + ubar(pp, m) * slash(e_in) * (slash(p) - slash(kp) + m) * slash(eo) * u(p, m) / (-2*dot(p, kp)))\nMc",
+  "stdout": "",
+  "latex": "\\frac{1}{2 \\, \\left({k} \\cdot {p}\\right)} \\left[\\bar{u}({p'}) {\\not{{{\\epsilon'}^{*}}}} \\left({\\not{k}} + {\\not{p}} + m\\right) {\\not{{\\epsilon}}} u(p)\\right] - \\frac{1}{2 \\, \\left({{k'}} \\cdot {p}\\right)} \\left[\\bar{u}({p'}) {\\not{{\\epsilon}}} \\left(-{\\not{{k'}}} + {\\not{p}} + m\\right) {\\not{{{\\epsilon'}^{*}}}} u(p)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 48
+ },
+ "c_sum": {
+  "code": "r = spin_sum(Mc * conjugate(Mc), rules={pp: p + k - kp})\nr = polarization_sum(r, [e_in, e_out]) / 4\nonshell = {dot(p, p): m^2, dot(k, k): 0, dot(kp, kp): 0, dot(k, kp): dot(p, k) - dot(p, kp)}\ncompton = r.subs(onshell)\nlen(compton.operands())",
+  "stdout": "",
+  "latex": null,
+  "text": "15",
+  "fig": null,
+  "seconds": 0.06,
+  "n": 49
+ },
+ "c_check587": {
+  "code": "pk, pkp = dot(p, k), dot(p, kp)\npeskin_587 = 2*(pkp/pk + pk/pkp + 2*m^2*(1/pk - 1/pkp) + m^4*(1/pk - 1/pkp)^2)\n(compton - peskin_587).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 50
+ },
+ "c_ward": {
+  "code": "r2 = polarization_sum(spin_sum(Mc * conjugate(Mc), rules={pp: p + k - kp}), [e_in, e_out],\n                      gauge=\"physical\", n=p) / 4\n(r2.subs(onshell) - compton).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.08,
+  "n": 51
+ },
+ "c_kn": {
+  "code": "w = var('w', latex_name=r'\\omega'); th = var('th', latex_name=r'\\theta')\nwp = w / (1 + w/m*(1 - cos(th)))                       # omega', Peskin (5.89)\nlab = compton.subs({pk: m*w, pkp: m*wp}).subs(e=1)\ndsig = 1/(2*w) * 1/(2*m) * 1/(8*pi) * wp^2/(w*m) * (4*pi*a_em)^2 * lab\npeskin_591 = pi*a_em^2/m^2 * (wp/w)^2 * (wp/w + w/wp - sin(th)^2)\n(dsig - peskin_591).full_simplify()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.04,
+  "n": 52
+ },
+ "c_thomson": {
+  "code": "low = limit(peskin_591, w=0)\nthomson = pi*a_em^2/m^2 * (1 + cos(th)^2)\n(low - thomson).trig_simplify(), integrate(low * sin(th), th, 0, pi)",
+  "stdout": "",
+  "latex": "\\left(0, \\frac{8 \\, \\pi {\\alpha}^{2}}{3 \\, m^{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 53
+ },
+ "c_plot": {
+  "code": "th_ = var('theta')\ncurves = [1 + cos(th_)^2] + [(peskin_591 / (pi*a_em^2/m^2)).subs(w=W*m).subs(th=th_) for W in (1/2, 2, 10)]\nfig = plotting.quick_plot(curves, (th_, 0, pi),\n                          labels=[r\"$\\omega = 0$\", r\"$\\omega = m/2$\", r\"$\\omega = 2m$\", r\"$\\omega = 10m$\"])",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/c_plot.svg",
+  "seconds": 0.05,
+  "n": 54
+ },
+ "vma": {
+  "code": "L = dirac_trace(slash(p2) * gamma(mu) * PL() * slash(p1) * gamma(nu) * PL())\nL",
+  "stdout": "",
+  "latex": "2 \\, {p_{1}}^{\\nu} {p_{2}}^{\\mu} + 2 \\, {p_{1}}^{\\mu} {p_{2}}^{\\nu} - 2 \\, \\left({p_{1}} \\cdot {p_{2}}\\right) g^{\\mu \\nu} + 2 i \\, \\epsilon^{\\mu \\nu p_{1} p_{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 55
+ },
+ "vma2": {
+  "code": "Lk = dirac_trace(slash(k2) * gamma(mu) * PL() * slash(k1) * gamma(nu) * PL())\ncontract(L * Lk)",
+  "stdout": "",
+  "latex": "16 \\, \\left({k_{1}} \\cdot {p_{1}}\\right) \\left({k_{2}} \\cdot {p_{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 56
+ },
+ "vma3": {
+  "code": "Lv = dirac_trace(slash(p2) * gamma(mu) * slash(p1) * gamma(nu)) / 2\ncontract(Lv * Lk)",
+  "stdout": "",
+  "latex": "8 \\, \\left({k_{1}} \\cdot {p_{2}}\\right) \\left({k_{2}} \\cdot {p_{1}}\\right) + 8 \\, \\left({k_{1}} \\cdot {p_{1}}\\right) \\left({k_{2}} \\cdot {p_{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 57
+ },
+ "col_idx": {
+  "code": "a, b, cc, dd = color_indices(\"a b cc dd\")\ni, j = quark_colors(\"i j\")\ncolor_factor(T_color(a, i, j) * T_color(b, j, i))",
+  "stdout": "",
+  "latex": "\\frac{1}{2} \\, \\delta_{a b}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 58
+ },
+ "col_cf": {
+  "code": "color_factor(color_chain(a, a, i=i, j=j))",
+  "stdout": "",
+  "latex": "\\frac{1}{2} \\, N \\delta_{i j} - \\frac{\\delta_{i j}}{2 \\, N}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 59
+ },
+ "col_ca": {
+  "code": "color_factor(f_color(a, cc, dd) * f_color(b, cc, dd))",
+  "stdout": "",
+  "latex": "N \\delta_{a b}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 60
+ },
+ "col_n3": {
+  "code": "color_factor(color_trace(a, b, a, b), N=3)",
+  "stdout": "",
+  "latex": "-\\frac{2}{3}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 61
+ },
+ "col_delta": {
+  "code": "color_factor(color_delta(i, j) * color_delta(j, i))",
+  "stdout": "",
+  "latex": "N",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 62
+ },
+ "col_R": {
+  "code": "Ncol = color_factor(color_delta(i, j) * color_delta(j, i), N=3)\ncharges = {'u': 2/3, 'd': -1/3, 's': -1/3, 'c': 2/3, 'b': -1/3}\nR = Ncol * sum(Q^2 for Q in charges.values())\nR",
+  "stdout": "",
+  "latex": "\\frac{11}{3}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 63
+ },
+ "col_gg": {
+  "code": "color_factor(color_chain(a, b, i=i, j=j) * color_chain(b, a, i=j, j=i))",
+  "stdout": "",
+  "latex": "\\frac{1}{4} \\, N^{3} - \\frac{1}{2} \\, N + \\frac{1}{4 \\, N}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 64
+ },
+ "B_amp": {
+  "code": "q = momenta(\"q\")                                  # the B\ng, MB = var('g M_B')\neB = polarization(\"eB\", q, mass=MB, latex_name=r\"\\varepsilon\")\nMa = g * vbar(p2) * slash(conjugate_vector(eB)) * u(p1)\nMa",
+  "stdout": "",
+  "latex": "g \\left[\\bar{v}(p_{2}) {\\not{{{\\varepsilon}^{*}}}} u(p_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 65
+ },
+ "B_sum": {
+  "code": "ra = polarization_sum(spin_sum(Ma * conjugate(Ma)), eB)\nra",
+  "stdout": "",
+  "latex": "8 \\, g^{2} \\left({p_{1}} \\cdot {p_{2}}\\right) + \\frac{8 \\, g^{2} \\left({p_{1}} \\cdot {q}\\right) \\left({p_{2}} \\cdot {q}\\right)}{M_{B}^{2}} - \\frac{4 \\, g^{2} \\left({p_{1}} \\cdot {p_{2}}\\right) {{q}^{2}}}{M_{B}^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 66
+ },
+ "B_onshell": {
+  "code": "ra = ra.subs({dot(p1, p1): 0, dot(p2, p2): 0, dot(q, p1): dot(p1, p2), dot(q, p2): dot(p1, p2),\n              dot(q, q): 2*dot(p1, p2)})\nra / 4, ra / 3",
+  "stdout": "",
+  "latex": "\\left(2 \\, g^{2} \\left({p_{1}} \\cdot {p_{2}}\\right), \\frac{8}{3} \\, g^{2} \\left({p_{1}} \\cdot {p_{2}}\\right)\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 67
+ },
+ "B_rates": {
+  "code": "s = var('s')\nsigma_B = 1/(2*s) * (ra/4).subs({dot(p1, p2): s/2}) * 2*pi           # times delta(s - M_B^2)\nGamma_B = 1/(2*MB) * (ra/3).subs({dot(p1, p2): MB^2/2}) / (8*pi)\nsigma_B, Gamma_B, sigma_B - 12*pi^2/MB * Gamma_B",
+  "stdout": "",
+  "latex": "\\left(\\pi g^{2}, \\frac{M_{B} g^{2}}{12 \\, \\pi}, 0\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 68
+ },
+ "B_b_amp": {
+  "code": "t = var('t'); uu = SR.var('uu', latex_name='u')      # not var('u'): u is the spinor\nea = polarization(\"ea\", p1, latex_name=r\"\\epsilon\")                  # the photon\neb = polarization(\"eb\", p2, mass=MB, latex_name=r\"\\varepsilon\")     # the B\nac, bc = conjugate_vector(ea), conjugate_vector(eb)\nMb = e*g*(vbar(k2) * slash(bc) * (slash(k1) - slash(p1)) * slash(ac) * u(k1) / (-2*dot(k1, p1))\n          + vbar(k2) * slash(ac) * (slash(k1) - slash(p2)) * slash(bc) * u(k1) / (MB^2 - 2*dot(k1, p2)))\nMb",
+  "stdout": "",
+  "latex": "-\\frac{e g}{2 \\, \\left({k_{1}} \\cdot {p_{1}}\\right)} \\left[\\bar{v}(k_{2}) {\\not{{{\\varepsilon}^{*}}}} \\left({\\not{k_{1}}} - {\\not{p_{1}}}\\right) {\\not{{{\\epsilon}^{*}}}} u(k_{1})\\right] + \\frac{e g}{M_{B}^{2} - 2 \\, \\left({k_{1}} \\cdot {p_{2}}\\right)} \\left[\\bar{v}(k_{2}) {\\not{{{\\epsilon}^{*}}}} \\left({\\not{k_{1}}} - {\\not{p_{2}}}\\right) {\\not{{{\\varepsilon}^{*}}}} u(k_{1})\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 69
+ },
+ "B_b_sum": {
+  "code": "mandelstam = {dot(k1, k1): 0, dot(k2, k2): 0, dot(p1, p1): 0, dot(p2, p2): MB^2,\n              dot(k1, k2): s/2, dot(k1, p1): -t/2, dot(k2, p2): (MB^2 - t)/2,\n              dot(k1, p2): (MB^2 - uu)/2, dot(k2, p1): -uu/2, dot(p1, p2): (s - MB^2)/2}\nrb = polarization_sum(spin_sum(Mb * conjugate(Mb)), [ea, eb]) / 4\nrb = rb.subs(mandelstam).subs(s=MB^2 - t - uu).simplify_rational()\nrb",
+  "stdout": "",
+  "latex": "\\frac{2 \\, {\\left(2 \\, M_{B}^{4} e^{2} g^{2} - 2 \\, M_{B}^{2} e^{2} g^{2} t - 2 \\, M_{B}^{2} e^{2} g^{2} {u} + e^{2} g^{2} t^{2} + e^{2} g^{2} {u}^{2}\\right)}}{t {u}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.07,
+  "n": 70
+ },
+ "B_check587": {
+  "code": "x587 = 2*e^2*g^2*(uu/t + t/uu + 2*s*MB^2/(t*uu))\n(rb - x587.subs(s=MB^2 - t - uu)).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 71
+ },
+ "B_ward": {
+  "code": "Mk = e*g*(vbar(k2) * slash(p2) * (slash(k1) - slash(p1)) * slash(ac) * u(k1) / (-2*dot(k1, p1))\n          + vbar(k2) * slash(ac) * (slash(k1) - slash(p2)) * slash(p2) * u(k1) / (MB^2 - 2*dot(k1, p2)))\npolarization_sum(spin_sum(Mk * conjugate(Mk)), ea).subs(mandelstam).subs(s=MB^2 - t - uu).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 72
+ },
+ "B_angle": {
+  "code": "ph = var('ph')                                     # th = theta, from the Compton part\nassume(s > MB^2, MB > 0)\ndOmega = 1/(2*s) * (s - MB^2)/(2*sqrt(s)) / (16*pi^2*sqrt(s)) * x587\nangles = {t: (MB^2 - s)*sin(th/2)^2, uu: (MB^2 - s)*cos(th/2)^2}\ndcos = 2*pi * dOmega.subs(angles).subs(e=sqrt(4*pi*a_em))\nx591 = a_em*g^2*(1 - MB^2/s)/(2*s*sin(th)^2) * (1 + cos(th)^2 + 4*s*MB^2/(s - MB^2)^2)\n(dcos - x591).subs(th=2*ph).expand_trig().simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 73
+ },
+ "B_massless": {
+  "code": "(x591.subs({MB: 0, g: sqrt(4*pi*a_em)}) - 2*pi*a_em^2/s * (1 + cos(th)^2)/sin(th)^2).simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 74
+ },
+ "B_plot": {
+  "code": "cc = var('cc')                                     # cos(theta)\nshape = (x591 / x591.subs(th=pi/2)).subs(th=arccos(cc))\ncurves = [shape.subs({MB: sqrt(f_*s)}).simplify_full() for f_ in (0, 1/2, 9/10)]\nfig = plotting.quick_plot(curves, (cc, -0.95, 0.95),\n                          labels=[r\"$M_B \\to 0$\", r\"$M_B^2 = s/2$\", r\"$M_B^2 = 9s/10$\"])",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/B_plot.svg",
+  "seconds": 0.05,
+  "n": 75
+ },
+ "B_forward": {
+  "code": "c = var('c'); assume(c > -1, c < 1)\nA = limit(((1 - c) * x591.subs(th=arccos(c))).simplify_full(), c=1)\nA",
+  "stdout": "",
+  "latex": "-\\frac{M_{B}^{4} {\\alpha} g^{2} + {\\alpha} g^{2} s^{2}}{2 \\, {\\left(M_{B}^{2} s^{2} - s^{3}\\right)}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 76
+ },
+ "B_ww": {
+  "code": "x = var('x')\nf = a_em/(2*pi) * (1 + (1 - x)^2)/x                 # f(x) without its log(s/m_e^2)\nww = (f * pi*g^2/s).subs(x=1 - MB^2/s)             # pi g^2 delta(M_B^2 - (1 - x) s), x integral done\n(A - ww).simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 77
+ },
+ "epa_traces": {
+  "code": "e1, e2 = momenta(\"e1 e2\", latex_name=[r\"\\epsilon_1\", r\"\\epsilon_2\"])\nCC = dirac_trace(slash(pp) * slash(e1) * PR() * slash(p) * slash(e1))     # |C|^2\nDD = dirac_trace(slash(pp) * slash(e2) * PR() * slash(p) * slash(e2))     # |D|^2\nCD = dirac_trace(slash(pp) * slash(e1) * PR() * slash(p) * slash(e2))     # C D^*\nCD",
+  "stdout": "",
+  "latex": "2 \\, \\left({{\\epsilon_1}} \\cdot {{p'}}\\right) \\left({{\\epsilon_2}} \\cdot {p}\\right) + 2 \\, \\left({{\\epsilon_1}} \\cdot {p}\\right) \\left({{\\epsilon_2}} \\cdot {{p'}}\\right) - 2 \\, \\left({{\\epsilon_1}} \\cdot {{\\epsilon_2}}\\right) \\left({p} \\cdot {{p'}}\\right) - 2 i \\, \\epsilon^{{\\epsilon_1} {\\epsilon_2} p {p'}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 78
+ },
+ "epa_frame": {
+  "code": "Ep = SR.var('Ep', latex_name=\"E'\")\nqt = momenta(\"qt\", latex_name=r\"\\tilde{q}\")\nassume(E > Ep, Ep > 0, th > 0, th < pi)\nvec = {p: vector([E, 0, 0, E]), pp: vector([Ep, Ep*sin(th), 0, Ep*cos(th)]),\n       e1: vector([0, Ep*cos(th) - E, 0, -Ep*sin(th)]) / sqrt(E^2 + Ep^2 - 2*E*Ep*cos(th)),\n       e2: vector([0, 0, 1, 0]),\n       qt: vector([E - Ep, Ep*sin(th), 0, Ep*cos(th) - E])}              # q~ = (q0, -q)\nmdot = lambda a, b: a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3]\nframe = {dot(a, b): mdot(vec[a], vec[b]) for a in vec for b in vec}\nframe[epsilon(e1, e2, p, pp)] = -matrix([vec[e1], vec[e2], vec[p], vec[pp]]).det()   # eps^{0123} = +1\nw0 = SR.wild(0)\nroot = (E^2 - 2*E*Ep + Ep^2)^w0 == (E - Ep)^(2*w0)      # sqrt((E - E')^2) = E - E' because E > E'\nsmall = lambda X: X.subs(frame).series(th, 3).truncate().simplify_full().subs(root).factor()\n[small(X) for X in (CC, DD, CD)]",
+  "stdout": "",
+  "latex": "\\left[\\frac{{\\left(E + {E'}\\right)}^{2} E {E'} {\\theta}^{2}}{{\\left(E - {E'}\\right)}^{2}}, E {E'} {\\theta}^{2}, \\frac{E {\\left(i \\, E + i \\, {E'}\\right)} {E'} {\\theta}^{2}}{E - {E'}}\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.11,
+  "n": 79
+ },
+ "epa_619": {
+  "code": "C2 = E*Ep*(E + Ep)^2/(E - Ep)^2 * th^2\nD2 = E*Ep * th^2\nCDs = I*E*Ep*(E + Ep)/(E - Ep) * th^2\n[(small(X) - Y).simplify_full() for X, Y in ((CC, C2), (DD, D2), (CD, CDs))]",
+  "stdout": "",
+  "latex": "\\left[0, 0, 0\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.08,
+  "n": 80
+ },
+ "epa_cross": {
+  "code": "CDL = dirac_trace(slash(pp) * slash(e1) * PL() * slash(p) * slash(e2))\n(CD + CDL).subs(frame).simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 81
+ },
+ "epa_B": {
+  "code": "J = ubar(pp) * (slash(p) - slash(pp)) * u(p)              # q.J with q = p - p'\nJt = ubar(pp) * slash(qt) * u(p)                          # q~.J\nQ = vec[p] - vec[pp]\nq2_, qqt = mdot(Q, Q), mdot(Q, vec[qt])\nB2 = (spin_sum(Jt * conjugate(Jt)) / 2).subs(frame) * q2_^2/(q2_^2 - qqt^2)^2\nspin_sum(J * conjugate(J)).subs(frame).simplify_full(), B2.series(th, 5).truncate().simplify_full()",
+  "stdout": "",
+  "latex": "\\left(0, \\frac{E^{3} {E'}^{3} {\\theta}^{4}}{E^{6} - 6 \\, E^{5} {E'} + 15 \\, E^{4} {E'}^{2} - 20 \\, E^{3} {E'}^{3} + 15 \\, E^{2} {E'}^{4} - 6 \\, E {E'}^{5} + {E'}^{6}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 4.8,
+  "n": 82
+ },
+ "epa_avg": {
+  "code": "Mh = SR.var('Mh', latex_name=r'|\\widehat{\\mathcal{M}}|^2')\navg = (C2 * Mh/2 + D2 * Mh/2).subs(Ep=(1 - x)*E)\navg.factor()",
+  "stdout": "",
+  "latex": "-\\frac{{\\left(x^{2} - 2 \\, x + 2\\right)} E^{2} {|\\widehat{\\mathcal{M}}|^2} {\\theta}^{2} {\\left(x - 1\\right)}}{x^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 83
+ },
+ "epa_q2": {
+  "code": "lt = var('lt')                       # theta and m both small: scale them together\nEpx = (1 - x)*E\nq2m = -2*(E*Epx - sqrt(E^2 - m^2)*sqrt(Epx^2 - m^2)*cos(th)) + 2*m^2\nassume(x > 0, x < 1)\nq2_small = q2m.subs(th=lt*th, m=lt*m).series(lt, 3).truncate().subs(lt=1)\nq2_small = q2_small.subs((E^2*x^2 - 2*E^2*x + E^2)^w0 == (E*(1 - x))^(2*w0)).subs((E^2)^w0 == E^(2*w0))\nq2_small.simplify_full(), (q2_small - (-(1 - x)*E^2*th^2 - x^2*m^2/(1 - x))).simplify_full()",
+  "stdout": "",
+  "latex": "\\left(-\\frac{2 \\, E^{2} {\\theta}^{2} x - E^{2} {\\theta}^{2} - {\\left(E^{2} {\\theta}^{2} + m^{2}\\right)} x^{2}}{x - 1}, 0\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 84
+ },
+ "epa_theta": {
+  "code": "a2, tmax = var('a2 tmax'); assume(a2 > 0, tmax > 0)\nI_th = integrate(th^3/(th^2 + a2)^2, th, 0, tmax)\nI_th, (I_th + log(a2)/2 - log(tmax)).subs(a2=0).simplify_log()",
+  "stdout": "",
+  "latex": "\\left(\\frac{\\mathit{tmax}^{2} \\log\\left(\\mathit{tmax}^{2} + a_{2}\\right)}{2 \\, {\\left(\\mathit{tmax}^{2} + a_{2}\\right)}} + \\frac{a_{2} \\log\\left(\\mathit{tmax}^{2} + a_{2}\\right)}{2 \\, {\\left(\\mathit{tmax}^{2} + a_{2}\\right)}} + \\frac{a_{2}}{2 \\, {\\left(\\mathit{tmax}^{2} + a_{2}\\right)}} - \\frac{1}{2} \\, \\log\\left(a_{2}\\right) - \\frac{1}{2}, -\\frac{1}{2}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 85
+ },
+ "epa_N": {
+  "code": "Mt, L = var('M_t L')                            # target mass; L = log(E^2/m^2)\nq2_0 = -(1 - x)*E^2*(th^2 + a2)\nper = (Epx*E * th/(8*pi^2) * e^2/q2_0^2 * avg).simplify_full()   # times dx dtheta and the target phase space\nsigma_gamma = (Mh/2) / (2*x*E * 2*Mt)          # photon cross section, per unit of target phase space\nN = (per / th^3 * (th^2 + a2)^2 * L/2) / (2*E * 2*Mt) / sigma_gamma\nN.subs(e=sqrt(4*pi*a_em)).simplify_full()",
+  "stdout": "",
+  "latex": "\\frac{L {\\alpha} x^{2} - 2 \\, L {\\alpha} x + 2 \\, L {\\alpha}}{2 \\, \\pi x}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 86
+ },
+ "g2_higgs": {
+  "code": "from feynsage.dirac import projector, form_factor\nq2 = SR.var('q2', latex_name='q^2'); mh = SR.var('mh', latex_name='m_h'); lam = SR.var('lam', latex_name=r'\\lambda')\nP = projector('F2', 'mu', 'p1', 'm', 'p2', 'm')\nkin = {'p1^2': 'm^2', 'p2^2': 'm^2', 'p1.p2': 'm^2 - q2/2'}\nhiggs = form_factor(['p2 - l + m', 'mu', 'p1 - l + m'], P, ['l', 'mh'], ['l - p2', 'm'], ['l - p1', 'm'], kin=kin)\nLh = higgs.coefficients()['1']\nuv_part(Lh).simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.8,
+  "n": 87
+ },
+ "g2_F2h": {
+  "code": "F2h = -lam^2/(32*pi^2) * finite_part(Lh, 1).subs(q2=0)\nfrom feynsage import tex\nLatexExpr(r\"\\begin{aligned} \\delta F_2(0) &= -\\frac{\\lambda^2}{32\\pi^2}\\Big[ \"\n          + tex.lines(finite_part(Lh, 1).subs(q2=0).expand(), per_line=3) + r\" \\Big] \\end{aligned}\")",
+  "stdout": "",
+  "latex": "\\begin{aligned} \\delta F_2(0) &= -\\frac{\\lambda^2}{32\\pi^2}\\Big[ 3  {m_h}^{2} C_{0}\\left(m^{2}, m^{2}, 0, m, {m_h}, m\\right) - \\frac{3  {m_h}^{4} C_{0}\\left(m^{2}, m^{2}, 0, m, {m_h}, m\\right)}{4  m^{2}} - \\frac{3  {m_h}^{2} \\Lambda(0; m, m)}{4  m^{2}} \\\\ & \\quad + \\frac{5  {m_h}^{2} \\Lambda(m^{2}; m, {m_h})}{4  m^{2}} - \\frac{9  {m_h}^{2} \\log\\left(\\frac{m^{2}}{{m_h}^{2}}\\right)}{4  m^{2}} + \\frac{5  {m_h}^{4} \\log\\left(\\frac{m^{2}}{{m_h}^{2}}\\right)}{8  m^{4}} \\\\ & \\quad - \\frac{3  {m_h}^{2} \\log\\left(\\frac{1}{m^{2}}\\right)}{4  m^{2}} + \\frac{3  {m_h}^{2} \\log\\left(\\frac{1}{{m_h}^{2}}\\right)}{4  m^{2}} + \\frac{{m_h}^{2}}{2  m^{2}} \\\\ & \\quad + \\frac{3}{2}  \\Lambda(0; m, m) - 2  \\Lambda(m^{2}; m, {m_h}) + 2  \\log\\left(\\frac{m^{2}}{{m_h}^{2}}\\right) \\\\ & \\quad + 2  \\log\\left(\\frac{1}{m^{2}}\\right) - 2  \\log\\left(\\frac{1}{{m_h}^{2}}\\right) \\Big] \\end{aligned}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 88
+ },
+ "g2_634": {
+  "code": "x = var('x')\nmatrix(SR, [[R, F2h.subs(m=1, mh=sqrt(R), lam=1).n(digits=60).n(digits=20),\n              (integrate((1 - x)^2*(1 + x)/((1 - x)^2 + x*R), x, 0, 1)/(4*pi)^2).n(digits=60).n(digits=20)]\n             for R in (1/2, 10, 1000)])                 # R = (m_h/m)^2, feynsage, eq. (6.34)",
+  "stdout": "",
+  "latex": "\\begin{pmatrix}\n\\frac{1}{2} & 0.0040101326337403856962 & 0.0040101326337403856962 \\\\\n10 & 0.0010484312114206570667 & 0.0010484312114206570667 \\\\\n1000 & 0.000036466850174497883945 & 0.000036466850174497883945\n\\end{pmatrix}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.25,
+  "n": 89
+ },
+ "g2_heavy": {
+  "code": "a, w = var('a w'); assume(a > 1, w > 0)\nIh = integrate(((1 - x)^2*(1 + x)/((x + a)*(x + 1/a))).partial_fraction(x), x, 0, 1)\nR_ = 2 + a + 1/a                                  # (1 - x)^2 + x R_ = (x + a)(x + 1/a)\n(Ih - (log(R_) - 7/6)/R_).subs(a=1/w).series(w, 3).truncate().simplify_full()",
+  "stdout": "",
+  "latex": "-3 \\, {\\omega}^{2} \\log\\left({\\omega}\\right) - \\frac{13}{4} \\, {\\omega}^{2}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 90
+ },
+ "g2_numbers": {
+  "code": "electron = F2h.subs(lam=3/10^6, m=511/1000, mh=60000)          # masses in MeV\nmuon_60 = F2h.subs(lam=6/10^4, m=10566/100, mh=60000)\nmuon_light = F2h.subs(lam=6/10^4, m=10566/100, mh=10566/100000)  # m_h = m_mu/1000\n[v.n(digits=60).n(digits=4) for v in (electron, muon_60, muon_light)]",
+  "stdout": "",
+  "latex": "\\left[9.169 \\times 10^{-23}, 8.142 \\times 10^{-14}, 3.412 \\times 10^{-9}\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 91
+ },
+ "g2_plot": {
+  "code": "import numpy as np, matplotlib.pyplot as plt\nratios = np.logspace(-3, 6, 37)                          # m_h / m\nunit = [float(F2h.subs(lam=1, m=1, mh=QQ(float(rv))).n(digits=60).real()) for rv in ratios]\nfig, ax = plt.subplots(figsize=(5.2, 3.2))\nax.loglog(ratios, [3e-6**2*u_ for u_ in unit], label=r\"electron, $\\lambda = 3\\times10^{-6}$\")\nax.loglog(ratios, [6e-4**2*u_ for u_ in unit], label=r\"muon, $\\lambda = 6\\times10^{-4}$\")\nax.axhline(1e-10, ls=\"--\", color=\"C0\"); ax.axhline(3e-8, ls=\"--\", color=\"C1\")\nax.set_xlabel(r\"$m_h/m$\"); ax.set_ylabel(r\"$\\delta F_2(0)$\"); ax.legend(fontsize=8)\nfig.tight_layout()",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/g2_plot.svg",
+  "seconds": 0.62,
+  "n": 92
+ },
+ "g2_axion": {
+  "code": "ma = SR.var('ma', latex_name='m_a')\naxion = form_factor(['g5', 'p2 - l + m', 'mu', 'p1 - l + m', 'g5'], P, ['l', 'ma'], ['l - p2', 'm'], ['l - p1', 'm'], kin=kin)\nF2a = lam^2/(32*pi^2) * finite_part(axion.coefficients()['1'], 1).subs(q2=0)\nmatrix(SR, [[R, F2a.subs(m=1, ma=sqrt(R), lam=1).n(digits=60).n(digits=20),\n              (-integrate((1 - x)^3/((1 - x)^2 + x*R), x, 0, 1)/(4*pi)^2).n(digits=60).n(digits=20)]\n             for R in (1/100, 2, 1000)])                # R = (m_a/m)^2, feynsage, eq. (6.40)",
+  "stdout": "",
+  "latex": "\\begin{pmatrix}\n\\frac{1}{100} & -0.0030708424399288822139 & -0.0030708424399288822139 \\\\\n2 & -0.0014948452025791385270 & -0.0014948452025791385270 \\\\\n1000 & -0.000032306640212805407293 & -0.000032306640212805407293\n\\end{pmatrix}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.66,
+  "n": 93
+ },
+ "g2_axion_light": {
+  "code": "Ia = integrate(((1 - x)^3/((x + a)*(x + 1/a))).partial_fraction(x), x, 0, 1)\nlight = -lam^2/(4*pi)^2 * integrate((1 - x)^3/(1 - x)^2, x, 0, 1)       # m_a -> 0\nheavy = (Ia - (log(R_) - 11/6)/R_).subs(a=1/w).series(w, 3).truncate().simplify_full()\nlight, heavy, sqrt(10^-10 / (light/lam^2).abs()).n(digits=3)",
+  "stdout": "",
+  "latex": "\\left(-\\frac{{\\lambda}^{2}}{32 \\, \\pi^{2}}, -5 \\, {\\omega}^{2} \\log\\left({\\omega}\\right) - \\frac{89}{12} \\, {\\omega}^{2}, 0.000178\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.06,
+  "n": 94
+ },
+ "g2_axion_plot": {
+  "code": "ratios = np.logspace(-3, 4, 29)                          # m_a / m\nlam_max = [float(sqrt(1e-10 / abs(F2a.subs(lam=1, m=1, ma=QQ(float(rv))).n(digits=60).real()))) for rv in ratios]\nfig, ax = plt.subplots(figsize=(5.2, 3.2))\nax.loglog(ratios, lam_max, color=\"C3\")\nax.fill_between(ratios, lam_max, 1, color=\"C3\", alpha=0.15)\nax.text(ratios[1], 0.1, \"excluded: $|\\\\delta F_2(0)| > 10^{-10}$\", fontsize=8)\nax.set_xlabel(r\"$m_a/m_e$\"); ax.set_ylabel(r\"largest allowed $\\lambda$\"); ax.set_ylim(1e-5, 1)\nfig.tight_layout()",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/g2_axion_plot.svg",
+  "seconds": 0.52,
+  "n": 95
+ },
+ "conv_note": {
+  "code": "set_convention(\"note\")\nspacetime_dimension()",
+  "stdout": "",
+  "latex": "D",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 96
+ },
+ "conv_std": {
+  "code": "set_convention(\"standard\")\nspacetime_dimension()",
+  "stdout": "",
+  "latex": "d",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 97
+ },
+ "conv_eu": {
+  "code": "set_convention(euclidean=True)\nt5 = dirac_trace(gamma(mu) * gamma(nu) * gamma(rho) * gamma(tau) * gamma5())\nset_convention(euclidean=False)\nt5",
+  "stdout": "",
+  "latex": "4 \\, \\epsilon^{\\mu \\nu \\rho \\tau}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 98
+ },
+ "wick": {
+  "code": "to_euclidean(dot(p, p) - m^2)",
+  "stdout": "",
+  "latex": "-m^{2} - {{p}^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 99
+ },
+ "speed": {
+  "code": "import time\nexprs = [slash(p) * gamma(mu) * slash(q) * gamma(nu) * n for n in range(1, 201)]\nt0 = time.time(); one_by_one = [dirac_trace(x) for x in exprs]; t1 = time.time()\ntogether = dirac_trace(exprs); t2 = time.time()\nprint(\"200 traces one by one: %.3f s,  in one FORM run: %.3f s\" % (t1 - t0, t2 - t1))",
+  "stdout": "200 traces one by one: 0.025 s,  in one FORM run: 0.019 s",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.05,
+  "n": 100
+ },
+ "debug": {
+  "code": "dirac_trace(slash(p) * gamma(mu) * slash(q) * gamma(mu), debug=True)",
+  "stdout": "--- FORM program ---\nVectors p,q;\nIndices mu;\nOff statistics;\nLocal FSE1 = g_(1,p,mu,q,mu);\ntrace4,1;\ncontract;\nFormat nospaces;\nPrint;\n.end\n\n--- FORM output ---\n\nFSE1=-8*p.q;",
+  "latex": "-8 \\, \\left({p} \\cdot {q}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 101
+ },
+ "errors": {
+  "code": "for bad in (lambda: slash(p + m),\n            lambda: dirac_trace(gamma(var('muu')) * gamma(nu)),\n            lambda: contract(gamma(mu) * gamma(mu) * gamma(mu))):\n    try:\n        bad()\n    except Exception as err:\n        print(type(err).__name__ + \":\", str(err).splitlines()[0])",
+  "stdout": "TypeError: m + p: the part m is not a momentum.  Write slash(p) + m, not slash(p + m)\nCompileError: gamma(muu) is Euler's Gamma function of the symbol muu here, because muu is not a Lorentz index.  Declare it first: muu = lorentz_indices('muu')\nDiracError: the index mu appears more than twice in one term; an index is either free (once) or summed (twice).  Rename one pair.",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 102
+ }
+}

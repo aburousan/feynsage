@@ -78,6 +78,45 @@ class Family(IntegralFamily):
         print("  %s(a1,...,at) = Int prod_r d^d l_r prod_i D_i^(-a_i), a_i <= 0 is a numerator."
               % self.name)
 
+    def integral(self, *a):
+        """The integral with powers a as a Sage symbol, e.g. T(2) or J(1,1)."""
+        from sage.symbolic.function_factory import function as _fn
+        return _fn(self.name)(*[SR(x) for x in a])
+
+    def ibp_eq(self, a=None):
+        """The IBP identities at the powers a, written as equations  sum_k c_k F(...) == 0.
+        Without a: the identities for symbolic powers a1, ..., at."""
+        if a is None:
+            return self._ibp_symbolic()
+        a = tuple(a) if isinstance(a, (tuple, list)) else (a,)
+        out = []
+        for rel in self.ibp(a):
+            lhs = sum((SR(str(c)) * self.integral(*k) for k, c in rel.items()), SR(0))
+            out.append(lhs == 0)
+        return out
+
+    def _ibp_symbolic(self):
+        from .ff import ibp_templates
+        gens = [SR(str(g)) for g in self.kin.R.gens()]
+        avars = [SR.var('a%d' % (i + 1)) for i in range(self.t)]
+
+        def poly(dct):
+            tot = SR(0)
+            for exps, c in dct.items():
+                term = SR(c)
+                for g, e in zip(gens, exps):
+                    term *= g ** e
+                tot += term
+            return tot
+        out = []
+        for tpl in ibp_templates(self):
+            lhs = SR(0)
+            for shift, c0, cs in tpl:
+                coef = poly(c0) + sum((avars[i] * poly(c) for i, c in enumerate(cs) if c), SR(0))
+                lhs += coef * self.integral(*[avars[i] + shift[i] for i in range(self.t)])
+            out.append(lhs.collect_common_factors() == 0)
+        return out
+
 
 def family(props, kin=None, loops=None, euclidean=False, name="F", explain=False):
     r"""
@@ -239,14 +278,14 @@ class Reduction:
         """An integral as the family's name with its powers, e.g. T(2) or J(1,1)."""
         return "%s(%s)" % (getattr(self.fam, 'name', 'F'), ",".join(str(x) for x in a))
 
-    def draw(self, graph, targets=None, rename=None, size=1.5):
+    def draw(self, graph, targets=None, rename=None, size=1.5, fontsize=12):
         """The reductions as equations of diagrams (see plotting.draw_reduction): `graph` is a
         FeynmanGraph whose lines are this family's propagators in the same order.  targets are
         given as "J(2,1)" or (2, 1)."""
         from .plotting import draw_reduction
         if targets is not None:
             targets = [_target(t) for t in targets]
-        return draw_reduction(self.table, graph, targets=targets, rename=rename, size=size)
+        return draw_reduction(self.table, graph, targets=targets, rename=rename, size=size, fontsize=fontsize)
 
     def info(self):
         print("Reduction of %d integrals of family %r with the %s reducer (%.1f s)."

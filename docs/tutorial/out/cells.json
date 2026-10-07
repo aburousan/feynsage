@@ -5,7 +5,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.03,
+  "seconds": 0.02,
   "n": 1
  },
  "solidangle": {
@@ -32,7 +32,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.8,
+  "seconds": 0.59,
   "n": 4
  },
  "pole": {
@@ -41,7 +41,7 @@
   "latex": "\\frac{{\\epsilon} m_{2} \\log\\left(m_{2}\\right) - {\\left({\\epsilon} + 1\\right)} m_{2}}{{\\epsilon}}",
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.01,
   "n": 5
  },
  "phi4": {
@@ -50,7 +50,7 @@
   "latex": "-\\frac{{\\left(\\gamma_E - 2 \\, \\log\\left(2\\right) - 1\\right)} {\\lambda} m_{2}}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left(\\pi\\right)}{32 \\, \\pi^{2}} - \\frac{{\\lambda} m_{2} \\log\\left(m_{2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left({\\mu^2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2}}{32 \\, \\pi^{2} e}",
   "text": null,
   "fig": null,
-  "seconds": 0.15,
+  "seconds": 0.07,
   "n": 6
  },
  "psi2": {
@@ -68,7 +68,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.03,
+  "seconds": 0.06,
   "n": 8
  },
  "tadibp": {
@@ -83,10 +83,10 @@
  "tadred": {
   "code": "r = ibp_reduce(tad, [\"T(2)\", \"T(3)\", \"T(4)\"])\nr",
   "stdout": "",
-  "latex": "\\begin{aligned} T(2) &= -\\frac{(d - 2)}{2 m^{2}}\\; T(1) \\\\ T(3) &= \\frac{(d - 4) (d - 2)}{8 m^{4}}\\; T(1) \\\\ T(4) &= -\\frac{(d - 6) (d - 4) (d - 2)}{48 m^{6}}\\; T(1) \\end{aligned}",
+  "latex": "\\begin{aligned} T(2) &= -\\frac{({d} - 2)}{2 {m}^{2}}\\; T(1) \\\\ T(3) &= \\frac{({d} - 4) ({d} - 2)}{8 {m}^{4}}\\; T(1) \\\\ T(4) &= -\\frac{({d} - 6) ({d} - 4) ({d} - 2)}{48 {m}^{6}}\\; T(1) \\end{aligned}",
   "text": null,
   "fig": null,
-  "seconds": 0.14,
+  "seconds": 0.13,
   "n": 10
  },
  "taddraw": {
@@ -95,7 +95,7 @@
   "latex": null,
   "text": null,
   "fig": "out/taddraw.svg",
-  "seconds": 0.06,
+  "seconds": 0.05,
   "n": 11
  },
  "tadcheck": {
@@ -122,7 +122,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.03,
+  "seconds": 0.02,
   "n": 14
  },
  "basis": {
@@ -131,7 +131,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.04,
+  "seconds": 0.03,
   "n": 15
  },
  "bubfam": {
@@ -155,7 +155,7 @@
  "bubred": {
   "code": "rb = ibp_reduce(bub, [\"J(2,1)\", \"J(1,2)\", \"J(0,2)\"])\nrb",
   "stdout": "",
-  "latex": "\\begin{aligned} J(2,1) &= -\\frac{(d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad - \\frac{(d - 2)}{2 m^{2} (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(1,2) &= -\\frac{(d - 3)}{(4 m^{2} + \\mathit{kk})}\\; J(1,1) \\\\ &\\quad - \\frac{(d - 2)}{2 m^{2} (4 m^{2} + \\mathit{kk})}\\; J(0,1) \\\\ J(0,2) &= -\\frac{(d - 2)}{2 m^{2}}\\; J(0,1) \\end{aligned}",
+  "latex": "\\begin{aligned} J(2,1) &= -\\frac{({d} - 3)}{(4 {m}^{2} + {\\mathit{kk}})}\\; J(1,1) \\\\ &\\quad - \\frac{({d} - 2)}{2 {m}^{2} (4 {m}^{2} + {\\mathit{kk}})}\\; J(0,1) \\\\ J(1,2) &= -\\frac{({d} - 3)}{(4 {m}^{2} + {\\mathit{kk}})}\\; J(1,1) \\\\ &\\quad - \\frac{({d} - 2)}{2 {m}^{2} (4 {m}^{2} + {\\mathit{kk}})}\\; J(0,1) \\\\ J(0,2) &= -\\frac{({d} - 2)}{2 {m}^{2}}\\; J(0,1) \\end{aligned}",
   "text": null,
   "fig": null,
   "seconds": 0.01,
@@ -212,7 +212,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.03,
+  "seconds": 0.02,
   "n": 24
  },
  "denum": {
@@ -221,7 +221,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 1.33,
+  "seconds": 1.18,
   "n": 25
  },
  "hyp": {
@@ -275,7 +275,7 @@
   "latex": null,
   "text": null,
   "fig": "out/b0plot.svg",
-  "seconds": 0.12,
+  "seconds": 0.09,
   "n": 31
  },
  "bub2": {
@@ -284,7 +284,7 @@
   "latex": null,
   "text": null,
   "fig": "out/bub2.svg",
-  "seconds": 0.05,
+  "seconds": 0.04,
   "n": 32
  },
  "box": {
@@ -302,7 +302,7 @@
   "latex": null,
   "text": null,
   "fig": "out/box2trees.svg",
-  "seconds": 0.1,
+  "seconds": 0.07,
   "n": 34
  },
  "kite": {
@@ -320,7 +320,7 @@
   "latex": null,
   "text": null,
   "fig": "out/kitetrees.svg",
-  "seconds": 0.12,
+  "seconds": 0.09,
   "n": 36
  },
  "kite2trees": {
@@ -329,7 +329,7 @@
   "latex": null,
   "text": null,
   "fig": "out/kite2trees.svg",
-  "seconds": 0.15,
+  "seconds": 0.12,
   "n": 37
  },
  "fpformula": {
@@ -383,7 +383,7 @@
   "latex": null,
   "text": null,
   "fig": "out/piontrees.svg",
-  "seconds": 0.08,
+  "seconds": 0.06,
   "n": 43
  },
  "piondelta": {
@@ -428,16 +428,16 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.05,
+  "seconds": 0.04,
   "n": 48
  },
  "piontrace": {
-  "code": "# Tr[ g5 (q - x k1 - (1-y) k2 + m) g^nu (q - x k1 + y k2 + m) g^mu\n#      (q + (1-x) k1 + y k2 + m) ]\n# each momentum combination stands for gamma.(that momentum);\n# the answer with the usual epsilon\nform.dirac_trace(['g5', 'q - x*k1 - (1-y)*k2 + m', 'nu', 'q - x*k1 + y*k2 + m', 'mu',\n                  'q + (1-x)*k1 + y*k2 + m'],\n                 vectors=['q', 'k1', 'k2'], levi_civita=\"usual\")",
+  "code": "# the trace above, written as on paper; FORM does the work\nq, k1, k2 = momenta(\"q k1 k2\")\nmu, nu = lorentz_indices(\"mu nu\")\nm = var('m')\ndirac_trace(gamma5() * (slash(q - x*k1 - (1-y)*k2) + m) * gamma(nu)\n            * (slash(q - x*k1 + y*k2) + m) * gamma(mu)\n            * (slash(q + (1-x)*k1 + y*k2) + m))",
   "stdout": "",
-  "latex": "4 i \\, m \\varepsilon\\left(k_{1}, k_{2}, \\mu, \\nu\\right)",
+  "latex": "4 i \\, m \\epsilon^{k_{1} k_{2} \\mu \\nu}",
   "text": null,
   "fig": null,
-  "seconds": 0.03,
+  "seconds": 0.02,
   "n": 49
  },
  "pionamp": {
@@ -450,12 +450,12 @@
   "n": 50
  },
  "pioneps": {
-  "code": "# Sage-style input; feynsage writes the FORM program, runs it and reads the answer back\nform.compute(\"eps(mu,nu,rho,sigma)*eps(mu,nu,al,be)*k1(rho)*k2(sigma)*k1(al)*k2(be)\",\n             vectors=[\"k1\", \"k2\"], rules={\"k1.k1\": 0, \"k2.k2\": 0},\n             levi_civita=\"usual\", show_code=True)",
-  "stdout": "Vectors k1,k2;\nIndices al,be,mu,nu,rho,sigma;\nLocal E = e_(mu,nu,rho,sigma)*e_(mu,nu,al,be)*k1(rho)*k2(sigma)*k1(al)*k2(be);\ncontract;\nid k1.k1 = 0;\nid k2.k2 = 0;\nFormat nospaces;\nPrint +s;\n.end",
-  "latex": "2 \\, {\\rm dot}\\left(k_{1}, k_{2}\\right)^{2}",
+  "code": "# the contraction above, written as on paper\ncontract(epsilon(mu, nu, k1, k2) * epsilon(mu, nu, k1, k2),\n         rules={dot(k1, k1): 0, dot(k2, k2): 0}, debug=True)",
+  "stdout": "--- FORM program ---\nVectors k1,k2;\nIndices mu,nu;\nOff statistics;\nLocal FSE1 = ((i_*e_(k1,k2,mu,nu)))^2;\ncontract;\nid k1.k1 = 0;\nid k2.k2 = 0;\n.sort\nid k1.k1 = 0;\nid k2.k2 = 0;\nFormat nospaces;\nPrint;\n.end\n\n--- FORM output ---\n\nFSE1=2*k1.k2^2;",
+  "latex": "2 \\, \\left({k_{1}} \\cdot {k_{2}}\\right)^{2}",
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.0,
   "n": 51
  },
  "pionrate": {
@@ -466,5 +466,86 @@
   "fig": null,
   "seconds": 0.01,
   "n": 52
+ },
+ "fa_tops": {
+  "code": "tops = topologies(0, 2, 2)                 # tree level, 2 -> 2\nlen(tops), [len(topologies(L, a, b)) for (L, a, b) in ((0, 2, 3), (1, 2, 2), (2, 1, 1))]",
+  "stdout": "",
+  "latex": "\\left(4, \\left[25, 99, 29\\right]\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.04,
+  "n": 53
+ },
+ "fa_insert": {
+  "code": "sm = SM()                                  # FeynArts' {\"SM\", \"SMQCD\"}, Feynman gauge\ndiags = insert_fields(tops, [\"e-\", \"e+\"], [\"mu-\", \"mu+\"], sm)\ndiags.counts(), [d.propagator_fields() for d in diags]",
+  "stdout": "",
+  "latex": "\\left(\\left[0, 4, 0, 0\\right], \\left[\\left[\\text{\\texttt{A}}\\right], \\left[\\text{\\texttt{G0}}\\right], \\left[\\text{\\texttt{H}}\\right], \\left[\\text{\\texttt{Z}}\\right]\\right]\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 54
+ },
+ "fa_draw": {
+  "code": "fig = diags.draw(size=1.9)",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/fa_draw.svg",
+  "seconds": 0.09,
+  "n": 55
+ },
+ "fa_loop": {
+  "code": "one_loop = insert_fields(topologies(1, 2, 2, exclude=(\"tadpoles\", \"wf\")), [\"e-\", \"e+\"], [\"mu-\", \"mu+\"], sm)\nlen(one_loop)",
+  "stdout": "",
+  "latex": null,
+  "text": "388",
+  "fig": null,
+  "seconds": 0.18,
+  "n": 56
+ },
+ "fa_m2": {
+  "code": "from feynsage.models import EL, SW, CW, MW, MZ, MH, ME, MM\np1, p2, p3, p4 = momenta(\"p1 p2 p3 p4\")\ns, t, u = var('s t u')\nmandelstam = {dot(p1, p1): ME^2, dot(p2, p2): ME^2, dot(p3, p3): MM^2, dot(p4, p4): MM^2,\n              dot(p1, p2): (s - 2*ME^2)/2, dot(p3, p4): (s - 2*MM^2)/2,\n              dot(p1, p3): (ME^2 + MM^2 - t)/2, dot(p2, p4): (ME^2 + MM^2 - t)/2,\n              dot(p1, p4): (ME^2 + MM^2 - u)/2, dot(p2, p3): (ME^2 + MM^2 - u)/2}\nM2 = (diags.squared([p1, p2], [p3, p4]) / 4).subs(mandelstam)       # spins summed, 1/4 for the average\nlen(M2.expand().operands())",
+  "stdout": "",
+  "latex": null,
+  "text": "104",
+  "fig": null,
+  "seconds": 0.05,
+  "n": 57
+ },
+ "fa_numbers": {
+  "code": "values = {EL: sqrt(4*pi/137.036), ME: 0.000511, MM: 0.105658, MZ: 91.1876, MW: 80.379, MH: 125.25,\n          SW: sqrt(0.23122), CW: sqrt(1 - 0.23122)}\ndef point(rs, c, me=0.000511, mmu=0.105658):\n    sv = rs^2; pin = sqrt(sv/4 - me^2); pout = sqrt(sv/4 - mmu^2)\n    tv = me^2 + mmu^2 - sv/2 + 2*pin*pout*c\n    return {s: sv, t: tv, u: 2*me^2 + 2*mmu^2 - sv - tv}\n[M2.subs(values).subs(point(70, c)).n(digits=9) for c in (0.5, -0.5)]",
+  "stdout": "",
+  "latex": "\\left[0.00472095318, 0.0215928503\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 58
+ },
+ "fa_gauge": {
+  "code": "M2u = (diags.squared([p1, p2], [p3, p4], gauge=\"unitary\") / 4).subs(mandelstam)\n(M2u - M2).subs({MW: MZ*CW}).subs({SW: sqrt(1 - CW^2)}).subs(u=2*ME^2 + 2*MM^2 - s - t).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.86,
+  "n": 59
+ },
+ "fa_sigma": {
+  "code": "GZ = var('GZ')\nM2w = (diags.squared([p1, p2], [p3, p4], widths={\"Z\": GZ, \"G0\": GZ}) / 4).subs(mandelstam)\nf = M2w.subs(values).subs({GZ: 2.4952})\nc = var('c')\ndef sigma_pb(rs, me=0.000511, mmu=0.105658):\n    sv = rs^2; pin = sqrt(sv/4 - me^2); pout = sqrt(sv/4 - mmu^2)\n    g = fast_callable(f.subs(point(rs, c)), vars=[c], domain=CDF)\n    return 3.894e8/(32*pi.n()*sv) * (pout/pin) * numerical_integral(lambda x: g(x).real(), -1, 1)[0]\n[round(sigma_pb(rs), 2) for rs in (20, 60, 91.1876, 160)]",
+  "stdout": "",
+  "latex": "\\left[217.17, 25.81, 1754.64, 4.34\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.12,
+  "n": 60
+ },
+ "fa_plot": {
+  "code": "import numpy as np, matplotlib.pyplot as plt\nroots = np.linspace(20, 160, 141)\nfig, ax = plt.subplots(figsize=(5.2, 3.0))\nax.semilogy(roots, [sigma_pb(x) for x in roots], color=\"C3\", lw=1.6, label=r\"$\\gamma + Z + H + G^0$\")\nax.semilogy(roots, [4*np.pi/(3*x**2)/137.036**2*3.894e8 for x in roots], color=\"C0\", ls=\"--\", lw=1, label=r\"$4\\pi\\alpha^2/(3s)$\")\nax.set_xlabel(r\"$\\sqrt{s}$ (GeV)\"); ax.set_ylabel(r\"$\\sigma$ (pb)\"); ax.legend(fontsize=8)\nfig.tight_layout()",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/fa_plot.svg",
+  "seconds": 0.37,
+  "n": 61
  }
 }

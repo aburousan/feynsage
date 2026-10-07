@@ -1,0 +1,14 @@
+peskin:
+  type: book
+  title: An Introduction to Quantum Field Theory
+  author: ["Peskin, Michael E.", "Schroeder, Daniel V."]
+  date: 1995
+  publisher: Westview Press
+  note: "page numbers of the CRC Press printing, 2018"
+
+xianyu:
+  type: report
+  title: "A Complete Solution to Problems in \"An Introduction to Quantum Field Theory\" by Peskin and Schroeder"
+  author: "Xianyu, Zhong-Zhi"
+  date: 2016-05
+  organization: Harvard University

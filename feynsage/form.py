@@ -302,9 +302,10 @@ def compute(expr="1", vectors=(), lines=(), rules=None, dim=4, show_code=False, 
 
 
 def to_loop(expr):
-    """Turn a dirac_trace result into a numerator string for pv.loop():
-    comp(l, mu) -> l^mu, dot(a, b) -> a.b, g(mu, nu) -> g(mu,nu)."""
+    """Turn a trace (of form.dirac_trace or of the textbook-notation dirac_trace) into a numerator string
+    for pv.loop(): comp(l, mu) or Comp(l, mu) -> l^mu, dot(a, b) or Dot(a, b) -> a.b, Metric(mu, nu) -> g(mu,nu)."""
     t = str(expr)
-    t = re.sub(r'comp\((\w+),\s*(\w+)\)', r'\1^\2', t)
-    t = re.sub(r'dot\((\w+),\s*(\w+)\)', r'\1.\2', t)
+    t = re.sub(r'\b[Cc]omp\((\w+),\s*(\w+)\)', r'\1^\2', t)
+    t = re.sub(r'\b[Dd]ot\((\w+),\s*(\w+)\)', r'\1.\2', t)
+    t = re.sub(r'\bMetric\(', 'g(', t)
     return t

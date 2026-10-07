@@ -11,7 +11,15 @@ Feynman integrals in SageMath, written from scratch.
   (exact, or with finite fields), symmetries found by itself, master integrals.
 - **Graphs.** The Symanzik polynomials U and F from spanning trees and 2-forests, checked against
   two other methods. Pictures of diagrams, trees and sectors.
-- **Dirac algebra with FORM**, gamma_5 included.
+- **Dirac algebra with FORM**, gamma_5 included. Traces, spin sums, polarization sums and colour factors
+  are written in textbook notation, `dirac_trace(slash(p) * gamma(mu) * slash(q) * gamma(nu))`, and FORM
+  does the work without any FORM code ([docs/dirac_algebra.md](docs/dirac_algebra.md)).
+- **Diagrams from a model, like FeynArts.** `topologies`, `insert_fields` with the Standard Model of
+  FeynArts (`SM()`, also QED), pictures of the diagrams, and tree amplitudes squared with FORM, with
+  Breit-Wigner widths if wanted.
+- **The methods of the lecture note**: Laurent series at Gamma poles, Mellin-Barnes residues, differential
+  equations for master integrals, Goncharov polylogarithms, sector decomposition, expansion by regions,
+  counting master integrals.
 - Every function can explain its own output: `explain=True` or `info(f)`.
 
 I wrote feynsage in 2024 for my MSc project. After the talk "An Introduction to Feynman Integrals" by
@@ -102,6 +110,7 @@ The tested results are checked against another program, a known answer or a dire
 | QED | Peskin and Schroeder | Ward identity and F2(0) = alpha/2pi exactly |
 | Series, discontinuities, raised powers, fermion lines, projectors | Package-X 2.1.1 (`tests/test_px_parity.sage`, `tests/test_dirac_px.sage`); finite differences where Package-X gives Indeterminate | every digit printed |
 | Pentagons | LoopTools 2.16 (E0), direct Feynman-parameter integration | 1e-14 |
+| Diagram generation | FeynArts 3.12: topology counts (11 cases up to two loops) and diagram counts (13 processes up to 388 one-loop diagrams); FeynCalc 10.2 for e+e- -> mu+mu- in the SM and Bhabha; an explicit helicity sum for e+e- -> W+W- | identical counts; 20 digits |
 
 Package-X and LoopTools both fail at one point we found (C0(-4,-3,-1; 0,0,1)). See
 `tests/looptools/README.md`.

@@ -10,6 +10,10 @@ the lecture notes, plus an epsilon-expansion helper.
 """
 from sage.all import SR, ZZ, var, gamma, hypergeometric, exp, euler_gamma, pi
 
+# `from feynsage.oneloop import *` gives only these; re-exporting Sage's gamma would hide feynsage's gamma(mu)
+__all__ = ['D', 'eps', 'tadpole', 'G', 'bubble_massless', 'triangle_onshell', 'bubble_equal_mass',
+           'bubble_one_mass', 'expand_eps']
+
 D, eps = var('D eps')
 
 

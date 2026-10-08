@@ -107,8 +107,14 @@ class Process:
         diagrams: a list of diagram numbers (from 1, as in draw()) to keep only those."""
         return self._amp(diagrams)[0]
 
+    def _no_tree(self):
+        if not len(self.diagrams):
+            raise ValueError("%s has no tree diagrams: it starts at one loop.  Use P.loop_diagrams() and "
+                             "loop_amplitude (see examples/02_qft_one_loop.ipynb, section 5, for H -> g g)" % self.text)
+
     def _amp(self, diagrams=None):
         from .diagrams import _Shared, _sum_amplitudes
+        self._no_tree()
         sh = _Shared()
         amps = self.diagrams.amplitudes(self.p_in, self.p_out, gauge=self.gauge, widths=self.widths, shared=sh)
         keep = range(1, len(amps) + 1) if diagrams is None else diagrams
@@ -198,6 +204,7 @@ class Process:
         the products M_i M_j* of pairs of diagrams are worked out in parallel.
         A particle that appears twice is named by its position: {3: +1} is the third particle.
         """
+        self._no_tree()
         if helicities:
             return self._helicity(helicities, diagrams)
         r = self._unpolarized(diagrams, polarization_gauge, nproc)
@@ -453,13 +460,43 @@ class Process:
         return r
 
     # ------------------------------------------------------------------ rates
-    def width(self):
-        """Gamma for a 1 -> 2 decay: |p| /(8 pi M^2) |M|^2 (averaged), times 1/2 for identical particles."""
-        if len(self.p_in) != 1 or len(self.p_out) != 2:
-            raise NotImplementedError("width() is for 1 -> 2 decays")
-        M2, a, b = [m ** 2 for m in self.masses]
-        P = sqrt(_kallen(M2, a, b)) / (2 * self.masses[0])
-        return self.symmetry_factor() * P / (8 * pi * M2) * self.squared()
+    def width(self, **values):
+        """The decay width Gamma (GeV).
+        1 -> 2: |p|/(8 pi M^2) |M|^2 (averaged), times 1/2 for identical particles; a formula in the masses.
+        1 -> 3: (1/(256 pi^3 M^3)) times the integral of |M|^2 over the Dalitz plot (m_12^2, m_23^2), done
+        numerically with the Standard-Model numbers; keywords as in numeric(), e.g. width(MW=80.4)."""
+        if len(self.p_in) == 1 and len(self.p_out) == 2:
+            M2, a, b = [m ** 2 for m in self.masses]
+            P = sqrt(_kallen(M2, a, b)) / (2 * self.masses[0])
+            return self.symmetry_factor() * P / (8 * pi * M2) * self.squared()
+        if len(self.p_in) == 1 and len(self.p_out) == 3:
+            return self._width3(**values)
+        raise NotImplementedError("width() is for 1 -> 2 and 1 -> 3 decays")
+
+    def _width3(self, **values):
+        from sage.all import fast_callable, RDF
+        from scipy.integrate import dblquad
+        import math
+        M, ma, mb, mc = [float(SR(self.numeric(m, **values))) for m in self.masses]
+        p0, pa, pb, pc = self.momenta
+        x, y = SR.var('fs_dalitz_x fs_dalitz_y')            # x = (pa + pb)^2, y = (pb + pc)^2
+        z = M ** 2 + ma ** 2 + mb ** 2 + mc ** 2 - x - y         # z = (pa + pc)^2
+        dots = {T.dot(p0, p0): M ** 2, T.dot(pa, pa): ma ** 2, T.dot(pb, pb): mb ** 2, T.dot(pc, pc): mc ** 2,
+                T.dot(pa, pb): (x - ma ** 2 - mb ** 2) / 2, T.dot(pb, pc): (y - mb ** 2 - mc ** 2) / 2,
+                T.dot(pa, pc): (z - ma ** 2 - mc ** 2) / 2, T.dot(p0, pa): (M ** 2 + ma ** 2 - y) / 2,
+                T.dot(p0, pb): (M ** 2 + mb ** 2 - z) / 2, T.dot(p0, pc): (M ** 2 + mc ** 2 - x) / 2}
+        m2 = SR(self.numeric(SR(self.squared()).subs(dots), **values))
+        m2 = m2.subs({T.EPS(*[SR.wild(i) for i in range(4)]): 0})
+        f = fast_callable(m2, vars=[x, y], domain=RDF)
+
+        def ylim(xv, sign):
+            Eb = (xv - ma ** 2 + mb ** 2) / (2 * math.sqrt(xv))
+            Ec = (M ** 2 - xv - mc ** 2) / (2 * math.sqrt(xv))
+            qb, qc = math.sqrt(max(Eb ** 2 - mb ** 2, 0)), math.sqrt(max(Ec ** 2 - mc ** 2, 0))
+            return (Eb + Ec) ** 2 - (qb + sign * qc) ** 2
+        val, err = dblquad(lambda yv, xv: float(f(xv, yv)), (ma + mb) ** 2, (M - mc) ** 2,
+                           lambda xv: ylim(xv, +1), lambda xv: ylim(xv, -1), epsabs=0, epsrel=1e-10)
+        return float(self.symmetry_factor()) * val / (256 * math.pi ** 3 * M ** 3)
 
     def dsigma_dcos(self, helicities=None):
         """d sigma/d cos(theta) for 2 -> 2 in sqrt_s and cos_theta (GeV^-2):

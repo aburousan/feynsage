@@ -80,5 +80,15 @@ pt = {s: 3, t: -1, u: MM^2 - 3 + 1, MM: 1/10, MW: 10^6, SW: 1/2, EL: 1/3}
 check("e- nu_mu -> nu_e mu-: averaged over the e- spin only (one neutrino helicity)",
       abs((N.squared()/lim).subs(pt).n(digits=30) - 1) < 1e-9)
 
+Mu = process("mu- -> e- nu_e~ nu_mu", massless=["e"])
+GF_ = float((sqrt(2)*EL^2/(8*SW^2*MW^2)).subs(Mu.values)); mmu = float(MM.subs(Mu.values))
+check("muon decay width (1 -> 3 over the Dalitz plot) = G_F^2 m^5/(192 pi^3), up to the W propagator (1e-6)",
+      abs(Mu.width()/(GF_^2*mmu^5/(192*pi.n()^3)) - 1) < 3e-6)
+try:
+    process("H -> g g").amplitude(); ok_ = False
+except ValueError as ex:
+    ok_ = "no tree diagrams" in str(ex)
+check("a process with no tree diagrams says so", ok_)
+
 print("time %.0f s" % (time.time() - t_start))
 print("ALL PROCESS CHECKS PASS" if not FAIL else "FAILED: %s" % FAIL)

@@ -366,7 +366,7 @@ process("H -> b b~").width()                        # decay widths
 | `P.squared(helicities={...})` | one helicity state in the CM frame (rest frame for a decay), in `sqrt_s` and `cos_theta` (theta = angle between p1 and p3). Fermions +1/-1 (or "R"/"L"; massless only), vectors +1, -1, 0 (Jacob-Wick vectors). A particle that appears twice is named by its position: `{3: +1}`. |
 | `P.helicity_table(configs, nproc=None)` | many helicity states at once; the different fermion-helicity traces are made in parallel |
 | `P.dsigma_dcos(helicities=None)`, `P.sigma(sqrt_s, unit="GeV^-2" or "pb", **values)` | d sigma/d cos theta (with 1/n! for identical final particles) and its integral |
-| `P.width()` | Gamma of a 1 -> 2 decay |
+| `P.width(**values)` | Gamma of a 1 -> 2 decay (a formula in the masses), or of a 1 -> 3 decay (a number: \|M\|^2 integrated over the Dalitz plot with the Standard-Model values, keywords as in `numeric`). A process with no tree diagrams (H -> g g) raises an error that points to the one-loop tools. |
 | `P.numeric(expr, sqrt_s=, cos_theta=, alpha=, alpha_s=, sw2=, MW=, ...)` | puts in the Standard-Model numbers (`P.values`: alpha(0), PDG masses, on-shell sin theta_W = sqrt(1 - MW^2/MZ^2)); keywords override them |
 | `P.kinematics()`, `P.to_angles()` | the scalar products of the momenta in s, t, u; s, t, u in sqrt_s and cos_theta |
 | `P.amplitude(diagrams=None)`, `P.diagrams`, `P.momenta`, `P.s, P.t, P.u, P.sqrt_s, P.cos_theta` | the pieces |

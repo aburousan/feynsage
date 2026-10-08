@@ -5,7 +5,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.67,
   "n": 1
  },
  "solidangle": {
@@ -32,7 +32,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.59,
+  "seconds": 0.02,
   "n": 4
  },
  "pole": {
@@ -47,7 +47,7 @@
  "phi4": {
   "code": "lam = var('lam', latex_name=r'\\lambda'); mu2 = var('mu2', latex_name=r'\\mu^2')\nw, e = var('omega e')\n# (1/2)(-lambda)(mu^2)^(2-w) Int d^(2w)l/(2 pi)^(2w) 1/(l^2 + m^2),\n# the integral done as above\nT = 1/2*(-lam)*mu2^(2 - w) * pi^w*gamma(1 - w)*m2^(w - 1)/(2*pi)^(2*w)\nTexp = T.subs({w: 2 - e}).series(e, 1).truncate()                          # e = 2 - omega\nlecture = lam*m2/(32*pi^2)*(1/e + psi(2) + log(4*pi*mu2/m2))\ngap = (Texp - lecture).canonicalize_radical().simplify_full()\nprint(\"minus the lecture's result:\", gap)\nTexp.collect(e)",
   "stdout": "minus the lecture's result: 0",
-  "latex": "-\\frac{{\\left(\\gamma_E - 2 \\, \\log\\left(2\\right) - 1\\right)} {\\lambda} m_{2}}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left(\\pi\\right)}{32 \\, \\pi^{2}} - \\frac{{\\lambda} m_{2} \\log\\left(m_{2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left({\\mu^2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2}}{32 \\, \\pi^{2} e}",
+  "latex": "\\frac{{\\lambda} m_{2} \\log\\left(\\pi\\right)}{32 \\, \\pi^{2}} - \\frac{{\\lambda} m_{2} \\log\\left(m_{2}\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2} \\log\\left({\\mu^2}\\right)}{32 \\, \\pi^{2}} - \\frac{{\\left(\\gamma_E - 1\\right)} {\\lambda} m_{2} - 2 \\, {\\lambda} m_{2} \\log\\left(2\\right)}{32 \\, \\pi^{2}} + \\frac{{\\lambda} m_{2}}{32 \\, \\pi^{2} e}",
   "text": null,
   "fig": null,
   "seconds": 0.07,
@@ -68,7 +68,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.06,
+  "seconds": 0.02,
   "n": 8
  },
  "tadibp": {
@@ -86,7 +86,7 @@
   "latex": "\\begin{aligned} T(2) &= -\\frac{({d} - 2)}{2 {m}^{2}}\\; T(1) \\\\ T(3) &= \\frac{({d} - 4) ({d} - 2)}{8 {m}^{4}}\\; T(1) \\\\ T(4) &= -\\frac{({d} - 6) ({d} - 4) ({d} - 2)}{48 {m}^{6}}\\; T(1) \\end{aligned}",
   "text": null,
   "fig": null,
-  "seconds": 0.13,
+  "seconds": 0.11,
   "n": 10
  },
  "taddraw": {
@@ -95,7 +95,7 @@
   "latex": null,
   "text": null,
   "fig": "out/taddraw.svg",
-  "seconds": 0.05,
+  "seconds": 0.04,
   "n": 11
  },
  "tadcheck": {
@@ -122,7 +122,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.02,
+  "seconds": 0.03,
   "n": 14
  },
  "basis": {
@@ -221,7 +221,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 1.18,
+  "seconds": 0.86,
   "n": 25
  },
  "hyp": {
@@ -275,7 +275,7 @@
   "latex": null,
   "text": null,
   "fig": "out/b0plot.svg",
-  "seconds": 0.09,
+  "seconds": 0.1,
   "n": 31
  },
  "bub2": {
@@ -383,7 +383,7 @@
   "latex": null,
   "text": null,
   "fig": "out/piontrees.svg",
-  "seconds": 0.06,
+  "seconds": 0.07,
   "n": 43
  },
  "piondelta": {
@@ -419,7 +419,7 @@
   "latex": "-\\frac{i \\, I_{r}}{16 \\, \\pi^{2} m^{2}}",
   "text": null,
   "fig": null,
-  "seconds": 0.01,
+  "seconds": 0.0,
   "n": 47
  },
  "pionIr": {
@@ -428,7 +428,7 @@
   "latex": null,
   "text": null,
   "fig": null,
-  "seconds": 0.04,
+  "seconds": 0.05,
   "n": 48
  },
  "piontrace": {
@@ -473,7 +473,7 @@
   "latex": "\\left(4, \\left[25, 99, 29\\right]\\right)",
   "text": null,
   "fig": null,
-  "seconds": 0.04,
+  "seconds": 0.05,
   "n": 53
  },
  "fa_insert": {
@@ -527,7 +527,7 @@
   "latex": "0",
   "text": null,
   "fig": null,
-  "seconds": 0.86,
+  "seconds": 0.87,
   "n": 59
  },
  "fa_sigma": {
@@ -545,7 +545,322 @@
   "latex": null,
   "text": null,
   "fig": "out/fa_plot.svg",
-  "seconds": 0.37,
+  "seconds": 0.38,
   "n": 61
+ },
+ "h_setup": {
+  "code": "from feynsage.models import EL, SW, CW, MW, MZ, MH, MT, MB, GS\nfrom feynsage.pv import finite_part, uv_part\nfrom feynsage import metric as g_, comp as c_, dot as dot_\nsm = SM()\nk1, k2 = momenta(\"k1 k2\")                      # the two decay products; the Higgs has k1 + k2\npeskin = {EL: sqrt(4*pi/128), SW: sqrt(0.23), CW: sqrt(0.77), MW: 80, MZ: 91, MT: 175, MB: 5, GS: sqrt(4*pi*0.12)}\ndef width(final, masses, identical=False):\n    # Gamma(h -> final) at tree level: diagrams, |M|^2 summed over spins, polarizations and colours\n    dg = insert_fields(topologies(0, 1, 2), [\"H\"], final, sm)\n    r = dg.squared([k1 + k2], [k1, k2])\n    for leg in (2, 3):\n        e = momenta(\"eps%d\" % leg)\n        if dg[0].model.field(final[leg - 2]).kind == \"V\":\n            r = polarization_sum(r, e)\n    r = color_factor(r, N=3)\n    m1, m2 = masses\n    r = r.subs({dot_(k1, k1): m1^2, dot_(k2, k2): m2^2, dot_(k1, k2): (MH^2 - m1^2 - m2^2)/2})\n    p = sqrt((MH^2 - (m1 + m2)^2)*(MH^2 - (m1 - m2)^2))/(2*MH)\n    return (p/(8*pi*MH^2) * r * (1/2 if identical else 1)).simplify_full()\nG_bb = width([\"b\", \"b~\"], (MB, MB))\nG_bb",
+  "stdout": "",
+  "latex": "-\\frac{3 \\, {\\left(4 \\, {e}^{2} {m_b}^{4} - {e}^{2} {m_b}^{2} {M_H}^{2}\\right)} \\sqrt{-4 \\, {m_b}^{2} {M_H}^{2} + {M_H}^{4}}}{32 \\, \\pi {M_H}^{3} {M_W}^{2} {s_W}^{2}}",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 62
+ },
+ "h_ff_check": {
+  "code": "al = var('al', latex_name=r'\\alpha')\nassume(MB > 0, MW > 0, MZ > 0, MH > 2*MB, MH > 2*MW, MH > 2*MZ)\npeskin_a = al*MH/(8*SW^2) * MB^2/MW^2 * (1 - 4*MB^2/MH^2)^(3/2) * 3\n(G_bb.subs(EL=sqrt(4*pi*al)) - peskin_a).canonicalize_radical().simplify_full()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.02,
+  "n": 63
+ },
+ "h_vv": {
+  "code": "G_WW = width([\"W+\", \"W-\"], (MW, MW))\nG_ZZ = width([\"Z\", \"Z\"], (MZ, MZ), identical=True)\ntW, tZ = MH^2/MW^2, MH^2/MZ^2\nx1559 = al*MH^3/(16*MW^2*SW^2) * (1 - 4/tW + 12/tW^2) * sqrt(1 - 4/tW)\nx1560 = al*MH^3/(32*MW^2*SW^2) * (1 - 4/tZ + 12/tZ^2) * sqrt(1 - 4/tZ)\n[(G.subs(EL=sqrt(4*pi*al)).subs(CW=MW/MZ) - x).canonicalize_radical().simplify_full() for G, x in ((G_WW, x1559), (G_ZZ, x1560))]",
+  "stdout": "",
+  "latex": "\\left[0, 0\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.07,
+  "n": 64
+ },
+ "h_goldstone": {
+  "code": "G_GG = width([\"G+\", \"G-\"], (0, 0))          # the Goldstone bosons of the ungauged theory (massless)\n[(G_WW/G_GG).subs(peskin).subs(MH=m).n(digits=6) for m in (300, 1000, 5000)]",
+  "stdout": "",
+  "latex": "\\left[0.656623, 0.962332, 0.998465\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 65
+ },
+ "h_gg": {
+  "code": "light = ['e', 'mu', 'ta', 'ne', 'nm', 'nt', 'u', 'c', 'd', 's']\ndgg = insert_fields(topologies(1, 1, 2, exclude=(\"tadpoles\", \"wf\")), [\"H\"], [\"g\", \"g\"], sm, exclude_fields=light)\ndef transverse(num, ext):                     # T_{mu nu} M^{mu nu} = (d - 2) (k1.k2) F\n    mu, nu = ext[1], ext[2]\n    return num*(g_(mu, nu) - (c_(k2, mu)*c_(k1, nu) + c_(k1, mu)*c_(k2, nu))/dot_(k1, k2))\nkin = {\"k1^2\": 0, \"k2^2\": 0, \"k1.k2\": \"MH^2/2\"}\nMgg = sum(dgg.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))\na2, a3 = color_indices(\"a2 a3\")\nF_gg = (finite_part(Mgg, 1) / MH^2).subs({color_delta(a2, a3): 1})      # F = T.M/((d - 2) k1.k2); colour delta^{ab} stripped\nlen(dgg), uv_part(Mgg).simplify_full()",
+  "stdout": "",
+  "latex": "\\left(4, 0\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.15,
+  "n": 66
+ },
+ "h_I": {
+  "code": "import mpmath\ndef I_x(tau):\n    # Xianyu (21.67), I = 3 int dx dy (1 - 4xy)/(1 - xy tau - i0), with the y integral done by hand:\n    # 3 int_0^1 dx [ (4/tau)(1 - x) - (1 - 4/tau) log(1 - x(1 - x) tau - i0)/(x tau) ]\n    tau = mpmath.mpf(float(tau))\n    lg = lambda x: mpmath.log(mpmath.mpc(1 - x*(1 - x)*tau, -mpmath.mpf(10)**-40))\n    pts = [0, 0.5, 1]\n    if tau > 4:                                   # the zeros of 1 - x(1 - x) tau, where the log is singular\n        r = mpmath.sqrt(1 - 4/tau)/2\n        pts = [0, 0.5 - r, 0.5, 0.5 + r, 1]\n    return complex(3*mpmath.quad(lambda x: 4/tau*(1 - x) - (1 - 4/tau)*lg(x)/(x*tau), pts))\nG_gg = abs(F_gg)^2 * MH^3/(8*pi)        # sum |M|^2 = 8 colours x 2 (k1.k2)^2 |F|^2, Gamma = sum |M|^2/(32 pi m_h)\ndef peskin_c(m):\n    I = sum(I_x(float(m^2/mq^2)) for mq in (5, 175))\n    return float((1/128)*m/(8*0.23)*m^2/80^2*0.12^2/(9*pi.n()^2)*abs(complex(I))^2)\n[(float(G_gg.subs(peskin).subs(MH=m).n()), peskin_c(m)) for m in (100, 300, 400)]",
+  "stdout": "",
+  "latex": "\\left[\\left(9.678636829959462 \\times 10^{-05}, 9.678636829959887 \\times 10^{-05}\\right), \\left(0.004450689608234522, 0.004450689608234508\\right), \\left(0.021881685449096615, 0.021881685449096605\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.29,
+  "n": 67
+ },
+ "h_aa": {
+  "code": "fermions_light = ['e', 'mu', 'ne', 'nm', 'nt', 'u', 'c', 'd', 's']\ndaa = insert_fields(topologies(1, 1, 2, exclude=(\"tadpoles\", \"wf\")), [\"H\"], [\"A\", \"A\"], sm, exclude_fields=fermions_light + ['ta'])\nbosonic = DiagramList([x for x in daa if not any(sm.field(f).kind == \"F\" for f in x.propagator_fields())], daa.tops, [])\nfermionic = DiagramList([x for x in daa if any(sm.field(f).kind == \"F\" for f in x.propagator_fields())], daa.tops, [])\nkin = {\"k1^2\": 0, \"k2^2\": 0, \"k1.k2\": \"MH^2/2\"}\nM_W = sum(bosonic.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))\nM_f = sum(fermionic.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))\nlen(daa), len(bosonic), uv_part(M_W).simplify_full(), uv_part(M_f).simplify_full()",
+  "stdout": "",
+  "latex": "\\left(30, 26, 0, 0\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.26,
+  "n": 68
+ },
+ "h_aa_draw": {
+  "code": "fig = bosonic.draw(ncols=7, size=1.25)",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/h_aa_draw.svg",
+  "seconds": 0.65,
+  "n": 69
+ },
+ "h_IW": {
+  "code": "def I_W(tau):                                  # Xianyu (21.97)-(21.100)\n    tau = mpmath.mpf(float(tau))\n    I1 = mpmath.quad(lambda x: mpmath.log(1 - x*(1 - x)*tau), [0, 1])\n    I2 = 2*mpmath.quad(lambda x: mpmath.quad(lambda y: mpmath.log(1 - x*y*tau), [0, 1 - x]), [0, 1])\n    I3 = mpmath.quad(lambda x: mpmath.quad(lambda y: (8 - 3*x + y + 4*x*y)*tau/(1 - x*y*tau), [0, 1 - x]), [0, 1])\n    return complex((6*I1 - 8*I2 + tau*(I1 - I2) + I3)/tau)\nv_ev, alpha = 2*MW*SW/EL, EL^2/(4*pi)\nR_W = (finite_part(M_W, 1)/MH^2) * pi*v_ev/alpha        # = I_W if M_W = alpha m_h^2/(2 pi v) I_W (below the W W threshold)\n[(float(R_W.subs(peskin).subs(MH=m).n().real()), I_W(m^2/80^2).real) for m in (50, 100, 150)]",
+  "stdout": "",
+  "latex": "\\left[\\left(3.575286601917601, 3.5752866019176057\\right), \\left(3.859842117418596, 3.8598421174185953\\right), \\left(4.880311609088385, 4.880311609088385\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 6.51,
+  "n": 70
+ },
+ "h_light": {
+  "code": "R_f = (finite_part(M_f, 1)/MH^2) * pi*v_ev/alpha\nsmall = {MH: 1/10}\nR_W.subs(peskin).subs(small).n(digits=40).real().n(digits=8), R_f.subs(peskin).subs(small).n(digits=40).real().n(digits=8)",
+  "stdout": "",
+  "latex": "\\left(3.5000003, -1.1111163\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.01,
+  "n": 71
+ },
+ "h_aa_width": {
+  "code": "F_aa = (finite_part(M_W + M_f, 1)/MH^2).subs(peskin)\ndef compare(m):\n    G = float(abs(complex(F_aa.subs(MH=m).n()))^2 * m^3/(64*pi.n()))\n    Sf = (4/9)*3*complex(I_x(m^2/175^2)) + (1/9)*3*complex(I_x(m^2/5^2))\n    pref = (1/128)*m/(8*0.23)*m^2/80^2*(1/128)^2/(18*pi.n()^2)\n    IW = I_W(m^2/80^2)\n    return G, float(pref*abs(Sf - 1.5*IW)^2), float(pref*abs(Sf - IW)^2)\n[compare(m) for m in (60, 100, 150)]",
+  "stdout": "",
+  "latex": "\\left[\\left(8.320089263030765 \\times 10^{-07}, 8.320089263030974 \\times 10^{-07}, 2.6190905861479945 \\times 10^{-07}\\right), \\left(4.528851540001802 \\times 10^{-06}, 4.528851540001745 \\times 10^{-06}, 1.4564067294020392 \\times 10^{-06}\\right), \\left(2.71714566890503 \\times 10^{-05}, 2.7171456689050554 \\times 10^{-05}, 9.439966911307296 \\times 10^{-06}\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 6.6,
+  "n": 72
+ },
+ "h_pp": {
+  "code": "def sigma_pp_nb(rs, mh=30, I=1):\n    # sigma(pp -> h + X) = int dx1 dx2 f_g(x1) f_g(x2) sigma(gg -> h), f_g(x) = 8 (1 - x)^7/x,\n    # sigma(gg -> h) = pi^2/(8 m_h) Gamma(h -> gg) delta(s_hat - m_h^2)   (Xianyu (21.71))\n    G = float((1/128)*mh/(8*0.23)*mh^2/80^2*0.12^2/(9*pi.n()^2)*I^2)\n    tau0 = mh^2/rs^2\n    lum = mpmath.quad(lambda x1: (8*(1 - x1)**7/x1)*(8*(1 - tau0/x1)**7/(tau0/x1))/x1, [tau0, 1])\n    return float(pi.n()^2/(8*mh)*G*lum/rs^2 * 0.3894e6)      # GeV^-2 -> nb\nroots = [1000*x for x in (1, 2, 5, 10, 20, 40)]\n[(r/1000, round(sigma_pp_nb(r), 3)) for r in roots]",
+  "stdout": "",
+  "latex": "\\left[\\left(1, 0.007\\right), \\left(2, 0.011\\right), \\left(5, 0.017\\right), \\left(10, 0.021\\right), \\left(20, 0.026\\right), \\left(40, 0.03\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.49,
+  "n": 73
+ },
+ "h_plots": {
+  "code": "import numpy as np, matplotlib.pyplot as plt\nmhs = np.linspace(50, 500, 46)\nI_top = [complex(I_x(m**2/175**2)) for m in mhs]\nG_gg_keV = [1e6*float(G_gg.subs(peskin).subs(MH=m).n()) for m in mhs]\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 2.9))\na1.plot(mhs, [z.real for z in I_top], label=r\"Re $I(m_h^2/m_t^2)$\"); a1.plot(mhs, [z.imag for z in I_top], ls=\"--\", label=r\"Im\")\na1.set_xlabel(r\"$m_h$ (GeV)\"); a1.legend(fontsize=8)\na2.semilogy(mhs, G_gg_keV, color=\"C3\"); a2.set_xlabel(r\"$m_h$ (GeV)\"); a2.set_ylabel(r\"$\\Gamma(h \\to gg)$ (keV)\")\nfig.tight_layout()",
+  "stdout": "",
+  "latex": null,
+  "text": null,
+  "fig": "out/h_plots.svg",
+  "seconds": 1.66,
+  "n": 74
+ },
+ "h_br": {
+  "code": "Gs = {\"bb\": G_bb.subs(EL=sqrt(4*pi*al)).subs(al=1/128), \"WW\": G_WW, \"ZZ\": G_ZZ, \"tt\": width([\"t\", \"t~\"], (MT, MT)), \"gg\": G_gg}\ndef partial(name, m):\n    thr = {\"WW\": 2*80, \"ZZ\": 2*91, \"tt\": 2*175, \"bb\": 10, \"gg\": 0}[name]\n    return 0.0 if m <= thr else float(abs(complex(Gs[name].subs(peskin).subs(MH=m).n())))\ntable = {n: [partial(n, m) for m in mhs] for n in Gs}\ntotal = [sum(table[n][i] for n in Gs) for i in range(len(mhs))]\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 3.0))\na1.semilogy(mhs, total, color=\"k\"); a1.set_xlabel(r\"$m_h$ (GeV)\"); a1.set_ylabel(r\"$\\Gamma_h$ (GeV)\")\nlabels = {\"bb\": r\"$b\\bar b$\", \"tt\": r\"$t\\bar t$\", \"gg\": r\"$gg$\", \"WW\": r\"$W^+W^-$\", \"ZZ\": r\"$Z^0Z^0$\"}\ncolours = {\"bb\": \"#7b2d8e\", \"tt\": \"#d62728\", \"gg\": \"#ff7f0e\", \"WW\": \"#1f5fbf\", \"ZZ\": \"#2ca02c\"}\nfor n in Gs:\n    a2.semilogy(mhs, [max(table[n][i]/total[i], 1e-6) for i in range(len(mhs))], label=labels[n], color=colours[n])\nprint(\"BR(gg) at m_h = 100, 200, 300, 400 GeV:\", [round(table[\"gg\"][i]/total[i], 5) for i in (5, 15, 25, 35)])\na2.set_ylim(1e-3, 1.2); a2.set_xlabel(r\"$m_h$ (GeV)\"); a2.set_ylabel(\"branching fraction\"); a2.legend(fontsize=7)\nfig.tight_layout()",
+  "stdout": "BR(gg) at m_h = 100, 200, 300, 400 GeV: [0.01936, 0.00065, 0.00052, 0.0008]",
+  "latex": null,
+  "text": null,
+  "fig": "out/h_br.svg",
+  "seconds": 0.31,
+  "n": 75
+ },
+ "c21_qed": {
+  "code": "from feynsage.models import MM\nfrom feynsage import u as u_spinor\np1, p2 = momenta(\"p1 p2\")                       # muon in (p1), photon in (p2 - p1), muon out (p2)\nq2 = var(\"q2\")                                  # q^2 = (p2 - p1)^2, sent to 0 at the end\ndef F2_projector(num, ext):                     # Tr[(p1/ + m) P (p2/ + m) X] picks F2 out of X^mu\n    P = vertex_projector(p1, p2, MM, ext[1], \"F2\")\n    return dirac_trace((slash(p1) + MM)*P*(slash(p2) + MM)*num, dim=\"d\", gamma5_scheme=\"NDR-even\")\nvertex_kin = {\"p1^2\": \"MM^2\", \"p2^2\": \"MM^2\", \"p1.p2\": \"MM^2 - q2/2\"}\ndef at_q2_zero(F):\n    return ((F.subs(q2=10^-10) + F.subs(q2=-10^-10))/2)\ntops_v = topologies(1, 2, 1, exclude=(\"tadpoles\", \"wf\"))\nALL = [\"A\", \"Z\", \"W+\", \"H\", \"G0\", \"G+\", \"u+\", \"u-\", \"uA\", \"uZ\", \"g\", \"ug\", \"e\", \"mu\", \"ta\", \"ne\", \"nm\", \"nt\",\n       \"u\", \"c\", \"t\", \"d\", \"s\", \"b\"]\nonly = lambda keep: [f for f in ALL if f not in keep]   # fields that may not run inside the loop\ndq = insert_fields(tops_v, [\"mu\", \"A\"], [\"mu\"], sm, exclude_fields=only([\"A\", \"mu\"]))\nF2 = finite_part(sum(dq.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin)), 1)/EL\nF2_qed = at_q2_zero(F2.subs({EL: 1, MM: 1})).n(digits=40)\nF2_qed.n(digits=20), (1/(8*pi^2)).n(digits=20)     # F2(0)/e^2 and alpha/(2 pi) with e = 1",
+  "stdout": "",
+  "latex": "\\left(0.012665147955292221430, 0.012665147955292221430\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.37,
+  "n": 76
+ },
+ "c21_w": {
+  "code": "GF = EL^2/(4*sqrt(2)*SW^2*MW^2)                 # G_F/sqrt(2) = g^2/(8 m_W^2), g = e/sin(theta_w)\nunit = GF*MM^2/(8*pi^2*sqrt(2))\nheavy = {EL: 1, MM: 1, MW: 1000, SW: sqrt(23/100), CW: sqrt(77/100), MZ: 1000/sqrt(77/100)}   # m_W = 1000 m_mu\ndW = insert_fields(tops_v, [\"mu\", \"A\"], [\"mu\"], sm, exclude_fields=only([\"W+\", \"G+\", \"nm\"]))\ndef a_mu(diags, xi=1):\n    res = diags.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin, xi=xi)\n    return [(at_q2_zero(finite_part(r, 1)/EL/unit).subs(heavy)).n(digits=60).n(digits=8) for r in res]\n[x.propagator_fields() for x in dW], a_mu(dW)",
+  "stdout": "",
+  "latex": "\\left(\\left[\\left[\\text{\\texttt{nm}}, \\text{\\texttt{G+}}, \\text{\\texttt{G+}}\\right], \\left[\\text{\\texttt{nm}}, \\text{\\texttt{G+}}, \\text{\\texttt{W+}}\\right], \\left[\\text{\\texttt{nm}}, \\text{\\texttt{W+}}, \\text{\\texttt{G+}}\\right], \\left[\\text{\\texttt{nm}}, \\text{\\texttt{W+}}, \\text{\\texttt{W+}}\\right]\\right], \\left[-3.3333350 \\times 10^{-7}, 0.50000017, 0.50000017, 2.3333340\\right]\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.8,
+  "n": 77
+ },
+ "c21_xi": {
+  "code": "[(xi, sum(a_mu(dW, xi))) for xi in (1, 3, 1/2, 1/100, 100)]",
+  "stdout": "",
+  "latex": "\\left[\\left(1, 3.3333340\\right), \\left(3, 3.3333340\\right), \\left(\\frac{1}{2}, 3.3333340\\right), \\left(\\frac{1}{100}, 3.3333340\\right), \\left(100, 3.3333340\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 13.27,
+  "n": 78
+ },
+ "c21_z": {
+  "code": "dZ = insert_fields(tops_v, [\"mu\", \"A\"], [\"mu\"], sm, exclude_fields=only([\"Z\", \"G0\", \"mu\"]))\nsw2 = 23/100\n[x.propagator_fields() for x in dZ], sum(a_mu(dZ)), -(4/3 + 8/3*sw2 - 16/3*sw2^2).n(digits=8)",
+  "stdout": "",
+  "latex": "\\left(\\left[\\left[\\text{\\texttt{G0}}, \\text{\\texttt{mu}}, \\text{\\texttt{mu}}\\right], \\left[\\text{\\texttt{Z}}, \\text{\\texttt{mu}}, \\text{\\texttt{mu}}\\right]\\right], -1.6645238, -1.6645333\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 1.03,
+  "n": 79
+ },
+ "c21_ww": {
+  "code": "from feynsage.models import ME\nfrom feynsage.qft import tensors as T\nfrom feynsage.diagrams import conjugate_amplitude\ndww = insert_fields(topologies(0, 2, 2), [\"e-\", \"e+\"], [\"W+\", \"W-\"], sm)\nq1, q2_, q3, q4 = momenta(\"q1 q2 q3 q4\")       # e-(q1) e+(q2) -> W+(q3) W-(q4)\nMww = dww.amplitude([q1, q2_], [q3, q4])\ns_, t_, u_ = var(\"s t u\")\nkin_ww = {dot(q1,q1): 0, dot(q2_,q2_): 0, dot(q3,q3): MW^2, dot(q4,q4): MW^2, dot(q1,q2_): s_/2,\n          dot(q3,q4): (s_ - 2*MW^2)/2, dot(q1,q3): (MW^2 - t_)/2, dot(q2_,q4): (MW^2 - t_)/2,\n          dot(q1,q4): (MW^2 - u_)/2, dot(q2_,q3): (MW^2 - u_)/2}\n# longitudinal polarization vectors, real:  eps_L(q3) = [q3 (q3.q4) - q4 m_W^2]/(m_W sqrt((q3.q4)^2 - m_W^4))\nP34 = (s_ - 2*MW^2)/2; NL = MW*sqrt(P34^2 - MW^4)\neL3, eL4 = (P34*q3 - MW^2*q4)/NL, (P34*q4 - MW^2*q3)/NL\nlongitudinal = {T._declare(n, \"vector\"): v for n, v in ((\"eps3\", eL3), (\"eps3_c\", eL3), (\"eps4\", eL4), (\"eps4_c\", eL4))}\ndef squared_00(hand):                           # |M(e-_hand e+ -> W+_0 W-_0)|^2\n    Mh = chiral(Mww, q1, hand)\n    return SR(spin_sum(Mh*conjugate_amplitude(Mh), rules=longitudinal)).subs(kin_ww).subs({ME: 0})\nLR, RL = squared_00(\"L\"), squared_00(\"R\")\nmw_ = 804/10; sw2 = 23/100; mz_ = mw_/sqrt(1 - sw2)\nnum_ww = {EL: 1, SW: sqrt(sw2), CW: sqrt(1 - sw2), MW: mw_, MZ: mz_}\ndef pt_ww(rs, c):                               # theta = angle between e- and W+\n    E = rs/2; p = sqrt(E^2 - mw_^2); tv = mw_^2 - rs^2/2 + 2*E*p*c\n    return {s_: rs^2, t_: tv, u_: 2*mw_^2 - rs^2 - tv}\nLR.subs(num_ww).subs(pt_ww(500, -1/2)).n(digits=20)",
+  "stdout": "",
+  "latex": "1.1677214900000775473",
+  "text": null,
+  "fig": null,
+  "seconds": 9.33,
+  "n": 80
+ },
+ "c21_xianyu": {
+  "code": "def X24_first(rs, c):                           # first line of Xianyu (21.24), without i e^2\n    sv = rs^2; E = rs/2; p = sqrt(E^2 - mw_^2); sn = sqrt(1 - c^2); uv = mw_^2 - sv/2 - 2*E*p*c\n    return (mz_^2/(sv*(sv - mz_^2)) - 1/(2*sw2)/(sv - mz_^2))*(-4*E*p*(E^2 + p^2)/mw_^2 + 16*E^3*p/mw_^2)*sn + 1/(2*sw2)/uv*2*E*(-3*E^2*p + p^3 - 2*E^3*c)*sn/mw_^2\ndef X24_second(rs, c, sign):                    # second line of (21.24); printed with sign = -1\n    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv); D = 1 + b^2 + 2*b*c\n    return -sv/(4*mw_^2)*(mz_^2/(sv - mz_^2)*b*(3 - b^2) + sign/(2*sw2)*((2/D - sv/(sv - mz_^2))*b*(3 - b^2) + 4*c/D))*sqrt(1 - c^2)\ndef X29(rs, c):                                 # Xianyu (21.29)\n    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv)\n    return sv/(sv - mz_^2)*mz_^2/(4*mw_^2)*b*(b^2 - 3)*sqrt(1 - c^2)\nrows = []\nfor rs, c in [(200, 3/10), (500, -1/2), (1000, 4/5)]:\n    a, r = LR.subs(num_ww).subs(pt_ww(rs, c)), RL.subs(num_ww).subs(pt_ww(rs, c))\n    rows.append([rs, c] + [(a/x^2).n(digits=60).n(digits=15) for x in (X24_first(rs, c), X24_second(rs, c, -1), X24_second(rs, c, +1))]\n                + [(r/X29(rs, c)^2).n(digits=60).n(digits=15)])\nprint(\"sqrt(s)  cos   first line     printed 2nd    2nd with +     (21.29)\")\nfor row in rows:\n    print(\"%-8s %-5s \" % (row[0], row[1]) + \"  \".join(\"%-14.10f\" % float(x) for x in row[2:]))",
+  "stdout": "sqrt(s)  cos   first line     printed 2nd    2nd with +     (21.29)\n200      3/10  1.0000000000    4.3044487432    1.0000000000    1.0000000000  \n500      -1/2  1.0000000000    190.2837164428  1.0000000000    1.0000000000  \n1000     4/5   1.0000000000    95.1490761247   1.0000000000    1.0000000000  ",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.18,
+  "n": 81
+ },
+ "c21_peskin": {
+  "code": "J = chiral(vbar(q2_)*slash(q3 - q4)*u_spinor(q1), q1, \"L\")      # vbar_L gamma_l u_L (k+ - k-)^l\nJ2 = SR(spin_sum(J*conjugate_amplitude(J))).subs(kin_ww)\ndef P108(rs, cP):                               # the bracket of Peskin (21.108); theta_P = angle of W-\n    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv)\n    return (1/(2*sw2)*(-sv/(sv - mz_^2)*(mz_^2/(2*mw_^2) + 1) + 2/b^2 - 8*mw_^2/(sv*b^2*(1 + b^2 - 2*b*cP)))\n            + mz_^2/mw_^2*((sv/2 + mw_^2)/(sv - mz_^2)))/sv\n[(rs, c, (LR.subs(num_ww).subs(pt_ww(rs, c))/(J2.subs(num_ww).subs(pt_ww(rs, c))*P108(rs, -c)^2)).n(digits=60).n(digits=15))\n for rs, c in [(200, 3/10), (500, -1/2), (1000, 4/5)]]",
+  "stdout": "",
+  "latex": "\\left[\\left(200, \\frac{3}{10}, 1.00000000000000\\right), \\left(500, -\\frac{1}{2}, 1.00000000000000\\right), \\left(1000, \\frac{4}{5}, 1.00000000000000\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.13,
+  "n": 82
+ },
+ "c21_equiv": {
+  "code": "dgg = insert_fields(topologies(0, 2, 2), [\"e-\", \"e+\"], [\"G+\", \"G-\"], sm)\nMg = chiral(dgg.amplitude([q1, q2_], [q3, q4]), q1, \"L\")\nGG = SR(spin_sum(Mg*conjugate_amplitude(Mg))).subs(kin_ww).subs({ME: 0})\nc = 3/10\ndef r(x, y, rs):\n    return (x.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)/y.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)).n(digits=8)\nlim = (1 - c^2)/(4*sw2*(1 - sw2))^2                         # (e^2 sin(theta)/(4 s_w^2 c_w^2))^2\nX28 = (1 + 2*c)^2*(1 - c^2)/(2*sw2*(1 + c))^2               # Xianyu (21.28) squared\nprint(\"sqrt(s)/GeV   W0W0/phi phi   W0W0/limit   W0W0/(21.28)\")\nfor rs in (10^3, 10^4, 10^5, 10^6):\n    x = LR.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)\n    print(\"%-13d %-14.8f %-12.8f %.8f\" % (rs, float(r(LR, GG, rs)), float(x/lim), float(x/X28)))",
+  "stdout": "sqrt(s)/GeV   W0W0/phi phi   W0W0/limit   W0W0/(21.28)\n1000          1.07273175     1.05016046   0.29232164\n10000         1.00070117     1.00049141   0.27849581\n100000        1.00000701     1.00000491   0.27836039\n1000000       1.00000007     1.00000005   0.27835903",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.43,
+  "n": 83
+ },
+ "c21_fp": {
+  "code": "# Xianyu's Feynman-parameter forms at q^2 = 0 with the full Delta, at the real m_W/m_mu\nimport mpmath\nmpmath.mp.dps = 30\nr_real = (80379/1000)/(1056584/10^7)\nreal = {EL: 1, MM: 1, MW: r_real, SW: sqrt(sw2), CW: sqrt(1 - sw2), MZ: r_real/sqrt(1 - sw2)}\ndef a_real(diags):\n    res = diags.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin)\n    return [(at_q2_zero(finite_part(r, 1)/EL/unit).subs(real)).n(digits=40) for r in res]\ndef dbl(f):\n    return mpmath.quad(lambda x: mpmath.quad(f, [0, 1 - x]), [0, 1])\nR2, z2, c2 = mpmath.mpf(float(r_real))**2, mpmath.mpf(float(r_real))**2/(1 - mpmath.mpf(0.23)), 1 - mpmath.mpf(0.23)\nx21_2 = 2*R2*dbl(lambda y: (1 - y)*(3 - 2*y)/((1 - y)*R2 - y*(1 - y)))                # (21.2)\nx21_9 = -(R2/(2*c2))*dbl(lambda y: (2*y*(3 + y) - (4*mpmath.mpf(0.23) - 1)**2*2*y*(1 - y))/((1 - y)**2 + y*z2))   # (21.9)\n[(a_real(dW)[3].n(digits=12), mpmath.nstr(x21_2, 12)), (a_real(dZ)[1].n(digits=12), mpmath.nstr(x21_9, 12))]",
+  "stdout": "",
+  "latex": "\\left[\\left(2.33333448528, 2.33333448528\\right), \\left(-1.66448641094, -1.66448641094\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 13.4,
+  "n": 84
+ },
+ "c21_trans_setup": {
+  "code": "# every helicity state with process(): electrons massless, the W helicities +1, -1, 0 (Jacob-Wick vectors)\nW = process(\"e- e+ -> W+ W-\", massless=[\"e\"])\nnum_W = {EL: 1, SW: sqrt(sw2), CW: sqrt(1 - sw2), MW: mw_, MZ: mz_}       # e = 1, as above\ndef hel(he, h3, h4, rs, c, diagrams=None):           # he = helicity of the e- (the e+ has the opposite)\n    r = W.squared(helicities={\"e-\": he, \"e+\": -he, \"W+\": h3, \"W-\": h4}, diagrams=diagrams)\n    return r.subs(num_W).subs({W.sqrt_s: rs, W.cos_theta: c}).n(digits=60)\nhel(-1, 0, 0, 500, -1/2)                             # the same number as Out above for e-_L e+_R -> W0 W0",
+  "stdout": "",
+  "latex": "1.16772149000007754432962891523992860395271506655960068015558",
+  "text": null,
+  "fig": null,
+  "seconds": 1.12,
+  "n": 85
+ },
+ "c21_trans": {
+  "code": "def X(name, rs, c, pm):              # Xianyu's printed amplitudes without i e^2 (first and second lines)\n    sv = rs^2; E0 = rs/2; p = sqrt(E0^2 - mw_^2); b = p/E0; sth = sqrt(1 - c^2); D = 1 + b^2 + 2*b*c\n    uv = mw_^2 - 2*E0^2 - 2*E0*p*c\n    br = mz_^2/(sv*(sv - mz_^2)) - 1/(2*sw2)/(sv - mz_^2)\n    return {\"25a\": br*(8*E0^2*p/mw_)*(-pm + c)/sqrt(2) - 1/(2*sw2)/uv*(2*E0/mw_)*(E0^2*(2*c - pm) + 2*E0*p + pm*p^2)*(pm + c)/sqrt(2),\n            \"25b\": (mz_^2/(sv - mz_^2)*b - 1/(2*sw2)*(sv/(sv - mz_^2)*b + (pm - 2*c - 2*b - pm*b^2)/D))*(rs/mw_)*(pm + c)/sqrt(2),\n            \"26a\": br*(-4*E0*p*sth) + 1/(2*sw2)/uv*2*E0*(p + E0*c)*sth,\n            \"26b\": (-mz_^2/(sv - mz_^2)*b + 1/(2*sw2)*(sv/(sv - mz_^2)*b - 2*(b + c)/D))*sth,\n            \"27a\": -1/(2*sw2)/uv*2*E0^2*(-pm + c)*sth, \"27b\": 1/(2*sw2)*2*(pm - c)*sth/D,\n            \"30\": mz_^2/(sv - mz_^2)*(rs/mw_)*b*(pm - c)/sqrt(2), \"31\": mz_^2/(sv - mz_^2)*b*sth}[name]\nrs, c = 500, -1/2\nprint(\"e-  W+ W-   eq.      feynsage |M|^2 / Xianyu^2: first line   second line\")\nfor pm in (1, -1):\n    for hand, h3, h4, eq in ((\"L\", 0, pm, \"25\"), (\"L\", -pm, 0, \"25\"), (\"L\", pm, pm, \"26\"), (\"L\", pm, -pm, \"27\"),\n                             (\"R\", 0, pm, \"30\"), (\"R\", -pm, 0, \"30\"), (\"R\", pm, pm, \"31\"), (\"R\", pm, -pm, \"32\")):\n        v = hel({\"L\": -1, \"R\": +1}[hand], h3, h4, rs, c)\n        if eq == \"32\":\n            print(\"%s   %+d  %+d   (21.32)  |M|^2 = %.1e\" % (hand, h3, h4, float(v)))\n            continue\n        cols = [X(eq + \"a\", rs, c, pm), X(eq + \"b\", rs, c, pm)] if eq in (\"25\", \"26\", \"27\") else [X(eq, rs, c, pm)]\n        print(\"%s   %+d  %+d   (21.%s)  \" % (hand, h3, h4, eq) + \"   \".join(\"%.12f\" % float(v/x^2) for x in cols))",
+  "stdout": "e-  W+ W-   eq.      feynsage |M|^2 / Xianyu^2: first line   second line\nL   +0  +1   (21.25)  0.001263677247   1.000000000000\nL   -1  +0   (21.25)  0.001263677247   1.000000000000\nL   +1  +1   (21.26)  1.000000000000   1.000000000000\nL   +1  -1   (21.27)  1.000000000000   1.000000000000\nR   +0  +1   (21.30)  1.000000000000\nR   -1  +0   (21.30)  1.000000000000\nR   +1  +1   (21.31)  1.000000000000\nR   +1  -1   (21.32)  |M|^2 = 0.0e+00\nL   +0  -1   (21.25)  0.003872720425   1.000000000000\nL   +1  +0   (21.25)  0.003872720425   1.000000000000\nL   -1  -1   (21.26)  1.000000000000   1.000000000000\nL   -1  +1   (21.27)  1.000000000000   1.000000000000\nR   +0  -1   (21.30)  1.000000000000\nR   +1  +0   (21.30)  1.000000000000\nR   -1  -1   (21.31)  1.000000000000\nR   -1  +1   (21.32)  |M|^2 = 0.0e+00",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 3.4,
+  "n": 86
+ },
+ "c21_algebra": {
+  "code": "# only the printed formulas: does each line equal the next one?  (no feynsage, no diagrams)\nEv, pv, cv, wv = var(\"E p c w\")\nmwv = sqrt(Ev^2 - pv^2); mzv = mwv^2/(1 - wv); sv = 4*Ev^2; bv = pv/Ev; snv = sqrt(1 - cv^2); Dv = 1 + bv^2 + 2*bv*cv\nuv = mwv^2 - 2*Ev^2 - 2*Ev*pv*cv\nbrv = mzv/(sv*(sv - mzv)) - 1/(2*wv)/(sv - mzv)\nfirst24 = brv*(-4*Ev*pv*(Ev^2 + pv^2)/mwv^2 + 16*Ev^3*pv/mwv^2)*snv + 1/(2*wv)/uv*2*Ev*(-3*Ev^2*pv + pv^3 - 2*Ev^3*cv)*snv/mwv^2\nA = mzv/(sv - mzv)*bv*(3 - bv^2); B = 1/(2*wv)*((2/Dv - sv/(sv - mzv))*bv*(3 - bv^2) + 4*cv/Dv)\nsecond24 = lambda sA, sB: -sv/(4*mwv^2)*(sA*A + sB*B)*snv\nzero = lambda x: bool(x.simplify_full() == 0)\nfirst27 = lambda pm: -1/(2*wv)/uv*2*Ev^2*(-pm + cv)*snv\nsecond27 = lambda pm: 1/(2*wv)*2*(pm - cv)*snv/Dv\ntt = var(\"tt\")                       # m_W/E -> 0\nprint(\"(21.24) first line = second line as printed, {A - B}:\", zero(first24 - second24(1, -1)))\nprint(\"(21.24) first line = second line with {-A - B}:      \", zero(first24 - second24(-1, -1)))\nprint(\"(21.27) first = second:\", zero(first27(1) - second27(1)), \"   first = -(second):\", zero(first27(1) + second27(1)))\nlim = (first24/snv).subs({pv: Ev*sqrt(1 - tt^2)}).simplify_full().limit(tt=0).factor()\nprint(\"high-energy limit of the (21.24) first line, divided by sin(theta):\", lim)\nprint(\"Peskin (21.107) bracket 1/(2c^2) - 1/(4c^2 s^2) + 1/(2s^2):\", (1/(2*(1 - wv)) - 1/(4*(1 - wv)*wv) + 1/(2*wv)).factor())",
+  "stdout": "(21.24) first line = second line as printed, {A - B}: False\n(21.24) first line = second line with {-A - B}:       True\n(21.27) first = second: False    first = -(second): True\nhigh-energy limit of the (21.24) first line, divided by sin(theta): -1/4/((w - 1)*w)\nPeskin (21.107) bracket 1/(2c^2) - 1/(4c^2 s^2) + 1/(2s^2): -1/4/((w - 1)*w)",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.18,
+  "n": 87
+ },
+ "c21_fig": {
+  "code": "import numpy as np, matplotlib.pyplot as plt\n# Peskin Fig. 21.10: e-_L e+_R at E_cm = 1000 GeV, theta = angle of the W- (cos = -cos_theta of the W+),\n# curves (h-, h+); dsigma/dcos in units of R = 4 pi alpha^2/(3 E_cm^2) is (3/8) beta |M|^2 with e = 1\nrs = 1000; beta = sqrt(1 - 4*mw_^2/rs^2).n()\npairs = [(hm, hp) for hm in (1, -1, 0) for hp in (1, -1, 0)]\ncfg = [{\"e-\": he, \"e+\": -he, \"W+\": hp, \"W-\": hm} for he in (-1, 1) for hm, hp in pairs]\ntab = W.helicity_table(cfg)                          # all 18 states, the traces in parallel\nf = [fast_callable(SR(x.subs(num_W).subs({W.sqrt_s: rs})), vars=[W.cos_theta], domain=CDF) for x in tab]\ncPs = [k/100 for k in range(-99, 100, 2)]\nds = lambda k, cP: 3/8*float(beta)*f[k](-cP).real()\ncur = {pq: [ds(k, x) for x in cPs] for k, pq in enumerate(pairs)}\ntot = [sum(cur[pq][i] for pq in pairs) for i in range(len(cPs))]\ntotR = [sum(ds(9 + k, x) for k in range(9)) for x in cPs]\nfig, ax = plt.subplots(figsize=(5.2, 3.8))\nax.semilogy(cPs, tot, \"k\", lw=1.5, label=\"total\")\nfor pq, lab in (((0, 0), \"(0,0)\"), ((1, -1), \"(+,-)\"), ((-1, 1), \"(-,+)\")):\n    ax.semilogy(cPs, cur[pq], lw=1.1, label=lab)\nax.semilogy(cPs, [a + b for a, b in zip(cur[(-1, 0)], cur[(0, 1)])], lw=1.1, label=\"(-,0)+(0,+)\")\nax.semilogy(cPs, [a + b for a, b in zip(cur[(1, 0)], cur[(0, -1)])], lw=1.1, label=\"(+,0)+(0,-)\")\nax.semilogy(cPs, totR, \"k--\", lw=1, label=r\"$e^-_R e^+_L$ total\")\nax.set_ylim(0.01, 200); ax.set_xlim(-1, 1); ax.set_xlabel(r\"$\\cos\\theta$\"); ax.set_ylabel(r\"$d\\sigma/d\\cos\\theta$ (units of R)\")\nax.legend(fontsize=7, ncol=2); fig.tight_layout()\ni0 = cPs.index(1/100)\nprint(\"e-_L / e-_R at cos = 0.01:\", round(tot[i0]/totR[i0], 1), \"   (+,+) and (-,-) largest for |cos| < 0.9:\",\n      \"%.1e\" % max(max(cur[(1, 1)][i], cur[(-1, -1)][i]) for i in range(len(cPs)) if abs(cPs[i]) < 0.9))",
+  "stdout": "e-_L / e-_R at cos = 0.01: 27.3    (+,+) and (-,-) largest for |cos| < 0.9: 3.6e-03",
+  "latex": null,
+  "text": null,
+  "fig": "out/c21_fig.svg",
+  "seconds": 2.89,
+  "n": 88
+ },
+ "c21_growth": {
+  "code": "# one W longitudinal, one transverse (21.2a): single diagrams grow like sqrt(s), the sum falls like 1/sqrt(s)\nnames = [str(x.propagator_fields()[0]) for x in W.diagrams]\nprint(\"|M|^2 for e-_L e+_R -> W+_0 W-_(+), cos = 0.3;  diagrams:\", names)\nfor rs in (10^3, 10^4, 10^5):\n    print(\"sqrt(s) = %6d GeV: \" % rs + \"  \".join(\"%9.3e\" % float(hel(-1, 0, 1, rs, 3/10, diagrams=[k])) for k in range(1, 5))\n          + \"   sum: %9.3e\" % float(hel(-1, 0, 1, rs, 3/10)))",
+  "stdout": "|M|^2 for e-_L e+_R -> W+_0 W-_(+), cos = 0.3;  diagrams: ['A', 'H', 'Z', 'ne']\nsqrt(s) =   1000 GeV: 1.273e+02  0.000e+00  1.785e+02  6.090e+02   sum: 1.214e-03\nsqrt(s) =  10000 GeV: 1.307e+04  0.000e+00  1.801e+04  6.177e+04   sum: 1.269e-05\nsqrt(s) = 100000 GeV: 1.307e+06  0.000e+00  1.801e+06  6.178e+06   sum: 1.270e-07",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 2.42,
+  "n": 89
+ },
+ "p_qed": {
+  "code": "from feynsage.models import QED\nP = process(\"e- e+ -> mu- mu+\", model=QED(), massless=[\"e\", \"mu\"])\nP, P.squared().factor()",
+  "stdout": "",
+  "latex": "\\left(\\text{\\texttt{process{ }e{-}{ }e+{ }{-}>{ }mu{-}{ }mu+:{ }1{ }diagram}}, \\frac{2 \\, {\\left(t^{2} + u^{2}\\right)} {e}^{4}}{s^{2}}\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.0,
+  "n": 90
+ },
+ "p_hel": {
+  "code": "[(he, hm, P.squared(helicities={\"e-\": he, \"e+\": -he, \"mu-\": hm, \"mu+\": -hm}).factor()) for he in (1, -1) for hm in (1, -1)]",
+  "stdout": "",
+  "latex": "\\left[\\left(1, 1, {e}^{4} {\\left({\\cos\\theta} + 1\\right)}^{2}\\right), \\left(1, -1, {e}^{4} {\\left({\\cos\\theta} - 1\\right)}^{2}\\right), \\left(-1, 1, {e}^{4} {\\left({\\cos\\theta} - 1\\right)}^{2}\\right), \\left(-1, -1, {e}^{4} {\\left({\\cos\\theta} + 1\\right)}^{2}\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 91
+ },
+ "p_sigma": {
+  "code": "P.dsigma_dcos().factor(), P.sigma(sqrt_s=10, unit=\"pb\"), float(4*pi*(1/137.035999084)^2/(3*10^2)*0.3893793721e9)",
+  "stdout": "",
+  "latex": "\\left(\\frac{{\\left({\\cos\\theta}^{2} + 1\\right)} {e}^{4}}{32 \\, \\pi {\\sqrt{s}}^{2}}, 868.5447687569202, 868.5447687569203\\right)",
+  "text": null,
+  "fig": null,
+  "seconds": 0.04,
+  "n": 92
+ },
+ "p_sm": {
+  "code": "Pz = process(\"e- e+ -> mu- mu+\", widths={\"Z\": 2.4952})       # the full Standard Model, Z with its width\n[(rs, round(Pz.sigma(sqrt_s=rs, unit=\"pb\"), 3)) for rs in (20, 60, 91.1876, 120, 200)]",
+  "stdout": "",
+  "latex": "\\left[\\left(20, 217.118\\right), \\left(60, 25.84\\right), \\left(91.1876000000000, 1867.875\\right), \\left(120, 10.643\\right), \\left(200, 2.655\\right)\\right]",
+  "text": null,
+  "fig": null,
+  "seconds": 0.83,
+  "n": 93
+ },
+ "p_decay": {
+  "code": "Hbb = process(\"H -> b b~\")\nG = Hbb.width()\nprint(\"Gamma(H -> b b~) divided by alpha m_h m_b^2 N_c (1 - 4 m_b^2/m_h^2)^(3/2)/(8 sin^2 m_W^2):\",\n      (G/(3*EL^2/(4*pi)*MH*MB^2*(1 - 4*MB^2/MH^2)^(3/2)/(8*SW^2*MW^2))).subs({MH: 125, MB: 5, MW: 80, SW: sqrt(0.23)}).n(digits=15))\nfor text in (\"H -> b b~\", \"Z -> mu- mu+\", \"Z -> nu_e nu_e~\", \"W+ -> e+ nu_e\", \"t -> W+ b\"):\n    D = process(text)\n    print(\"%-16s %.6f GeV\" % (text, float(D.numeric(D.width()).n())))",
+  "stdout": "Gamma(H -> b b~) divided by alpha m_h m_b^2 N_c (1 - 4 m_b^2/m_h^2)^(3/2)/(8 sin^2 m_W^2): 1.00000000000000\nH -> b b~        0.004129 GeV\nZ -> mu- mu+     0.080936 GeV\nZ -> nu_e nu_e~  0.160009 GeV\nW+ -> e+ nu_e    0.219178 GeV\nt -> W+ b        1.432814 GeV",
+  "latex": null,
+  "text": null,
+  "fig": null,
+  "seconds": 0.03,
+  "n": 94
+ },
+ "p_ww": {
+  "code": "W = process(\"e- e+ -> W+ W-\", massless=[\"e\"])\nLL = W.squared(helicities={\"e-\": -1, \"e+\": +1, \"W+\": 0, \"W-\": 0})\nW.numeric(LL, sqrt_s=500, cos_theta=-1/2, alpha=1/(4*pi)).n(digits=20)       # e = 1",
+  "stdout": "",
+  "latex": "1.2168202717424543187",
+  "text": null,
+  "fig": null,
+  "seconds": 1.05,
+  "n": 95
+ },
+ "p_qcd": {
+  "code": "Q = process(\"u u~ -> g g\", exclude_fields=[\"A\", \"Z\", \"H\", \"G0\", \"G+\", \"W+\"], massless=[\"u\"])\ns, t, u = Q.s, Q.t, Q.u\nfrom feynsage.models import GS\n(Q.squared() - 32*GS^4/27*(t/u + u/t - 9*(t^2 + u^2)/(4*s^2))).subs(s=-t-u).simplify_rational()",
+  "stdout": "",
+  "latex": "0",
+  "text": null,
+  "fig": null,
+  "seconds": 0.4,
+  "n": 96
  }
 }

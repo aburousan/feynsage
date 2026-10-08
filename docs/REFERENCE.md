@@ -7,7 +7,7 @@ module, for example `feynsage.oneloop.tadpole` or `feynsage.form.compute`.
 Every function explains itself in more detail: `info(f)` prints what it computes and what its output
 means and the main ones also take `explain=True`. Worked examples are in the tutorial
 ([`tutorial/feynsage_tutorial.pdf`](tutorial/feynsage_tutorial.pdf)) and in
-[`../examples/feynsage_walkthrough.ipynb`](../examples/feynsage_walkthrough.ipynb). What each module
+the notebooks in [`../examples/`](../examples/) (start with `00_start_here.ipynb`). What each module
 does and how it is checked is in [`DETAILS.md`](DETAILS.md).
 
 Two normalisations are used.
@@ -93,11 +93,11 @@ Euclidean, measure d^D l / pi^(D/2). `D` is the symbol of the dimension (`from f
 | `PVB(r, n, s, m1, m2, explain=False, series=None, disc=None)` **(top)** | the Passarino-Veltman coefficient as Package-X's `PVB[r, n, ...]`: `PVB(0,0)` = B0, `PVB(0,1)` = B1, `PVB(1,0)` = B00. `series=(x, x0, n)` gives the Taylor series to order (x - x0)^n (Package-X's LoopRefineSeries), `disc=s` the discontinuity across the cut in s (Package-X's Part -> Discontinuity[s]). The same two options exist for `PVC` and `PVD`; `PVD` also takes `disc=(s, t)` for the double spectral function. |
 | `PVC(r, n1, n2, s1, s12, s2, m0, m1, m2, explain=False)` **(top)** | the same for triangles, as `PVC[r, n1, n2, ...]` |
 | `PVD(r, n1, n2, n3, s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, explain=False)` **(top)** | the same for boxes, as `PVD[...]` |
-| `loop(numerator, *props, kin=None, euclidean=False, explain=False)` **(top)** | a one-loop tensor integral reduced to A0, B0, C0, D0. A propagator is `["l + p", "m"]`; writing the same propagator twice raises its power (reduced by integration by parts). Up to five propagators: a pentagon is written through boxes (exact up to O(eps), tensors up to rank 5). The numerator may contain `l^2`, `l.p`, `l^mu`, `g(mu,nu)` and products. Returns a `LoopResult`. |
+| `loop(numerator, *props, kin=None, euclidean=False, explain=False)` **(top)** | a one-loop tensor integral reduced to A0, B0, C0, D0. A propagator is `["l + p", "m"]`; writing the same propagator twice raises its power (reduced by integration by parts). Up to five propagators: a pentagon is written through boxes (exact up to O(eps), tensors up to rank 5). The numerator may contain `l^2`, `l.p`, `l^mu`, `g(mu,nu)`, the imaginary unit `I` and products. A massless tadpole (any power) is scaleless and gives 0. Returns a `LoopResult`. |
 | `loop_diff(expr, x)` **(top)** | d expr/dx for an expression with A0, B0, C0, D0, written again in the same functions; the derivatives of C0 and D0 are exact (integration by parts) |
 | `loop_series(expr, (x, x0, n), ...)` **(top)** | the Taylor series of a result about a point where its closed form is regular. About zero external momenta use the `series=` option of `PVB`, `PVC`, `PVD`, which expands the Feynman-parameter integral. |
 | `explicit(expr)` **(top)** | every `C0(...)` and `D0(...)` with numerical arguments replaced by its closed form in dilogarithms |
-| `finite_part(expr, mu_value=None)` **(top)** | the eps^0 part. `mu_value` sets the scale mu to a number. |
+| `finite_part(expr, mu_value=None)` **(top)** | the eps^0 part. `mu_value` sets the scale mu to a number. Terms with eps in a denominator (a projector with 1/(d - 2)) are expanded first. |
 | `uv_part(expr)` **(top)** | the coefficient of 1/eps |
 | `pole_parts(expr)` **(top)** | (coefficient of 1/eps^2, coefficient of 1/eps) |
 | `c0_numeric(s1, s12, s2, m0, m1, m2, n=260, tol=1e-06)` **(top)** | C0 by numerical integration on two grids, as a check |
@@ -198,8 +198,9 @@ Tr[g^mu g^nu g^rho g^sigma g5] = -4i eps^{mu nu rho sigma}, eps^{0123} = +1.
 | `momenta("p q")`, `lorentz_indices("mu nu")` | Sage symbols marked as four-vectors or Lorentz indices |
 | `gamma(mu)`, `slash(p)`, `gamma5()`, `PL()`, `PR()`, `sigma(mu, nu)`, `one()` | Dirac matrices; they multiply in the order written. `gamma` of anything that is not an index is Euler's Gamma, `sigma` of numbers is Sage's divisor function |
 | `u(p, m)`, `v(p, m)`, `ubar(p, m)`, `vbar(p, m)` | spinors; a line with a spinor at both ends is a number |
+| `chiral(M, p, "L" or "R")` | puts P_L or P_R next to the spinor with momentum p (u -> P u, ubar -> ubar P'); for massless fermions `spin_sum` then gives one helicity |
 | `dot(p, q)`, `comp(p, mu)`, `metric(mu, nu)`, `epsilon(a, b, c, d)` | p.q, p^mu, g^{mu nu}, the Levi-Civita tensor; printed as `Dot`, `Comp`, `Metric`, `Epsilon` (also accepted as input) |
-| `dirac_trace(expr, dim=4, rules=None, contract=True, euclidean=None, gamma5_scheme="NDR", eps_in_d=False, debug=False, threads=None)` | the trace (Tr 1 = 4); a list gives a list from one FORM run. In d dimensions gamma5 only where NDR is unambiguous |
+| `dirac_trace(expr, dim=4, rules=None, contract=True, euclidean=None, gamma5_scheme="NDR", eps_in_d=False, debug=False, threads=None)` | the trace (Tr 1 = 4); a list gives a list from one FORM run. In d dimensions gamma5 only where NDR is unambiguous; `gamma5_scheme="NDR-even"` drops the traces with one gamma5, for quantities whose parity-odd part vanishes (a form factor with too few momenta for an epsilon) |
 | `contract(expr, rules=None, dim=4, euclidean=None, eps_in_d=False, debug=False)` | sums repeated indices of a Sage expression (also `form.compute` output); on Dirac matrices it calls `simplify_dirac` |
 | `simplify_dirac(expr, dim=4, rules=None)` | open lines: tensors into the gamma matrices (FORM), then ordering, repeated indices, p/ p/ = p^2, Dirac equation at spinors (`feynsage.dirac`) |
 | `conjugate(M, complex_symbols=())` | complex conjugate of an amplitude: gamma^0 G^dagger gamma^0 on each line, summed indices renamed, eps(k) <-> eps*(k), (T^a)_ij -> (T^a)_ji; other objects go to Sage's `conjugate` |
@@ -345,6 +346,36 @@ Tests: `tests/test_methods.sage`.
 
 ---
 
+## process: a reaction in one line
+
+The short way to everything in the diagrams section. All names **(top)**.
+
+```python
+P = process("e- e+ -> mu- mu+")                     # Standard Model, tree level, Feynman-'t Hooft gauge
+P.draw()                                            # the diagrams
+P.squared()                                         # spin/colour averaged |M|^2 in s, t, u
+P.squared(helicities={"e-": +1, "e+": -1})          # one helicity state, in sqrt_s and cos_theta
+P.dsigma_dcos(); P.sigma(sqrt_s=10, unit="pb")      # cross sections
+process("H -> b b~").width()                        # decay widths
+```
+
+| Call | What it does |
+|---|---|
+| `process(text, model=None, loops=0, gauge="feynman", exclude_fields=(), massless=(), widths=None)` | parses `"a b -> c d"` (names `e- e+ mu- mu+ tau- tau+ nu_e nu_e~ u u~ ... b b~ gamma Z W+ W- H g`, antiparticles with `~`), numbers the momenta p1, p2 (in) p3, p4, ... (out) and makes the diagrams. `massless=["e"]` sets that mass to zero everywhere. `widths={"Z": GZ}` Breit-Wigner propagators (G0 and G+- get the width of the Z and W). |
+| `P.squared(average=True, helicities=None, diagrams=None, nproc=None)` | \|M\|^2. Summed over spins, polarizations (photons -g, gluons the physical sum, massive vectors -g + kk/M^2) and colours, divided by the initial spin and colour states when `average` (2 for a massive or charged fermion, 1 for a Standard-Model neutrino, which has only one helicity). With four external legs or fewer, epsilon tensors of the external momenta are set to zero (p4 = p1 + p2 - p3). 2 -> 2: in s = (p1+p2)^2, t = (p1-p3)^2, u = (p1-p4)^2; 1 -> 2: in the masses. `diagrams=[1, 3]` keeps those diagrams. The pairs M_i M_j* are computed in parallel. |
+| `P.squared(helicities={...})` | one helicity state in the CM frame (rest frame for a decay), in `sqrt_s` and `cos_theta` (theta = angle between p1 and p3). Fermions +1/-1 (or "R"/"L"; massless only), vectors +1, -1, 0 (Jacob-Wick vectors). A particle that appears twice is named by its position: `{3: +1}`. |
+| `P.helicity_table(configs, nproc=None)` | many helicity states at once; the different fermion-helicity traces are made in parallel |
+| `P.dsigma_dcos(helicities=None)`, `P.sigma(sqrt_s, unit="GeV^-2" or "pb", **values)` | d sigma/d cos theta (with 1/n! for identical final particles) and its integral |
+| `P.width()` | Gamma of a 1 -> 2 decay |
+| `P.numeric(expr, sqrt_s=, cos_theta=, alpha=, alpha_s=, sw2=, MW=, ...)` | puts in the Standard-Model numbers (`P.values`: alpha(0), PDG masses, on-shell sin theta_W = sqrt(1 - MW^2/MZ^2)); keywords override them |
+| `P.kinematics()`, `P.to_angles()` | the scalar products of the momenta in s, t, u; s, t, u in sqrt_s and cos_theta |
+| `P.amplitude(diagrams=None)`, `P.diagrams`, `P.momenta`, `P.s, P.t, P.u, P.sqrt_s, P.cos_theta` | the pieces |
+| `P.loop_diagrams()`, `P.virtual(average=True, xi=1, nproc=None, diagrams=None)` | the one-loop diagrams and the one-loop correction: the sum over spins, polarizations and colours of M0^* M1 (M1 unrenormalized), in d dimensions, as a Laurent series in eps; 2 Re of it corrects \|M\|^2. Any number of open fermion lines; gamma5 anticommutes and, with at most four external legs, traces with one gamma5 are dropped (their epsilon tensors vanish after the integration). Checked against FeynCalc + Package-X: e+e- -> mu+mu- in QED (vertices, vacuum polarization, boxes), H -> b b~ with the gluon loop, Z -> nu nu~ with all electroweak loops (tests/test_feyncalc_loop.sage). |
+
+Checks (tests/test_process.sage, tests/test_feyncalc.sage: 38 tree processes against FeynCalc with all masses, tests/test_books.sage: Peskin and Schroeder): QED e+e- -> mu+mu- = 2e^4(t^2+u^2)/s^2 and the Peskin (5.21) helicity form; e+e- -> W+W- helicity states against Xianyu (21.24)-(21.32) and Peskin (21.108); u ubar -> g g = Xianyu (17.23); sum over helicities = unpolarized.
+
+---
+
 ## diagrams: topologies, fields and amplitudes (like FeynArts)
 
 Diagrams made from a model, as FeynArts' `CreateTopologies`, `InsertFields` and `CreateFeynAmp` do, with
@@ -359,9 +390,11 @@ the amplitudes in the textbook notation of the `qft` layer (squared with FORM).
 | `diags.amplitudes(p_in, p_out, ...)` | the amplitude of each diagram |
 | `diags.squared(p_in, p_out, ...)` | M times its conjugate, summed over fermion spins; then `polarization_sum` and `color_factor` for vectors and colour |
 | `conjugate_amplitude(M, keep=())` **(top)** | the complex conjugate of an amplitude without spinors, with its summed indices renamed |
+| `diags.loop_amplitude(p_in, p_out, project, kin, xi=1)` | one-loop amplitudes, one per diagram, as Laurent series in eps. `project(numerator, ext)` closes the free indices (`ext` = the index of each external leg): a projector, a polarization contraction or a trace. Closed fermion loops are traced (-1 each), closed ghost loops -1 (an open ghost line through the loop has no sign), symmetry factors 1/|Aut|, colour factor separate (a four-gluon vertex gets one colour factor per Lorentz structure). One open fermion line is allowed (its Dirac string goes to `project`). `xi` != 1: R_xi propagators, the vector propagator split into its m_W and sqrt(xi) m_W parts; massless: -i g/k^2 + i(1 - xi) k k/k^4. Checked against FeynCalc: the electron, gluon and ghost self-energies and the ghost-gluon and three-gluon (ghost triangle) vertices, at xi = 1 and 3. |
+| `vertex_projector(p1, p2, m, mu, part="F2", dim="d")` **(top)** | the Dirac matrix P with Tr[(p1/ + m) P (p2/ + m) X] = F2 (or "F1", "A", "B", "C") for the vertex ubar(p2) X^mu u(p1), exact in d dimensions |
 
 Tests: `tests/test_diagrams.sage` (topology and diagram counts against FeynArts; e+e- -> mu+mu-, Bhabha against
-FeynCalc; e+e- -> W+W- against an explicit helicity sum; u ubar -> g g and g g -> g g against the standard results).
+FeynCalc; e+e- -> W+W- against an explicit helicity sum; u ubar -> g g and g g -> g g against the standard results; H -> gamma gamma pole cancellation; the QED F2(0) = alpha/(2 pi); the weak muon g - 2 of P&S 21.1 (10/3, xi independence, Z part); e-_L e+_R -> W+_0 W-_0 against P&S (21.108)).
 
 ---
 

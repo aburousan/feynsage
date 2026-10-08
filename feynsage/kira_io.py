@@ -10,6 +10,11 @@ import re
 from sage.all import SR
 from ._parse import sr
 
+from sage.repl.preparse import preparse as _preparse
+from sage.all import Integer as _Integer, RealNumber as _RealNumber
+_NUMS = {'Integer': _Integer, 'RealNumber': _RealNumber}    # exact rationals: 8/9 is not a float
+
+
 
 def _top_level_split(text):
     """The entries of a Mathematica list: split at the commas that are outside every bracket."""
@@ -43,5 +48,5 @@ def read_kira(path, family_name=None):
         loc = {name: _fn(name)}
         for n in set(re.findall(r'[A-Za-z_]\w*', rhs)) - {name}:
             loc[n] = SR.var(n)
-        out[idx] = SR(eval(rhs.replace('^', '**'), {}, loc))
+        out[idx] = SR(eval(_preparse(rhs.replace('^', '**')), _NUMS, loc))
     return out

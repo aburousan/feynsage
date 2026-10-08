@@ -458,6 +458,32 @@ def PR():
     return DiracExpr([(SR(1), Chain(None, (Factor([(('1',), Integer(1) / 2), (('5',), Integer(1) / 2)]),), None), ())])
 
 
+def chiral(expr, p, hand):
+    r"""
+    Keep one chirality of the external spinor with momentum p: u(p) -> P_hand u(p) (and v(p) the same),
+    ubar(p) -> ubar(p) P_other.  For a massless fermion this picks one helicity, so that
+        spin_sum(chiral(M, p1, "L") * conjugate(chiral(M, p1, "L")))
+    is |M|^2 for a left-handed electron with momentum p1 (summed over the other spins).  For a massless
+    antifermion v(p) with P_L v = v the helicity is +1/2 (right-handed positron).
+    """
+    if hand not in ("L", "R"):
+        raise ValueError('hand must be "L" or "R"')
+    pr = (PL() if hand == "L" else PR()).terms[0][1].factors
+    pl = (PR() if hand == "L" else PL()).terms[0][1].factors
+    key = str(SR(p))
+
+    def fix(ch):
+        if ch is None:
+            return ch
+        f = ch.factors
+        if ch.right is not None and str(ch.right.p) == key:
+            f = f + pr
+        if ch.left is not None and str(ch.left.p) == key:
+            f = pl + f
+        return Chain(ch.left, f, ch.right)
+    return DiracExpr([(c, fix(o), tuple(fix(x) for x in cl)) for c, o, cl in expr.terms])
+
+
 def sigma(*args, **kw):
     """sigma(mu, nu) = (i/2) [gamma^mu, gamma^nu] for Lorentz indices or momenta (sigma(mu, p) =
     sigma^{mu nu} p_nu).  With other arguments it is Sage's divisor function sigma(n, k)."""

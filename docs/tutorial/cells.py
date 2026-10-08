@@ -562,3 +562,423 @@ ax.set_xlabel(r"$\\sqrt{s}$ (GeV)"); ax.set_ylabel(r"$\\sigma$ (pb)"); ax.legend
 fig.tight_layout()
 """, {"fig": "fig"}),
 ]
+
+CELLS += [
+("h_setup", """
+from feynsage.models import EL, SW, CW, MW, MZ, MH, MT, MB, GS
+from feynsage.pv import finite_part, uv_part
+from feynsage import metric as g_, comp as c_, dot as dot_
+sm = SM()
+k1, k2 = momenta("k1 k2")                      # the two decay products; the Higgs has k1 + k2
+peskin = {EL: sqrt(4*pi/128), SW: sqrt(0.23), CW: sqrt(0.77), MW: 80, MZ: 91, MT: 175, MB: 5, GS: sqrt(4*pi*0.12)}
+def width(final, masses, identical=False):
+    # Gamma(h -> final) at tree level: diagrams, |M|^2 summed over spins, polarizations and colours
+    dg = insert_fields(topologies(0, 1, 2), ["H"], final, sm)
+    r = dg.squared([k1 + k2], [k1, k2])
+    for leg in (2, 3):
+        e = momenta("eps%d" % leg)
+        if dg[0].model.field(final[leg - 2]).kind == "V":
+            r = polarization_sum(r, e)
+    r = color_factor(r, N=3)
+    m1, m2 = masses
+    r = r.subs({dot_(k1, k1): m1^2, dot_(k2, k2): m2^2, dot_(k1, k2): (MH^2 - m1^2 - m2^2)/2})
+    p = sqrt((MH^2 - (m1 + m2)^2)*(MH^2 - (m1 - m2)^2))/(2*MH)
+    return (p/(8*pi*MH^2) * r * (1/2 if identical else 1)).simplify_full()
+G_bb = width(["b", "b~"], (MB, MB))
+G_bb
+""", {}),
+
+("h_ff_check", """
+al = var('al', latex_name=r'\\alpha')
+assume(MB > 0, MW > 0, MZ > 0, MH > 2*MB, MH > 2*MW, MH > 2*MZ)
+peskin_a = al*MH/(8*SW^2) * MB^2/MW^2 * (1 - 4*MB^2/MH^2)^(3/2) * 3
+(G_bb.subs(EL=sqrt(4*pi*al)) - peskin_a).canonicalize_radical().simplify_full()
+""", {}),
+
+("h_vv", """
+G_WW = width(["W+", "W-"], (MW, MW))
+G_ZZ = width(["Z", "Z"], (MZ, MZ), identical=True)
+tW, tZ = MH^2/MW^2, MH^2/MZ^2
+x1559 = al*MH^3/(16*MW^2*SW^2) * (1 - 4/tW + 12/tW^2) * sqrt(1 - 4/tW)
+x1560 = al*MH^3/(32*MW^2*SW^2) * (1 - 4/tZ + 12/tZ^2) * sqrt(1 - 4/tZ)
+[(G.subs(EL=sqrt(4*pi*al)).subs(CW=MW/MZ) - x).canonicalize_radical().simplify_full() for G, x in ((G_WW, x1559), (G_ZZ, x1560))]
+""", {}),
+
+("h_goldstone", """
+G_GG = width(["G+", "G-"], (0, 0))          # the Goldstone bosons of the ungauged theory (massless)
+[(G_WW/G_GG).subs(peskin).subs(MH=m).n(digits=6) for m in (300, 1000, 5000)]
+""", {}),
+
+("h_gg", """
+light = ['e', 'mu', 'ta', 'ne', 'nm', 'nt', 'u', 'c', 'd', 's']
+dgg = insert_fields(topologies(1, 1, 2, exclude=("tadpoles", "wf")), ["H"], ["g", "g"], sm, exclude_fields=light)
+def transverse(num, ext):                     # T_{mu nu} M^{mu nu} = (d - 2) (k1.k2) F
+    mu, nu = ext[1], ext[2]
+    return num*(g_(mu, nu) - (c_(k2, mu)*c_(k1, nu) + c_(k1, mu)*c_(k2, nu))/dot_(k1, k2))
+kin = {"k1^2": 0, "k2^2": 0, "k1.k2": "MH^2/2"}
+Mgg = sum(dgg.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))
+a2, a3 = color_indices("a2 a3")
+F_gg = (finite_part(Mgg, 1) / MH^2).subs({color_delta(a2, a3): 1})      # F = T.M/((d - 2) k1.k2); colour delta^{ab} stripped
+len(dgg), uv_part(Mgg).simplify_full()
+""", {}),
+
+("h_I", """
+import mpmath
+def I_x(tau):
+    # Xianyu (21.67), I = 3 int dx dy (1 - 4xy)/(1 - xy tau - i0), with the y integral done by hand:
+    # 3 int_0^1 dx [ (4/tau)(1 - x) - (1 - 4/tau) log(1 - x(1 - x) tau - i0)/(x tau) ]
+    tau = mpmath.mpf(float(tau))
+    lg = lambda x: mpmath.log(mpmath.mpc(1 - x*(1 - x)*tau, -mpmath.mpf(10)**-40))
+    pts = [0, 0.5, 1]
+    if tau > 4:                                   # the zeros of 1 - x(1 - x) tau, where the log is singular
+        r = mpmath.sqrt(1 - 4/tau)/2
+        pts = [0, 0.5 - r, 0.5, 0.5 + r, 1]
+    return complex(3*mpmath.quad(lambda x: 4/tau*(1 - x) - (1 - 4/tau)*lg(x)/(x*tau), pts))
+G_gg = abs(F_gg)^2 * MH^3/(8*pi)        # sum |M|^2 = 8 colours x 2 (k1.k2)^2 |F|^2, Gamma = sum |M|^2/(32 pi m_h)
+def peskin_c(m):
+    I = sum(I_x(float(m^2/mq^2)) for mq in (5, 175))
+    return float((1/128)*m/(8*0.23)*m^2/80^2*0.12^2/(9*pi.n()^2)*abs(complex(I))^2)
+[(float(G_gg.subs(peskin).subs(MH=m).n()), peskin_c(m)) for m in (100, 300, 400)]
+""", {}),
+
+("h_aa", """
+fermions_light = ['e', 'mu', 'ne', 'nm', 'nt', 'u', 'c', 'd', 's']
+daa = insert_fields(topologies(1, 1, 2, exclude=("tadpoles", "wf")), ["H"], ["A", "A"], sm, exclude_fields=fermions_light + ['ta'])
+bosonic = DiagramList([x for x in daa if not any(sm.field(f).kind == "F" for f in x.propagator_fields())], daa.tops, [])
+fermionic = DiagramList([x for x in daa if any(sm.field(f).kind == "F" for f in x.propagator_fields())], daa.tops, [])
+kin = {"k1^2": 0, "k2^2": 0, "k1.k2": "MH^2/2"}
+M_W = sum(bosonic.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))
+M_f = sum(fermionic.loop_amplitude([k1 + k2], [k1, k2], transverse, kin))
+len(daa), len(bosonic), uv_part(M_W).simplify_full(), uv_part(M_f).simplify_full()
+""", {}),
+
+("h_aa_draw", """
+fig = bosonic.draw(ncols=7, size=1.25)
+""", {"fig": "fig"}),
+
+("h_IW", """
+def I_W(tau):                                  # Xianyu (21.97)-(21.100)
+    tau = mpmath.mpf(float(tau))
+    I1 = mpmath.quad(lambda x: mpmath.log(1 - x*(1 - x)*tau), [0, 1])
+    I2 = 2*mpmath.quad(lambda x: mpmath.quad(lambda y: mpmath.log(1 - x*y*tau), [0, 1 - x]), [0, 1])
+    I3 = mpmath.quad(lambda x: mpmath.quad(lambda y: (8 - 3*x + y + 4*x*y)*tau/(1 - x*y*tau), [0, 1 - x]), [0, 1])
+    return complex((6*I1 - 8*I2 + tau*(I1 - I2) + I3)/tau)
+v_ev, alpha = 2*MW*SW/EL, EL^2/(4*pi)
+R_W = (finite_part(M_W, 1)/MH^2) * pi*v_ev/alpha        # = I_W if M_W = alpha m_h^2/(2 pi v) I_W (below the W W threshold)
+[(float(R_W.subs(peskin).subs(MH=m).n().real()), I_W(m^2/80^2).real) for m in (50, 100, 150)]
+""", {}),
+
+("h_light", """
+R_f = (finite_part(M_f, 1)/MH^2) * pi*v_ev/alpha
+small = {MH: 1/10}
+R_W.subs(peskin).subs(small).n(digits=40).real().n(digits=8), R_f.subs(peskin).subs(small).n(digits=40).real().n(digits=8)
+""", {}),
+
+("h_aa_width", """
+F_aa = (finite_part(M_W + M_f, 1)/MH^2).subs(peskin)
+def compare(m):
+    G = float(abs(complex(F_aa.subs(MH=m).n()))^2 * m^3/(64*pi.n()))
+    Sf = (4/9)*3*complex(I_x(m^2/175^2)) + (1/9)*3*complex(I_x(m^2/5^2))
+    pref = (1/128)*m/(8*0.23)*m^2/80^2*(1/128)^2/(18*pi.n()^2)
+    IW = I_W(m^2/80^2)
+    return G, float(pref*abs(Sf - 1.5*IW)^2), float(pref*abs(Sf - IW)^2)
+[compare(m) for m in (60, 100, 150)]
+""", {}),
+
+("h_pp", """
+def sigma_pp_nb(rs, mh=30, I=1):
+    # sigma(pp -> h + X) = int dx1 dx2 f_g(x1) f_g(x2) sigma(gg -> h), f_g(x) = 8 (1 - x)^7/x,
+    # sigma(gg -> h) = pi^2/(8 m_h) Gamma(h -> gg) delta(s_hat - m_h^2)   (Xianyu (21.71))
+    G = float((1/128)*mh/(8*0.23)*mh^2/80^2*0.12^2/(9*pi.n()^2)*I^2)
+    tau0 = mh^2/rs^2
+    lum = mpmath.quad(lambda x1: (8*(1 - x1)**7/x1)*(8*(1 - tau0/x1)**7/(tau0/x1))/x1, [tau0, 1])
+    return float(pi.n()^2/(8*mh)*G*lum/rs^2 * 0.3894e6)      # GeV^-2 -> nb
+roots = [1000*x for x in (1, 2, 5, 10, 20, 40)]
+[(r/1000, round(sigma_pp_nb(r), 3)) for r in roots]
+""", {}),
+
+("h_plots", """
+import numpy as np, matplotlib.pyplot as plt
+mhs = np.linspace(50, 500, 46)
+I_top = [complex(I_x(m**2/175**2)) for m in mhs]
+G_gg_keV = [1e6*float(G_gg.subs(peskin).subs(MH=m).n()) for m in mhs]
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 2.9))
+a1.plot(mhs, [z.real for z in I_top], label=r"Re $I(m_h^2/m_t^2)$"); a1.plot(mhs, [z.imag for z in I_top], ls="--", label=r"Im")
+a1.set_xlabel(r"$m_h$ (GeV)"); a1.legend(fontsize=8)
+a2.semilogy(mhs, G_gg_keV, color="C3"); a2.set_xlabel(r"$m_h$ (GeV)"); a2.set_ylabel(r"$\\Gamma(h \\to gg)$ (keV)")
+fig.tight_layout()
+""", {"fig": "fig"}),
+
+("h_br", """
+Gs = {"bb": G_bb.subs(EL=sqrt(4*pi*al)).subs(al=1/128), "WW": G_WW, "ZZ": G_ZZ, "tt": width(["t", "t~"], (MT, MT)), "gg": G_gg}
+def partial(name, m):
+    thr = {"WW": 2*80, "ZZ": 2*91, "tt": 2*175, "bb": 10, "gg": 0}[name]
+    return 0.0 if m <= thr else float(abs(complex(Gs[name].subs(peskin).subs(MH=m).n())))
+table = {n: [partial(n, m) for m in mhs] for n in Gs}
+total = [sum(table[n][i] for n in Gs) for i in range(len(mhs))]
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 3.0))
+a1.semilogy(mhs, total, color="k"); a1.set_xlabel(r"$m_h$ (GeV)"); a1.set_ylabel(r"$\\Gamma_h$ (GeV)")
+labels = {"bb": r"$b\\bar b$", "tt": r"$t\\bar t$", "gg": r"$gg$", "WW": r"$W^+W^-$", "ZZ": r"$Z^0Z^0$"}
+colours = {"bb": "#7b2d8e", "tt": "#d62728", "gg": "#ff7f0e", "WW": "#1f5fbf", "ZZ": "#2ca02c"}
+for n in Gs:
+    a2.semilogy(mhs, [max(table[n][i]/total[i], 1e-6) for i in range(len(mhs))], label=labels[n], color=colours[n])
+print("BR(gg) at m_h = 100, 200, 300, 400 GeV:", [round(table["gg"][i]/total[i], 5) for i in (5, 15, 25, 35)])
+a2.set_ylim(1e-3, 1.2); a2.set_xlabel(r"$m_h$ (GeV)"); a2.set_ylabel("branching fraction"); a2.legend(fontsize=7)
+fig.tight_layout()
+""", {"fig": "fig"}),
+
+]
+
+CELLS += [
+("c21_qed", """
+from feynsage.models import MM
+from feynsage import u as u_spinor
+p1, p2 = momenta("p1 p2")                       # muon in (p1), photon in (p2 - p1), muon out (p2)
+q2 = var("q2")                                  # q^2 = (p2 - p1)^2, sent to 0 at the end
+def F2_projector(num, ext):                     # Tr[(p1/ + m) P (p2/ + m) X] picks F2 out of X^mu
+    P = vertex_projector(p1, p2, MM, ext[1], "F2")
+    return dirac_trace((slash(p1) + MM)*P*(slash(p2) + MM)*num, dim="d", gamma5_scheme="NDR-even")
+vertex_kin = {"p1^2": "MM^2", "p2^2": "MM^2", "p1.p2": "MM^2 - q2/2"}
+def at_q2_zero(F):
+    return ((F.subs(q2=10^-10) + F.subs(q2=-10^-10))/2)
+tops_v = topologies(1, 2, 1, exclude=("tadpoles", "wf"))
+ALL = ["A", "Z", "W+", "H", "G0", "G+", "u+", "u-", "uA", "uZ", "g", "ug", "e", "mu", "ta", "ne", "nm", "nt",
+       "u", "c", "t", "d", "s", "b"]
+only = lambda keep: [f for f in ALL if f not in keep]   # fields that may not run inside the loop
+dq = insert_fields(tops_v, ["mu", "A"], ["mu"], sm, exclude_fields=only(["A", "mu"]))
+F2 = finite_part(sum(dq.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin)), 1)/EL
+F2_qed = at_q2_zero(F2.subs({EL: 1, MM: 1})).n(digits=40)
+F2_qed.n(digits=20), (1/(8*pi^2)).n(digits=20)     # F2(0)/e^2 and alpha/(2 pi) with e = 1
+""", {}),
+("c21_w", """
+GF = EL^2/(4*sqrt(2)*SW^2*MW^2)                 # G_F/sqrt(2) = g^2/(8 m_W^2), g = e/sin(theta_w)
+unit = GF*MM^2/(8*pi^2*sqrt(2))
+heavy = {EL: 1, MM: 1, MW: 1000, SW: sqrt(23/100), CW: sqrt(77/100), MZ: 1000/sqrt(77/100)}   # m_W = 1000 m_mu
+dW = insert_fields(tops_v, ["mu", "A"], ["mu"], sm, exclude_fields=only(["W+", "G+", "nm"]))
+def a_mu(diags, xi=1):
+    res = diags.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin, xi=xi)
+    return [(at_q2_zero(finite_part(r, 1)/EL/unit).subs(heavy)).n(digits=60).n(digits=8) for r in res]
+[x.propagator_fields() for x in dW], a_mu(dW)
+""", {}),
+("c21_xi", """
+[(xi, sum(a_mu(dW, xi))) for xi in (1, 3, 1/2, 1/100, 100)]
+""", {}),
+("c21_z", """
+dZ = insert_fields(tops_v, ["mu", "A"], ["mu"], sm, exclude_fields=only(["Z", "G0", "mu"]))
+sw2 = 23/100
+[x.propagator_fields() for x in dZ], sum(a_mu(dZ)), -(4/3 + 8/3*sw2 - 16/3*sw2^2).n(digits=8)
+""", {}),
+("c21_ww", """
+from feynsage.models import ME
+from feynsage.qft import tensors as T
+from feynsage.diagrams import conjugate_amplitude
+dww = insert_fields(topologies(0, 2, 2), ["e-", "e+"], ["W+", "W-"], sm)
+q1, q2_, q3, q4 = momenta("q1 q2 q3 q4")       # e-(q1) e+(q2) -> W+(q3) W-(q4)
+Mww = dww.amplitude([q1, q2_], [q3, q4])
+s_, t_, u_ = var("s t u")
+kin_ww = {dot(q1,q1): 0, dot(q2_,q2_): 0, dot(q3,q3): MW^2, dot(q4,q4): MW^2, dot(q1,q2_): s_/2,
+          dot(q3,q4): (s_ - 2*MW^2)/2, dot(q1,q3): (MW^2 - t_)/2, dot(q2_,q4): (MW^2 - t_)/2,
+          dot(q1,q4): (MW^2 - u_)/2, dot(q2_,q3): (MW^2 - u_)/2}
+# longitudinal polarization vectors, real:  eps_L(q3) = [q3 (q3.q4) - q4 m_W^2]/(m_W sqrt((q3.q4)^2 - m_W^4))
+P34 = (s_ - 2*MW^2)/2; NL = MW*sqrt(P34^2 - MW^4)
+eL3, eL4 = (P34*q3 - MW^2*q4)/NL, (P34*q4 - MW^2*q3)/NL
+longitudinal = {T._declare(n, "vector"): v for n, v in (("eps3", eL3), ("eps3_c", eL3), ("eps4", eL4), ("eps4_c", eL4))}
+def squared_00(hand):                           # |M(e-_hand e+ -> W+_0 W-_0)|^2
+    Mh = chiral(Mww, q1, hand)
+    return SR(spin_sum(Mh*conjugate_amplitude(Mh), rules=longitudinal)).subs(kin_ww).subs({ME: 0})
+LR, RL = squared_00("L"), squared_00("R")
+mw_ = 804/10; sw2 = 23/100; mz_ = mw_/sqrt(1 - sw2)
+num_ww = {EL: 1, SW: sqrt(sw2), CW: sqrt(1 - sw2), MW: mw_, MZ: mz_}
+def pt_ww(rs, c):                               # theta = angle between e- and W+
+    E = rs/2; p = sqrt(E^2 - mw_^2); tv = mw_^2 - rs^2/2 + 2*E*p*c
+    return {s_: rs^2, t_: tv, u_: 2*mw_^2 - rs^2 - tv}
+LR.subs(num_ww).subs(pt_ww(500, -1/2)).n(digits=20)
+""", {}),
+("c21_xianyu", """
+def X24_first(rs, c):                           # first line of Xianyu (21.24), without i e^2
+    sv = rs^2; E = rs/2; p = sqrt(E^2 - mw_^2); sn = sqrt(1 - c^2); uv = mw_^2 - sv/2 - 2*E*p*c
+    return (mz_^2/(sv*(sv - mz_^2)) - 1/(2*sw2)/(sv - mz_^2))*(-4*E*p*(E^2 + p^2)/mw_^2 + 16*E^3*p/mw_^2)*sn + 1/(2*sw2)/uv*2*E*(-3*E^2*p + p^3 - 2*E^3*c)*sn/mw_^2
+def X24_second(rs, c, sign):                    # second line of (21.24); printed with sign = -1
+    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv); D = 1 + b^2 + 2*b*c
+    return -sv/(4*mw_^2)*(mz_^2/(sv - mz_^2)*b*(3 - b^2) + sign/(2*sw2)*((2/D - sv/(sv - mz_^2))*b*(3 - b^2) + 4*c/D))*sqrt(1 - c^2)
+def X29(rs, c):                                 # Xianyu (21.29)
+    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv)
+    return sv/(sv - mz_^2)*mz_^2/(4*mw_^2)*b*(b^2 - 3)*sqrt(1 - c^2)
+rows = []
+for rs, c in [(200, 3/10), (500, -1/2), (1000, 4/5)]:
+    a, r = LR.subs(num_ww).subs(pt_ww(rs, c)), RL.subs(num_ww).subs(pt_ww(rs, c))
+    rows.append([rs, c] + [(a/x^2).n(digits=60).n(digits=15) for x in (X24_first(rs, c), X24_second(rs, c, -1), X24_second(rs, c, +1))]
+                + [(r/X29(rs, c)^2).n(digits=60).n(digits=15)])
+print("sqrt(s)  cos   first line     printed 2nd    2nd with +     (21.29)")
+for row in rows:
+    print("%-8s %-5s " % (row[0], row[1]) + "  ".join("%-14.10f" % float(x) for x in row[2:]))
+""", {}),
+("c21_peskin", """
+J = chiral(vbar(q2_)*slash(q3 - q4)*u_spinor(q1), q1, "L")      # vbar_L gamma_l u_L (k+ - k-)^l
+J2 = SR(spin_sum(J*conjugate_amplitude(J))).subs(kin_ww)
+def P108(rs, cP):                               # the bracket of Peskin (21.108); theta_P = angle of W-
+    sv = rs^2; b = sqrt(1 - 4*mw_^2/sv)
+    return (1/(2*sw2)*(-sv/(sv - mz_^2)*(mz_^2/(2*mw_^2) + 1) + 2/b^2 - 8*mw_^2/(sv*b^2*(1 + b^2 - 2*b*cP)))
+            + mz_^2/mw_^2*((sv/2 + mw_^2)/(sv - mz_^2)))/sv
+[(rs, c, (LR.subs(num_ww).subs(pt_ww(rs, c))/(J2.subs(num_ww).subs(pt_ww(rs, c))*P108(rs, -c)^2)).n(digits=60).n(digits=15))
+ for rs, c in [(200, 3/10), (500, -1/2), (1000, 4/5)]]
+""", {}),
+("c21_equiv", """
+dgg = insert_fields(topologies(0, 2, 2), ["e-", "e+"], ["G+", "G-"], sm)
+Mg = chiral(dgg.amplitude([q1, q2_], [q3, q4]), q1, "L")
+GG = SR(spin_sum(Mg*conjugate_amplitude(Mg))).subs(kin_ww).subs({ME: 0})
+c = 3/10
+def r(x, y, rs):
+    return (x.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)/y.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)).n(digits=8)
+lim = (1 - c^2)/(4*sw2*(1 - sw2))^2                         # (e^2 sin(theta)/(4 s_w^2 c_w^2))^2
+X28 = (1 + 2*c)^2*(1 - c^2)/(2*sw2*(1 + c))^2               # Xianyu (21.28) squared
+print("sqrt(s)/GeV   W0W0/phi phi   W0W0/limit   W0W0/(21.28)")
+for rs in (10^3, 10^4, 10^5, 10^6):
+    x = LR.subs(num_ww).subs(pt_ww(rs, c)).n(digits=80)
+    print("%-13d %-14.8f %-12.8f %.8f" % (rs, float(r(LR, GG, rs)), float(x/lim), float(x/X28)))
+""", {}),
+]
+
+CELLS += [
+("c21_fp", """
+# Xianyu's Feynman-parameter forms at q^2 = 0 with the full Delta, at the real m_W/m_mu
+import mpmath
+mpmath.mp.dps = 30
+r_real = (80379/1000)/(1056584/10^7)
+real = {EL: 1, MM: 1, MW: r_real, SW: sqrt(sw2), CW: sqrt(1 - sw2), MZ: r_real/sqrt(1 - sw2)}
+def a_real(diags):
+    res = diags.loop_amplitude([p1, p2 - p1], [p2], F2_projector, kin=vertex_kin)
+    return [(at_q2_zero(finite_part(r, 1)/EL/unit).subs(real)).n(digits=40) for r in res]
+def dbl(f):
+    return mpmath.quad(lambda x: mpmath.quad(f, [0, 1 - x]), [0, 1])
+R2, z2, c2 = mpmath.mpf(float(r_real))**2, mpmath.mpf(float(r_real))**2/(1 - mpmath.mpf(0.23)), 1 - mpmath.mpf(0.23)
+x21_2 = 2*R2*dbl(lambda y: (1 - y)*(3 - 2*y)/((1 - y)*R2 - y*(1 - y)))                # (21.2)
+x21_9 = -(R2/(2*c2))*dbl(lambda y: (2*y*(3 + y) - (4*mpmath.mpf(0.23) - 1)**2*2*y*(1 - y))/((1 - y)**2 + y*z2))   # (21.9)
+[(a_real(dW)[3].n(digits=12), mpmath.nstr(x21_2, 12)), (a_real(dZ)[1].n(digits=12), mpmath.nstr(x21_9, 12))]
+""", {}),
+("c21_trans_setup", """
+# every helicity state with process(): electrons massless, the W helicities +1, -1, 0 (Jacob-Wick vectors)
+W = process("e- e+ -> W+ W-", massless=["e"])
+num_W = {EL: 1, SW: sqrt(sw2), CW: sqrt(1 - sw2), MW: mw_, MZ: mz_}       # e = 1, as above
+def hel(he, h3, h4, rs, c, diagrams=None):           # he = helicity of the e- (the e+ has the opposite)
+    r = W.squared(helicities={"e-": he, "e+": -he, "W+": h3, "W-": h4}, diagrams=diagrams)
+    return r.subs(num_W).subs({W.sqrt_s: rs, W.cos_theta: c}).n(digits=60)
+hel(-1, 0, 0, 500, -1/2)                             # the same number as Out above for e-_L e+_R -> W0 W0
+""", {}),
+("c21_trans", """
+def X(name, rs, c, pm):              # Xianyu's printed amplitudes without i e^2 (first and second lines)
+    sv = rs^2; E0 = rs/2; p = sqrt(E0^2 - mw_^2); b = p/E0; sth = sqrt(1 - c^2); D = 1 + b^2 + 2*b*c
+    uv = mw_^2 - 2*E0^2 - 2*E0*p*c
+    br = mz_^2/(sv*(sv - mz_^2)) - 1/(2*sw2)/(sv - mz_^2)
+    return {"25a": br*(8*E0^2*p/mw_)*(-pm + c)/sqrt(2) - 1/(2*sw2)/uv*(2*E0/mw_)*(E0^2*(2*c - pm) + 2*E0*p + pm*p^2)*(pm + c)/sqrt(2),
+            "25b": (mz_^2/(sv - mz_^2)*b - 1/(2*sw2)*(sv/(sv - mz_^2)*b + (pm - 2*c - 2*b - pm*b^2)/D))*(rs/mw_)*(pm + c)/sqrt(2),
+            "26a": br*(-4*E0*p*sth) + 1/(2*sw2)/uv*2*E0*(p + E0*c)*sth,
+            "26b": (-mz_^2/(sv - mz_^2)*b + 1/(2*sw2)*(sv/(sv - mz_^2)*b - 2*(b + c)/D))*sth,
+            "27a": -1/(2*sw2)/uv*2*E0^2*(-pm + c)*sth, "27b": 1/(2*sw2)*2*(pm - c)*sth/D,
+            "30": mz_^2/(sv - mz_^2)*(rs/mw_)*b*(pm - c)/sqrt(2), "31": mz_^2/(sv - mz_^2)*b*sth}[name]
+rs, c = 500, -1/2
+print("e-  W+ W-   eq.      feynsage |M|^2 / Xianyu^2: first line   second line")
+for pm in (1, -1):
+    for hand, h3, h4, eq in (("L", 0, pm, "25"), ("L", -pm, 0, "25"), ("L", pm, pm, "26"), ("L", pm, -pm, "27"),
+                             ("R", 0, pm, "30"), ("R", -pm, 0, "30"), ("R", pm, pm, "31"), ("R", pm, -pm, "32")):
+        v = hel({"L": -1, "R": +1}[hand], h3, h4, rs, c)
+        if eq == "32":
+            print("%s   %+d  %+d   (21.32)  |M|^2 = %.1e" % (hand, h3, h4, float(v)))
+            continue
+        cols = [X(eq + "a", rs, c, pm), X(eq + "b", rs, c, pm)] if eq in ("25", "26", "27") else [X(eq, rs, c, pm)]
+        print("%s   %+d  %+d   (21.%s)  " % (hand, h3, h4, eq) + "   ".join("%.12f" % float(v/x^2) for x in cols))
+""", {}),
+("c21_algebra", """
+# only the printed formulas: does each line equal the next one?  (no feynsage, no diagrams)
+Ev, pv, cv, wv = var("E p c w")
+mwv = sqrt(Ev^2 - pv^2); mzv = mwv^2/(1 - wv); sv = 4*Ev^2; bv = pv/Ev; snv = sqrt(1 - cv^2); Dv = 1 + bv^2 + 2*bv*cv
+uv = mwv^2 - 2*Ev^2 - 2*Ev*pv*cv
+brv = mzv/(sv*(sv - mzv)) - 1/(2*wv)/(sv - mzv)
+first24 = brv*(-4*Ev*pv*(Ev^2 + pv^2)/mwv^2 + 16*Ev^3*pv/mwv^2)*snv + 1/(2*wv)/uv*2*Ev*(-3*Ev^2*pv + pv^3 - 2*Ev^3*cv)*snv/mwv^2
+A = mzv/(sv - mzv)*bv*(3 - bv^2); B = 1/(2*wv)*((2/Dv - sv/(sv - mzv))*bv*(3 - bv^2) + 4*cv/Dv)
+second24 = lambda sA, sB: -sv/(4*mwv^2)*(sA*A + sB*B)*snv
+zero = lambda x: bool(x.simplify_full() == 0)
+first27 = lambda pm: -1/(2*wv)/uv*2*Ev^2*(-pm + cv)*snv
+second27 = lambda pm: 1/(2*wv)*2*(pm - cv)*snv/Dv
+tt = var("tt")                       # m_W/E -> 0
+print("(21.24) first line = second line as printed, {A - B}:", zero(first24 - second24(1, -1)))
+print("(21.24) first line = second line with {-A - B}:      ", zero(first24 - second24(-1, -1)))
+print("(21.27) first = second:", zero(first27(1) - second27(1)), "   first = -(second):", zero(first27(1) + second27(1)))
+lim = (first24/snv).subs({pv: Ev*sqrt(1 - tt^2)}).simplify_full().limit(tt=0).factor()
+print("high-energy limit of the (21.24) first line, divided by sin(theta):", lim)
+print("Peskin (21.107) bracket 1/(2c^2) - 1/(4c^2 s^2) + 1/(2s^2):", (1/(2*(1 - wv)) - 1/(4*(1 - wv)*wv) + 1/(2*wv)).factor())
+""", {}),
+("c21_fig", """
+import numpy as np, matplotlib.pyplot as plt
+# Peskin Fig. 21.10: e-_L e+_R at E_cm = 1000 GeV, theta = angle of the W- (cos = -cos_theta of the W+),
+# curves (h-, h+); dsigma/dcos in units of R = 4 pi alpha^2/(3 E_cm^2) is (3/8) beta |M|^2 with e = 1
+rs = 1000; beta = sqrt(1 - 4*mw_^2/rs^2).n()
+pairs = [(hm, hp) for hm in (1, -1, 0) for hp in (1, -1, 0)]
+cfg = [{"e-": he, "e+": -he, "W+": hp, "W-": hm} for he in (-1, 1) for hm, hp in pairs]
+tab = W.helicity_table(cfg)                          # all 18 states, the traces in parallel
+f = [fast_callable(SR(x.subs(num_W).subs({W.sqrt_s: rs})), vars=[W.cos_theta], domain=CDF) for x in tab]
+cPs = [k/100 for k in range(-99, 100, 2)]
+ds = lambda k, cP: 3/8*float(beta)*f[k](-cP).real()
+cur = {pq: [ds(k, x) for x in cPs] for k, pq in enumerate(pairs)}
+tot = [sum(cur[pq][i] for pq in pairs) for i in range(len(cPs))]
+totR = [sum(ds(9 + k, x) for k in range(9)) for x in cPs]
+fig, ax = plt.subplots(figsize=(5.2, 3.8))
+ax.semilogy(cPs, tot, "k", lw=1.5, label="total")
+for pq, lab in (((0, 0), "(0,0)"), ((1, -1), "(+,-)"), ((-1, 1), "(-,+)")):
+    ax.semilogy(cPs, cur[pq], lw=1.1, label=lab)
+ax.semilogy(cPs, [a + b for a, b in zip(cur[(-1, 0)], cur[(0, 1)])], lw=1.1, label="(-,0)+(0,+)")
+ax.semilogy(cPs, [a + b for a, b in zip(cur[(1, 0)], cur[(0, -1)])], lw=1.1, label="(+,0)+(0,-)")
+ax.semilogy(cPs, totR, "k--", lw=1, label=r"$e^-_R e^+_L$ total")
+ax.set_ylim(0.01, 200); ax.set_xlim(-1, 1); ax.set_xlabel(r"$\\cos\\theta$"); ax.set_ylabel(r"$d\\sigma/d\\cos\\theta$ (units of R)")
+ax.legend(fontsize=7, ncol=2); fig.tight_layout()
+i0 = cPs.index(1/100)
+print("e-_L / e-_R at cos = 0.01:", round(tot[i0]/totR[i0], 1), "   (+,+) and (-,-) largest for |cos| < 0.9:",
+      "%.1e" % max(max(cur[(1, 1)][i], cur[(-1, -1)][i]) for i in range(len(cPs)) if abs(cPs[i]) < 0.9))
+""", {"fig": "fig"}),
+("c21_growth", """
+# one W longitudinal, one transverse (21.2a): single diagrams grow like sqrt(s), the sum falls like 1/sqrt(s)
+names = [str(x.propagator_fields()[0]) for x in W.diagrams]
+print("|M|^2 for e-_L e+_R -> W+_0 W-_(+), cos = 0.3;  diagrams:", names)
+for rs in (10^3, 10^4, 10^5):
+    print("sqrt(s) = %6d GeV: " % rs + "  ".join("%9.3e" % float(hel(-1, 0, 1, rs, 3/10, diagrams=[k])) for k in range(1, 5))
+          + "   sum: %9.3e" % float(hel(-1, 0, 1, rs, 3/10)))
+""", {}),
+]
+
+CELLS += [
+("p_qed", """
+from feynsage.models import QED
+P = process("e- e+ -> mu- mu+", model=QED(), massless=["e", "mu"])
+P, P.squared().factor()
+""", {}),
+("p_hel", """
+[(he, hm, P.squared(helicities={"e-": he, "e+": -he, "mu-": hm, "mu+": -hm}).factor()) for he in (1, -1) for hm in (1, -1)]
+""", {}),
+("p_sigma", """
+P.dsigma_dcos().factor(), P.sigma(sqrt_s=10, unit="pb"), float(4*pi*(1/137.035999084)^2/(3*10^2)*0.3893793721e9)
+""", {}),
+("p_sm", """
+Pz = process("e- e+ -> mu- mu+", widths={"Z": 2.4952})       # the full Standard Model, Z with its width
+[(rs, round(Pz.sigma(sqrt_s=rs, unit="pb"), 3)) for rs in (20, 60, 91.1876, 120, 200)]
+""", {}),
+("p_decay", """
+Hbb = process("H -> b b~")
+G = Hbb.width()
+print("Gamma(H -> b b~) divided by alpha m_h m_b^2 N_c (1 - 4 m_b^2/m_h^2)^(3/2)/(8 sin^2 m_W^2):",
+      (G/(3*EL^2/(4*pi)*MH*MB^2*(1 - 4*MB^2/MH^2)^(3/2)/(8*SW^2*MW^2))).subs({MH: 125, MB: 5, MW: 80, SW: sqrt(0.23)}).n(digits=15))
+for text in ("H -> b b~", "Z -> mu- mu+", "Z -> nu_e nu_e~", "W+ -> e+ nu_e", "t -> W+ b"):
+    D = process(text)
+    print("%-16s %.6f GeV" % (text, float(D.numeric(D.width()).n())))
+""", {}),
+("p_ww", """
+W = process("e- e+ -> W+ W-", massless=["e"])
+LL = W.squared(helicities={"e-": -1, "e+": +1, "W+": 0, "W-": 0})
+W.numeric(LL, sqrt_s=500, cos_theta=-1/2, alpha=1/(4*pi)).n(digits=20)       # e = 1
+""", {}),
+("p_qcd", """
+Q = process("u u~ -> g g", exclude_fields=["A", "Z", "H", "G0", "G+", "W+"], massless=["u"])
+s, t, u = Q.s, Q.t, Q.u
+from feynsage.models import GS
+(Q.squared() - 32*GS^4/27*(t/u + u/t - 9*(t^2 + u^2)/(4*s^2))).subs(s=-t-u).simplify_rational()
+""", {}),
+]

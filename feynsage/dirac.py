@@ -20,7 +20,7 @@ or more distinct gamma matrices, each times 1, g5 or PL, PR.
 """
 import re
 from sage.all import SR, I
-from ._parse import sr
+from ._parse import sr, swap_i
 
 D = SR.var('d')
 
@@ -637,7 +637,7 @@ def _inverse(rows):
     as a formal symbol, put back at the end), which is much faster than in SR."""
     from sage.all import PolynomialRing, QQ, matrix
     Ig = SR.var('fs_Ig')
-    rows = [[SR(x).subs({I: Ig}) for x in r] for r in rows]
+    rows = [[swap_i(x, Ig) for x in r] for r in rows]
     names = sorted({str(v) for r in rows for x in r for v in x.variables()} | {'fs_Ig'})
     F = PolynomialRing(QQ, names).fraction_field()
     M = matrix(F, [[F(str(x)) for x in r] for r in rows])

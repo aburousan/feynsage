@@ -10,7 +10,6 @@ is computed from the Feynman diagrams twice: with feynsage + FORM (Jupyter noteb
 - `ir_cancellation.ipynb`: the infrared pole of the vertex against the soft-photon pole, F2 = alpha/2pi,
   Lightman's law
 - `double_compton.py`: the bookkeeping of the six double Compton diagrams, used by the first notebook
-  and by section 18 of `../feynsage_walkthrough.ipynb`
 
 Open the notebooks with the SageMath kernel. The FeynCalc versions run from the repository root:
 

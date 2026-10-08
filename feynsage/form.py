@@ -13,6 +13,11 @@ p.q -> dot(p,q).
 import os, re, subprocess, tempfile, shutil
 from sage.all import SR, function
 
+from sage.repl.preparse import preparse as _preparse
+from sage.all import Integer as _Integer, RealNumber as _RealNumber
+_NUMS = {'Integer': _Integer, 'RealNumber': _RealNumber}    # exact rationals: 8/9 is not a float
+
+
 def _find_form():
     """FEYNSAGE_FORM, then the PATH, then the places install.sh and package managers use."""
     cands = [os.environ.get('FEYNSAGE_FORM'), shutil.which('form'),
@@ -79,7 +84,7 @@ Print +s;
     names = {i: SR.var(i) for i in indices}
     names['g'] = g
     names[dim] = SR.var(dim)
-    return SR(eval(body.replace('^', '**'), {}, names))
+    return SR(eval(_preparse(body.replace('^', '**')), _NUMS, names))
 
 
 def dirac_trace(factors, vectors, dim=4, levi_civita="form"):
@@ -157,7 +162,7 @@ def dirac_trace(factors, vectors, dim=4, levi_civita="form"):
     names = {'g': function('g'), 'eps': function('eps'), 'dot': function('dot'), 'comp': function('comp')}
     for n in set(re.findall(r'[A-Za-z_]\w*', body)) - set(names):
         names[n] = SR.var(n)
-    return _levi_civita(SR(eval(body.replace('^', '**'), {}, names)), levi_civita)
+    return _levi_civita(SR(eval(_preparse(body.replace('^', '**')), _NUMS, names)), levi_civita)
 
 
 EPS = function('Eps', latex_name=r'\varepsilon')        # the usual Levi-Civita symbol
@@ -239,7 +244,7 @@ def _parse(out, name, vectors):
     names = {'g': function('g'), 'eps': function('eps'), 'dot': function('dot'), 'comp': function('comp'), 'I': SR(1).parent()('I')}
     for n_ in set(re.findall(r'[A-Za-z_]\w*', body)) - set(names):
         names[n_] = SR.var(n_)
-    return SR(eval(body.replace('^', '**'), {}, names))
+    return SR(eval(_preparse(body.replace('^', '**')), _NUMS, names))
 
 
 def compute(expr="1", vectors=(), lines=(), rules=None, dim=4, show_code=False, levi_civita="form"):

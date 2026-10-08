@@ -47,3 +47,30 @@ def integrate_termwise(expr, x, *bounds):
     op = e.operator()
     terms = e.operands() if op is not None and 'add' in getattr(op, '__name__', str(op)) else [e]
     return sum((integrate(t, x, *bounds) for t in terms), SR(0))
+
+
+def tidy(expr, radicals=True):
+    """
+    Make a result from integrate() readable: the argument of every log is factored and the logs are
+    expanded (so log((a + b)^2) - 2 log(a + b) cancels), radicals are simplified with the assumptions
+    in force (assume(x > 0) first) and the rest is simplified.  The value is unchanged.
+    """
+    from sage.all import SR, log
+    e = SR(expr)
+    w0 = SR.wild(0)
+    for L in set(e.find(log(w0))):
+        arg = L.operands()[0]
+        try:
+            e = e.subs({L: log(arg.factor())})
+        except Exception:
+            pass
+    e = e.expand_log(algorithm='powers')
+    if radicals:
+        try:
+            e = e.canonicalize_radical()
+        except Exception:
+            pass
+    try:
+        return e.simplify_full()
+    except Exception:
+        return e

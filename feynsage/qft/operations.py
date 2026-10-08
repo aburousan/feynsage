@@ -55,9 +55,9 @@ def _execute(prog, exprs, lines_per_expr=0, vec_ids=(), post_ids=(), trace4=True
 
 
 def _check(prog, dim, eps_in_d, gamma5_scheme="NDR"):
-    if gamma5_scheme != "NDR":
-        raise NotImplementedError('only gamma5_scheme="NDR" (anticommuting gamma5) is implemented; in 4 '
-                                  'dimensions (dim=4) FORM traces gamma5 exactly and no scheme is needed')
+    if gamma5_scheme not in ("NDR", "NDR-even"):
+        raise NotImplementedError('only gamma5_scheme="NDR" (anticommuting gamma5) and "NDR-even" are implemented; '
+                                  'in 4 dimensions (dim=4) FORM traces gamma5 exactly and no scheme is needed')
     if dim != 4 and prog.has_eps and not eps_in_d:
         raise DiracError("a Levi-Civita tensor is contracted in %s dimensions.  epsilon is a 4-dimensional object; "
                          "contracting it in d dimensions is a scheme choice (FORM uses d-dimensional metrics in "
@@ -75,9 +75,12 @@ def _threads(threads):
 
 
 # ---------------------------------------------------------------------------- gamma5 in d dimensions
-def _ndr(coef, factors):
+def _ndr(coef, factors, drop_odd=False):
     """Anticommuting gamma5 in d dimensions: [(c, factors without gamma5)] equal to the trace of
-    coef * product(factors), or raise when the trace with one gamma5 left over is ambiguous."""
+    coef * product(factors), or raise when the trace with one gamma5 left over is ambiguous.
+    drop_odd: leave out the traces with one gamma5 (gamma5_scheme="NDR-even", for quantities whose
+    parity-odd part is known to vanish, e.g. a parity-even form factor with too few momenta for an
+    epsilon tensor)."""
     branches = [(SR(coef), [], 0)]                 # (coefficient, factors so far, gamma5 parity)
     for F in factors:
         c5 = F.gamma5_coefficient()
@@ -95,7 +98,7 @@ def _ndr(coef, factors):
             out.append((c, fs))
             continue
         ngam = sum(1 for F in fs if F.odd_even()[1].items)
-        if ngam < 4:
+        if ngam < 4 or drop_odd:
             continue                                # Tr[gamma5 x (fewer than 4 gammas)] = 0
         raise DiracError("a trace with gamma5 and %d other gamma matrices in d dimensions is ambiguous with an "
                          "anticommuting gamma5 (NDR).  Use dim=4, or do the gamma5 part in 4 dimensions." % ngam)
@@ -158,14 +161,14 @@ def _apply_vector_rules(expr, vr):
                       for c, o, cl in expr.terms])
 
 # ---------------------------------------------------------------------------- traces
-def _line_texts(prog, coef, lines, dim4):
+def _line_texts(prog, coef, lines, dim4, drop_odd=False):
     """A term coef * Tr(line_1) * Tr(line_2) ... -> FORM text (NDR for gamma5 in d dims)."""
     alts = [(SR(coef), [])]
     for n, factors in enumerate(lines, 1):
         if dim4:
             alts = [(c, ch + [(n, list(factors))]) for c, ch in alts]
         else:
-            alts = [(c * c2, ch + [(n, f2)]) for c, ch in alts for c2, f2 in _ndr(1, factors)]
+            alts = [(c * c2, ch + [(n, f2)]) for c, ch in alts for c2, f2 in _ndr(1, factors, drop_odd)]
     texts = []
     for c, ch in alts:
         parts = [prog.chain(f, n) for n, f in ch]
@@ -212,7 +215,7 @@ def dirac_trace(expr, dim=4, rules=None, contract=True, euclidean=None, gamma5_s
         _guard_indices(e)
         parts = []
         for c, lines in _trace_terms(e):
-            parts += _line_texts(prog, c, lines, dim4)
+            parts += _line_texts(prog, c, lines, dim4, gamma5_scheme == "NDR-even")
             nlines = max(nlines, len(lines))
         texts.append('+'.join(parts) if parts else '0')
     _check(prog, dim, eps_in_d, gamma5_scheme)
@@ -261,9 +264,8 @@ def contract(expr, rules=None, dim=4, euclidean=None, eps_in_d=False, debug=Fals
 # ---------------------------------------------------------------------------- conjugation
 def _conj_scalar(c, complex_symbols=()):
     """Complex conjugate with every symbol real except those in complex_symbols; (T^a)_{ij} -> (T^a)_{ji}."""
-    c = SR(c)
-    if c.has(I):
-        c = c.subs({I: -I})
+    from .._parse import swap_i
+    c = swap_i(c, -I)
     from .color import COLT
     ts = c.find(COLT(SR.wild(0), SR.wild(1), SR.wild(2)))
     if ts:
@@ -467,7 +469,7 @@ def spin_sum(expr, dim=4, rules=None, contract=True, euclidean=None, gamma5_sche
         for c, o, cl in e.terms:
             loops = [[_vr_factor(F, vr) for F in lp] for lp in _cycles(list(cl))]   # the projectors p/ + m too
             nlines = max(nlines, len(loops))
-            parts += _line_texts(prog, c, loops, dim == 4)
+            parts += _line_texts(prog, c, loops, dim == 4, gamma5_scheme == "NDR-even")
         texts.append('+'.join(parts) if parts else '0')
     _check(prog, dim, eps_in_d, gamma5_scheme)
     vec, post = prog.rules(rules)

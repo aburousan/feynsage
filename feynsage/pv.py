@@ -28,6 +28,7 @@ Quick start
     B0(s, m, m).explicit()   # closed form, like Package-X's LoopRefine
 """
 import itertools
+import operator
 import re
 from sage.all import (SR, RR, var, function, log, sqrt, pi, I, gamma, matrix, factorial, PolynomialRing, lcm,
                       exp, euler_gamma, beta, integrate,
@@ -382,20 +383,31 @@ def B0(s, m1, m2):
             + log(mu ** 2 / m2 ** 2))
 
 
+def _laurent(expr):
+    """expr expanded in eps; terms with eps in a denominator (e.g. 1/(d - 2) from a projector) are
+    first expanded as a series around eps = 0."""
+    e = sr(expr).expand()
+    rest = sum((t for t in (e.operands() if e.operator() is operator.add else [e])
+                if any(c.has(eps) for c in (t.coefficient(eps, k) for k in (-2, -1, 0, 1, 2)))), sr(0))
+    if rest.is_trivial_zero():
+        return e
+    return (e - rest + rest.series(eps, 2).truncate()).expand()
+
+
 def uv_part(expr):
     """The coefficient of 1/eps (the UV pole if the integral is IR finite; UV and IR together otherwise)."""
-    return sr(expr).expand().coefficient(eps, -1)
+    return _laurent(expr).coefficient(eps, -1)
 
 
 def pole_parts(expr):
     """(coefficient of 1/eps^2, coefficient of 1/eps)."""
-    e = sr(expr).expand()
+    e = _laurent(expr)
     return e.coefficient(eps, -2), e.coefficient(eps, -1)
 
 
 def finite_part(expr, mu_value=None):
     """The eps^0 part; with mu_value the scale mu is set to that number."""
-    e = sr(expr).expand().coefficient(eps, 0)
+    e = _laurent(expr).coefficient(eps, 0)
     return e.subs(mu=mu_value) if mu_value is not None else e
 
 
@@ -734,6 +746,8 @@ class _Engine:
 
     # masters ----------------------------------------------------------------
     def master(self, props):
+        if len({_key(q) for q, _ in props}) == 1 and all(self.msq(m) == 0 for _, m in props):
+            return {}                                # massless tadpole (any power): scaleless, zero
         groups = {}
         for q, mm in props:
             groups.setdefault((_key(q), mm), []).append((q, mm))
@@ -1514,6 +1528,10 @@ def loop(numerator, *props, kin=None, euclidean=False, explain=False):
     if explain:
         print(_INFO)
     text = numerator.replace('**', '^')
+    # the imaginary unit: a formal symbol in the exact (rational) arithmetic, put back at the end
+    imag = re.search(r'\bI\b', text) is not None
+    if imag:
+        text = re.sub(r'\bI\b', 'zImagUnit', text)
     # a metric factor g(mu,nu) in the numerator (for example from a Dirac trace)
     text = _TOKEN_G.sub(lambda mm: 'fsMET_%s_%s' % tuple(sorted((mm.group(1), mm.group(2)))), text)
     metric_idx = {i for mm in re.finditer(r'fsMET_(\w+?)_(\w+)', text) for i in mm.groups()}
@@ -1577,7 +1595,10 @@ def loop(numerator, *props, kin=None, euclidean=False, explain=False):
     for mm in re.finditer(r'fsMET_(\w+?)_(\w+)', s):
         a_i, a_j = mm.groups()
         names[mm.group(0)] = SR.var('fsG%s_%s' % tuple(sorted((a_i, a_j))))
-    expr = sr(eval(s, {}, names)).expand()
+    # Sage's preparser makes 8/9 an exact rational (Python's eval would give the float 0.888...)
+    from sage.repl.preparse import preparse
+    from sage.all import Integer, RealNumber
+    expr = sr(eval(preparse(s), {'Integer': Integer, 'RealNumber': RealNumber}, names)).expand()
     terms = expr.operands() if expr.operator() is not None and 'add' in str(expr.operator()) else [expr]
     total = {}
     shift = dict(q0)                      # l_old = l_new - q0 (poly_numerator shifts l -> l - qr)
@@ -1704,6 +1725,11 @@ def loop(numerator, *props, kin=None, euclidean=False, explain=False):
             parts.append((label(exps), val))
             mparts.append((label(exps), _masters_view(dct, euclidean)))
             raw.append((label(exps), dct))
+    if imag:
+        back = {SR.var('zImagUnit'): SR(I)}
+        parts = [(st, SR(v).subs(back)) for st, v in parts]
+        mparts = [(st, SR(v).subs(back)) for st, v in mparts]
+        parts = [(st, v) for st, v in parts if not v.is_trivial_zero()]
     return LoopResult(parts, mparts, euclidean, _INFO, raw=raw, K=K)
 
 

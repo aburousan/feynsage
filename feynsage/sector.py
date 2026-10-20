@@ -136,12 +136,11 @@ def integrate_sectors(sectors, eps, order=0, values=None, exact=False):
             ts = [t for t in sec.ts if f.has(t)]
             if exact:
                 from sage.all import assume, forget
+                from .integrators import integrate_checked, IntegrationError
                 facts = [t > 0 for t in sec.ts] + [t < 1 for t in sec.ts]
                 assume(*facts)
                 try:
-                    val = f
-                    for t in ts:
-                        val = integrate(val, t, 0, 1)
+                    val = _exact_cube(f, ts, integrate_checked, IntegrationError)
                 finally:
                     forget(*facts)
             else:
@@ -149,6 +148,23 @@ def integrate_sectors(sectors, eps, order=0, values=None, exact=False):
             total += pref * val
     total = total.expand()
     return sum((c * eps**k for c, k in total.coefficients(eps)), SR(0))
+
+
+def _exact_cube(f, ts, integrate_checked, IntegrationError):
+    """Int over the unit cube in ts, one variable after the other.  The order matters a lot (one order gives
+    dilogarithms on their branch cut, another only logarithms), so every order is tried until one works."""
+    import itertools
+    errors = []
+    for order in itertools.permutations(ts):
+        try:
+            val = f
+            for t in order:
+                val = integrate_checked(val, t, 0, 1)
+            return val
+        except IntegrationError as err:
+            errors.append(str(err))
+    raise IntegrationError("exact sector integration failed in every order of %s; the last error: %s"
+                           % (list(ts), errors[-1] if errors else "none"))
 
 
 def _numint(f, ts):

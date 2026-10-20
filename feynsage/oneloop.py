@@ -18,28 +18,46 @@ D, eps = var('D eps')
 
 
 def tadpole(n, m2):
+    """The Euclidean tadpole Int [dl] (l^2 + m^2)^(-n) = Gamma(n - D/2)/Gamma(n) (m^2)^(D/2 - n), with
+    [dl] = d^D l/pi^(D/2).  m2 is the squared mass, n any power (a number or a symbol).
+        tadpole(1, m2)     # Gamma(1 - D/2) (m^2)^(D/2 - 1)"""
     return gamma(n - D/2)/gamma(n) * m2**(D/2 - n)
 
 
 def G(a, b):
+    """The coefficient of the massless bubble: Int [dl] (l^2)^(-a) ((l - p)^2)^(-b) = G(a, b) (p^2)^(D/2 - a - b),
+    G(a, b) = Gamma(a + b - D/2) Gamma(D/2 - a) Gamma(D/2 - b)/(Gamma(a) Gamma(b) Gamma(D - a - b)).
+    Euclidean, [dl] = d^D l/pi^(D/2)."""
     return gamma(a + b - D/2)*gamma(D/2 - a)*gamma(D/2 - b)/(gamma(a)*gamma(b)*gamma(D - a - b))
 
 
 def bubble_massless(a, b, p2):
+    """The massless bubble Int [dl] (l^2)^(-a) ((l - p)^2)^(-b) = G(a, b) (p^2)^(D/2 - a - b), Euclidean p^2 = p2.
+        bubble_massless(1, 1, p2)"""
     return G(a, b) * p2**(D/2 - a - b)
 
 
 def triangle_onshell(a1, a2, a3, Q2):
+    """The massless triangle with two on-shell legs (p1^2 = p2^2 = 0) and Q = p1 + p2, Q^2 = Q2 (Euclidean),
+    lines with powers a1, a2, a3:
+        (Q^2)^(D/2 - a) Gamma(a - D/2) Gamma(D/2 - a1 - a3) Gamma(D/2 - a2 - a3)/(Gamma(a1) Gamma(a2) Gamma(D - a)),
+    a = a1 + a2 + a3.  Lines 1 and 2 meet at the vertex where Q enters, line 3 joins the two on-shell legs (at
+    a3 = 0 it is the bubble G(a1, a2) of Q).  Measure [dl] = d^D l/pi^(D/2)."""
     a = a1 + a2 + a3
     return Q2**(D/2 - a) * gamma(a - D/2)*gamma(D/2 - a1 - a3)*gamma(D/2 - a2 - a3) / (gamma(a1)*gamma(a2)*gamma(D - a))
 
 
 def bubble_equal_mass(p2, m2):
+    """The equal-mass bubble Int [dl] 1/((l^2 + m^2)((l - p)^2 + m^2)) (Euclidean, powers 1 and 1) as a Gauss
+    function: Gamma(2 - D/2) (m^2)^(D/2 - 2) 2F1(2 - D/2, 1; 3/2; -p^2/(4 m^2)).  p2 = p^2, m2 = m^2."""
     x = p2/(4*m2)
     return gamma(2 - D/2) * m2**(D/2 - 2) * hypergeometric([2 - D/2, 1], [SR(3)/2], -x)
 
 
 def bubble_one_mass(a, b, q2, m2):
+    """The bubble with one massless line (power a) and one massive line (power b, mass^2 m2), Euclidean q^2 = q2:
+        Gamma(a + b - D/2) Gamma(D/2 - a)/(Gamma(b) Gamma(D/2)) (m^2)^(D/2 - a - b) 2F1(a + b - D/2, a; D/2; -q^2/m^2).
+    Measure [dl] = d^D l/pi^(D/2)."""
     z = q2/m2
     return (gamma(a + b - D/2)*gamma(D/2 - a)/(gamma(b)*gamma(D/2)) * m2**(D/2 - a - b)
             * hypergeometric([a + b - D/2, a], [D/2], -z))

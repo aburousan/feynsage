@@ -51,6 +51,7 @@ def dimension():
 
 
 def _euclid(euclidean):
+    """Return the requested Euclidean flag, using the current convention when it is None."""
     return _CONV['euclidean'] if euclidean is None else bool(euclidean)
 
 
@@ -59,12 +60,14 @@ _KIND = {}          # symbol name -> 'vector' or 'index'
 
 
 def _names(names):
+    """Split comma- or space-separated names, or convert a sequence of names to strings."""
     if isinstance(names, str):
         return names.replace(',', ' ').split()
     return [str(n) for n in names]
 
 
 def _declare(names, kind, latex_name=None):
+    """Register names with one tensor kind and return one Sage symbol or a tuple of symbols."""
     out = []
     names = _names(names)
     if latex_name is not None:
@@ -94,6 +97,8 @@ def lorentz_indices(names, latex_name=None):
 
 
 def is_momentum(x):
+    """Return whether x is a Sage symbol registered as a momentum-like vector.
+    This includes polarization vectors and excludes sums of momenta and unregistered symbols."""
     try:
         return x.is_symbol() and _KIND.get(str(x)) == 'vector'
     except AttributeError:
@@ -101,6 +106,8 @@ def is_momentum(x):
 
 
 def is_index(x):
+    """Return whether x is a Sage symbol registered as a Lorentz index.
+    Use lorentz_indices() to declare such symbols. Colour indices do not pass this test."""
     try:
         return x.is_symbol() and _KIND.get(str(x)) == 'index'
     except AttributeError:
@@ -118,10 +125,12 @@ def _fresh_index(base, taken):
 
 # ---------------------------------------------------------------------------- the symbolic functions
 def _lx(a):
+    """Return the LaTeX representation of a Sage object."""
     return latex(a)
 
 
 def _latex_dot(self, a, b):
+    """Format a scalar product in LaTeX, using a square for equal vectors and the Euclidean subscript."""
     E = r'_{E}' if _CONV['euclidean'] else ''           # the note writes Euclidean squares p_E^2
     if str(a) == str(b):
         return r'{{%s}%s^{2}}' % (_lx(a), E)                       # a group, so that (p^2)^2 is valid LaTeX
@@ -167,6 +176,7 @@ def vector_parts(x, what="a momentum"):
 
 
 def _index_or_vector(x):
+    """Return (symbol, coefficient) pairs for one Lorentz index or a linear combination of momenta."""
     x = SR(x)
     if is_index(x):
         return [(x, Integer(1))]
@@ -204,6 +214,7 @@ def metric(mu, nu, euclidean=None):
 
 
 def _perm_sign(seq):
+    """Return the sign of the swaps needed to sort seq."""
     seq, sign = list(seq), 1
     for i in range(len(seq)):
         for j in range(len(seq) - 1 - i):
@@ -214,6 +225,7 @@ def _perm_sign(seq):
 
 
 def _eps_sorted(args, fn=None):
+    """Sort four epsilon slots with the permutation sign, returning zero for repeated slots."""
     names = [str(a) for a in args]
     if len(set(names)) < 4:
         return SR(0)
@@ -222,6 +234,7 @@ def _eps_sorted(args, fn=None):
 
 
 def _eps3_sorted(args):
+    """Sort three structure-constant slots with the permutation sign, returning zero for repeated slots."""
     from .color import COLF
     names = [str(a) for a in args]
     if len(set(names)) < 3:
@@ -252,7 +265,9 @@ Dot, Comp, Metric, Epsilon = dot, comp, metric, epsilon
 
 
 def Delta(mu, nu):
-    """The Euclidean metric delta_{mu nu}."""
+    """Return the symbolic Euclidean metric delta_{mu nu} for two declared Lorentz indices.
+    Sort the indices symmetrically and select the Euclidean metric regardless of the current convention.
+    Use contract(Delta(mu, nu), euclidean=True) for Euclidean contractions."""
     return metric(mu, nu, euclidean=True)
 
 
@@ -285,6 +300,7 @@ def conjugate_vector(x):
 
 # ---------------------------------------------------------------------------- Minkowski <-> Euclidean
 def _flip_dots(expr):
+    """Reverse every Dot sign in a scalar expression, rejecting components, metrics and epsilon tensors."""
     expr = SR(expr)
     w0, w1 = SR.wild(0), SR.wild(1)
     if any(T_ in str(expr) for T_ in ('Comp(', 'Metric(', 'Delta(', 'Epsilon(')):

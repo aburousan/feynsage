@@ -1,7 +1,7 @@
 (* FeynCalc + Package-X side of tests/test_feyncalc_loop.sage: sum over spins, polarizations and colours of
    M1 M0^* at numerical points for H -> b b~ (gluon loop), e+e- -> gamma gamma (QED) and Z -> nu nu~ (electroweak).
    Run:  PROC=hbb WolframKernel -script virtual.wl  (PROC = hbb, ee_aa or z_nn).
-   e+e- -> gamma gamma is not used in the test: TID meets a zero Gram determinant and Package-X gives Indeterminate. *)
+   e+e- -> gamma gamma is compared exactly in d (SYMBOLIC=1); Package-X cannot expand its soft box numerically. *)
 $FeynCalcStartupMessages = False; $LoadAddOns = {"FeynArts", "FeynHelpers"};
 Quiet[Get["FeynCalc`"]]; $FCAdvice = False;
 which = Environment["PROC"]; t0 = AbsoluteTime[];
@@ -34,9 +34,24 @@ x = (amp1 ComplexConjugate[amp0]) // FermionSpinSum // DiracSimplify // SUNSimpl
 Do[x = If[which === "z_nn", DoPolarizationSums[x, v], DoPolarizationSums[x, v, 0]], {v, vecs}];
 x = x // DiracSimplify // SUNSimplify[#, SUNNToCACF -> False] & // ExpandScalarProduct;
 x = FCReplaceMomenta[x, If[n2, {p4 -> p1 + p2 - p3}, {p3 -> p1 - p2}]] // ExpandScalarProduct;
-If[n2, x = x /. u -> 2 SMP["m_e"]^2 - s - t];
+If[n2, x = x /. u -> 2 SMP["m_e"]^2 - s - t;
+  (* TID must see only the three independent momenta: with the Mandelstam table (and its own u) still set it meets
+     p4^2 = 0 denominators and gives Indeterminate *)
+  FCClearScalarProducts[]; SPD[p1, p1] = m1^2; SPD[p2, p2] = m2^2; SPD[p3, p3] = m3^2;
+  SPD[p1, p2] = (s - m1^2 - m2^2)/2; SPD[p1, p3] = (m1^2 + m3^2 - t)/2; SPD[p2, p3] = (s + t - m1^2 - m4^2)/2];
 Print["algebra done ", Round[AbsoluteTime[] - t0]];
 x = TID[x, l, ToPaVe -> True];
+TAG = which;
+If[Environment["SYMBOLIC"] === "1",
+  (* the reduction itself, exact in D: coefficients times A0, B0, C0, D0 (squared masses), written for
+     tests/test_feyncalc_loop.sage, which compares it term by term with feynsage's virtual(masters=True) *)
+  Module[{y = FeynAmpDenominatorExplicit[x] // ExpandScalarProduct, f = "pave_" <> TAG <> ".m"},
+   y = y /. {SMP["m_e"] -> ME, SMP["m_mu"] -> MM, SMP["m_tau"] -> ML, SMP["e"] -> EL, SMP["m_H"] -> MH, SMP["m_b"] -> MB,
+      SMP["m_W"] -> MW, SMP["m_Z"] -> MZ, SMP["sin_W"] -> SW, SMP["cos_W"] -> CW, SMP["g_s"] -> GS, SUNN -> 3};
+   Print["heads left: ", Union[Cases[y, h_[___] /; !MemberQ[{Plus, Times, Power, Complex, Rational, A0, B0, C0, D0}, h] :> h, Infinity]]];
+   WriteString[f, ToString[y, InputForm]]; Close[f];
+   Print["SYMBOLIC written ", f, "  ", Round[AbsoluteTime[] - t0], " s"]];
+  Exit[]];
 x = PaXEvaluate[x, PaXImplicitPrefactor -> 1, PaXC0Expand -> True, PaXD0Expand -> True];
 x = FeynAmpDenominatorExplicit[x] // ExpandScalarProduct;
 Print["PaX done ", Round[AbsoluteTime[] - t0]];

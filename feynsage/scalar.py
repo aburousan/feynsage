@@ -41,6 +41,7 @@ class V:
 
     @staticmethod
     def of(x):
+        """A rational number (or a float, through its simplest rational) as a V pair; a V is returned as it is."""
         if isinstance(x, V):
             return x
         q = QQ(x) if not isinstance(x, (float,)) else RR(x).simplest_rational()
@@ -70,6 +71,7 @@ class V:
     def __neg__(s): return V(-s.n, -s.e if s.e is not None else None)
 
     def is_zero(s):
+        """True if the exact side is zero, or (numbers only) if the number is below 10^(-DPS/2)."""
         return (s.e is not None and s.e.is_trivial_zero()) or abs(s.n) < mp.mpf(10) ** (-DPS // 2)
 
 
@@ -112,6 +114,8 @@ def vsqrt(x):
 
 
 def vlog(z):
+    """log of a V.  On the negative real axis the side of the cut is the sign of the imaginary part (the i eps)
+    of the number: log(-x) + i pi above the cut, log(-x) - i pi below."""
     n = mp.log(z.n)
     if z.e is None:
         return V(n, None)
@@ -139,6 +143,8 @@ def _li2(z):
 
 
 def vli2(z):
+    """Li2 of a V.  On the cut [1, oo) the exact side uses Li2(x) = pi^2/3 - log(x)^2/2 - Li2(1/x) +- i pi log(x),
+    with the sign of the imaginary part (the i eps) of the number."""
     n = _li2(mp.mpc(z.n))
     if z.e is None:
         return V(n, None)
@@ -151,6 +157,7 @@ def vli2(z):
 
 
 def two_pi_i_times(k):
+    """2 pi i k as a V (k an integer, from the continuation of logarithms across their cuts)."""
     return V(2j * mp.pi * k, 2 * pi * I * k)
 
 
@@ -681,6 +688,8 @@ def _d0_terms(s1, s2, s3, s4, s12, s23, m0, m1, m2, m3, exact=True):
     perms = list(itertools.permutations(range(4)))
     errors = []
     if nz == 0:
+        # |m_i^2 + m_j^2 - s_ij|/(m_i m_j) for the opposite corners 0 and 2 of the relabelled box: the
+        # relabellings with a real root of the corresponding x (value >= 2) are tried first
         def k02(pm):
             Mi, Mj = M[pm[0]].n, M[pm[2]].n
             return abs((Mi * Mi + Mj * Mj - pp(pm[0], pm[2]).n) / (Mi * Mj))

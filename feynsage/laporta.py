@@ -29,14 +29,29 @@ from sage.all import prod
 
 
 def weight(a):
+    """Return the sorting key for an integral with integer propagator powers a.
+    Positive powers give denominators and negative powers give numerators.
+    The key orders by present lines, extra denominator powers (dots), numerator
+    powers, the Boolean sector tuple and finally a itself. Smaller keys are simpler."""
     pos = [x for x in a if x > 0]
     neg = [-x for x in a if x < 0]
     return (len(pos), sum(x - 1 for x in pos), sum(neg), tuple(x > 0 for x in a), tuple(a))
 
 
 class Reducer:
+    """Laporta reduction of an IntegralFamily to unreduced master integrals.
+    Integral indices follow the family's propagator order, with negative powers
+    for numerators. Rules express integrals as {index tuple: rational coefficient}
+    in the family's kinematic fraction field. Use run() to build the rules and
+    reduce(a) to apply them, e.g. Reducer(fam).run(rmax=2).reduce((2, 1))."""
 
     def __init__(self, family, symmetries=(), sector_symmetries=True, numerator_relations="auto", top=None):
+        """Set up reduction for family, an IntegralFamily, with no rules yet.
+        symmetries gives generators as zero-based propagator permutations.
+        sector_symmetries also identifies sectors through their U + F polynomials.
+        numerator_relations is True, False or "auto" for momentum-shift identities,
+        with "auto" adding them when needed. top is a 0/1 tuple restricting seed
+        sectors and favouring representatives inside it, or None for no restriction."""
         self.fam = family
         self.t = family.t
         self.syms = _closure([tuple(s) for s in symmetries], self.t)
@@ -63,9 +78,15 @@ class Reducer:
 
     # ------------------------------------------------------------------ helpers
     def sector(self, a):
+        """Return a 0/1 tuple marking the positive entries of the integral powers a.
+        Entries follow the propagator order. Zero or negative powers mean an absent
+        line, so sector((2, 0, -1)) is (1, 0, 0)."""
         return tuple(1 if x > 0 else 0 for x in a)
 
     def is_zero(self, a):
+        """Return whether the integral with powers a lies in a scaleless sector.
+        Apply the family's Lee criterion to the positive-power lines and cache the
+        Boolean result for that sector."""
         s = self.sector(a)
         if s not in self._zero:
             self._zero[s] = self.fam.is_zero_sector(s)
@@ -84,6 +105,7 @@ class Reducer:
         return sum(1 for i in range(self.t) if a[i] > 0 and not self.top[i])
 
     def _key(self, a):
+        """Return the number of lines outside the top sector followed by the weight of a."""
         return (self._outside(a), weight(a))
 
     def canon(self, a):
@@ -151,6 +173,7 @@ class Reducer:
         return gr, [xs] + [colours[c] for c in cols], tuple((c, len(colours[c])) for c in cols)
 
     def _info(self, sec):
+        """Return the cached canonical graph key and line-to-canonical-position map for sector sec."""
         if sec not in self._secinfo:
             gr, part, cols = self._sector_graph(sec)
             C, cert = gr.canonical_label(partition=part, certificate=True, edge_labels=True)
@@ -184,6 +207,7 @@ class Reducer:
 
     # ------------------------------------------------------------------ numerators: momentum shifts
     def _global_images(self, sec):
+        """Return the set of sector tuples obtained from sec by the whole-family symmetries."""
         return {tuple(sec[g[i]] for i in range(self.t)) for g in self.syms}
 
     def _global_auts(self, sec):
@@ -390,6 +414,7 @@ class Reducer:
         return rels
 
     def _sector_canon(self, a):
+        """Return the simplest image of numerator-free powers a in its representative sector."""
         sec = self.sector(a)
         key, pos = self._info(sec)
         best, line_at, auts, _ = self._representative(key, sum(sec), sec)
@@ -406,6 +431,10 @@ class Reducer:
         return min(imgs, key=self._key)
 
     def clean(self, expr):
+        """Return expr with scaleless integrals removed and symmetry images combined.
+        expr is a dict {index tuple: coefficient} representing a linear combination
+        of family integrals. The returned dict uses canonical indices and omits zero
+        coefficients. No reduction rules are applied."""
         out = {}
         for a, c in expr.items():
             if c == 0 or self.is_zero(a):
@@ -417,6 +446,9 @@ class Reducer:
         return out
 
     def substitute(self, expr):
+        """Apply the stored reduction rules once to expr, a dict {index: coefficient}.
+        Return a new dict in the same form with equal integrals combined and zero
+        coefficients removed. Indices without rules are kept as they are."""
         out = {}
         for a, c in expr.items():
             if a in self.rules:
@@ -428,6 +460,10 @@ class Reducer:
 
     # ------------------------------------------------------------------ elimination
     def add_identity(self, ident):
+        """Add an identity ident = {index tuple: coefficient}, meaning sum c_a I(a) = 0.
+        Remove zero sectors, combine symmetry images and apply existing rules, then
+        solve for the integral of greatest weight and substitute it into earlier rules.
+        Return True if a rule was added or False if the identity already reduces to zero."""
         c = self.clean(ident)
         self.seen.update(c.keys())
         e = self.substitute(c)
@@ -473,6 +509,11 @@ class Reducer:
         return out
 
     def run(self, rmax, smax=0, verbose=False):
+        """Build IBP reduction rules from seeds and return this Reducer.
+        rmax is the maximum total number of dots, sum(a_i - 1) over positive powers.
+        smax is the maximum total numerator power, sum(-a_i) over negative powers.
+        verbose prints progress. In "auto" mode, repeat with momentum-shift identities
+        if the remaining masters need them. Example: red.run(rmax=3, smax=1)."""
         self.rmax, self.smax = rmax, smax
         self._run(rmax, smax, verbose)
         if self.numerator_relations == "auto" and not self._use_relations and self.relations_needed(self.masters()):
@@ -483,6 +524,7 @@ class Reducer:
         return self
 
     def _run(self, rmax, smax, verbose):
+        """Add seed IBP and enabled symmetry identities, printing their independent count if verbose."""
         n_used = 0
         for a in self.seeds(rmax, smax):
             for ident in self.fam.ibp(a) + self.symmetry_relations(a):
@@ -491,6 +533,10 @@ class Reducer:
             print("independent identities used:", n_used)
 
     def reduce(self, a):
+        """Return the reduction of integer powers a as {index tuple: coefficient}.
+        Canonicalise a and apply its stored rule, with coefficients in the family's
+        kinematic fraction field. Return {} for a scaleless sector or {canon(a): 1}
+        if no rule is known. Run the reducer first, e.g. red.run(2).reduce((2, 1))."""
         a = self.canon(tuple(a))
         if self.is_zero(a):
             return {}

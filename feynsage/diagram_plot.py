@@ -52,26 +52,6 @@ def _layout(top):
     return pos
 
 
-def _wavy_unused(ax, P, Q, amp=0.018, waves=None, curly=False, **kw):
-    d = Q - P
-    L = np.linalg.norm(d)
-    if L < 1e-9:
-        return
-    n = np.array([-d[1], d[0]]) / L
-    waves = waves or max(3, int(L / 0.045))
-    t = np.linspace(0, 1, 40 * waves)
-    if curly:
-        # a curly (gluon) line: loops made by a cycloid along the line
-        ph = 2 * math.pi * waves * t
-        x = P[0] + d[0] * t + (amp * 0.9) * (np.cos(ph) - 1) * d[0] / L * 0.6 + amp * np.sin(ph) * n[0]
-        y = P[1] + d[1] * t + (amp * 0.9) * (np.cos(ph) - 1) * d[1] / L * 0.6 + amp * np.sin(ph) * n[1]
-    else:
-        off = amp * np.sin(2 * math.pi * waves * t)
-        x = P[0] + d[0] * t + off * n[0]
-        y = P[1] + d[1] * t + off * n[1]
-    ax.plot(x, y, **kw)
-
-
 def _path(P, Q, bend, npts=200):
     """Points on the straight line (bend = 0) or a circular-looking arc from P to Q."""
     t = np.linspace(0, 1, npts)
@@ -135,6 +115,8 @@ def _self_loop(ax, P, particle, label):
 
 
 def draw_diagram(diag, ax):
+    """Draw one diagram on the matplotlib axes ax: external legs, vertices and the fields on the lines (fermions
+    and ghosts with arrows, vectors wavy, gluons curly, scalars dashed, ghosts dotted)."""
     top, model = diag.top, diag.model
     pos = _layout(top)
     # lines joining the same two end points are bent apart
@@ -174,6 +156,7 @@ def draw_diagram(diag, ax):
 
 
 def draw_diagrams(diags, ncols=4, size=2.2):
+    """A matplotlib figure with every diagram of diags on a grid, ncols per row, size inches each, numbered from 1."""
     import matplotlib.pyplot as plt
     n = max(1, len(diags))
     ncols = min(ncols, n)

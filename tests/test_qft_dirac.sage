@@ -266,6 +266,11 @@ for nm, G_ in [("1", one()), ("g5", gamma5()), ("g^mu", gamma(mu)), ("g^mu g5", 
     check("conjugate([ubar %s u]) vs explicit spinors" % nm, ok)
 Mx = ubar(p2, m) * gamma(mu) * u(p1, m) * ubar(k2) * gamma(mu) * u(k1)
 check("conjugate renames summed indices (mu -> mu_c)", [str(i) for i in dummy_indices(conjugate(Mx))] == ['mu_c'])
+tr5 = dirac_trace(gamma5()*slash(p)*slash(q)*gamma(mu)*gamma(nu))
+check("conjugate of a trace with gamma5: epsilon real, i -> -i", bool((conjugate(tr5) + tr5).expand() == 0))
+ia, ib = lorentz_indices("ia ib")
+check("contract of a power: Metric(a, b)^2 = d (= 4 in four dimensions), Comp(p, a)^2 = p.p",
+      bool(SR(contract(metric(ia, ib)^2, dim=4)) == 4) and bool(SR(contract(comp(p, ia)^2)) == dot(p, p)))
 
 # e+ e- -> mu+ mu- : M = vbar(p2) g^mu u(p1) * ubar(k1) g_mu v(k2), electrons massless
 Mee = vbar(p2) * gamma(mu) * u(p1) * ubar(k1, M_) * gamma(mu) * v(k2, M_)

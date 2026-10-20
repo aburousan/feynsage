@@ -37,6 +37,7 @@ def swap_i(expr, by):
 
 
 def _swap_i(e, by):
+    """Walk symbolic expression e, replacing each numeric z by real(z) + by*imag(z)."""
     from sage.all import I
     if e.is_numeric():
         z = e.pyobject()

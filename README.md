@@ -47,6 +47,41 @@ cd feynsage
 
 macOS, Linux and Windows (WSL). The script finds or installs SageMath and FORM.
 
+### Integrals: which integrator is used
+
+Sage's `integrate()` gives the work to one program, Maxima, unless told otherwise, and returns what comes
+back. That can be a wrong branch of a logarithm, an answer that quietly assumed the sign of a parameter, or
+the integral itself unevaluated. So feynsage does its symbolic integrals (exact sector integration, the
+Feynman-parameter fallback of the one-loop library, `principal_value`, `integrate_termwise`) with
+`integrate_checked`. It tries several integrators in turn and keeps the first answer that agrees with a
+numerical integral at random values of the other symbols. If none agrees it stops with an error. It never
+returns a formula it could not check.
+
+Nothing extra is needed: Maxima, SymPy and Giac come with every SageMath. A stronger integrator only means
+that more integrals come out in closed form, and faster. The order tried is
+
+| Integrator | How to get it |
+|---|---|
+| polynomials term by term | built in |
+| Wolfram (Mathematica or the free Wolfram Engine) | download the Wolfram Engine from https://www.wolfram.com/engine/ (free for personal use, needs a Wolfram account), run `wolframscript -activate` once; feynsage finds the kernel, or set `FEYNSAGE_WOLFRAM` to the path of `WolframKernel` |
+| FriCAS, the strongest free integrator | `./install.sh --with-fricas` (conda: from conda-forge, otherwise `sage -i fricas`) |
+| Maxima, SymPy, Giac | come with SageMath |
+| the antiderivative, then one-sided limits at the end points | built in, for definite integrals the others cannot do |
+
+`available_integrators()` shows what your installation has. `set_integrators(["fricas", "maxima"])` or the
+environment variable `FEYNSAGE_INTEGRATORS` changes the order, and `FEYNSAGE_INTEGRATE_TIMEOUT` (seconds,
+default 120) stops an integrator that takes too long. You can call it yourself:
+
+```python
+from feynsage import *
+x, a = var('x a')
+integrate_checked(x*log(a + x), x, 0, 1, assume_=[a > 0], info=True)   # (answer, which integrator)
+```
+
+`tests/test_integrators.sage` runs the same integrals with every integrator that is installed. One
+example of why the check is needed: for d sigma/d cos theta of e+e- -> mu+mu- with the Z width, Maxima with
+M_Z still a symbol returns a sigma of 14.7 pb at the peak instead of 1754.6 pb. The check rejects it.
+
 ## Try it
 
 ```python
@@ -65,6 +100,19 @@ ibp_reduce(kite, ["F(2,2,1,2,2)"], method="trimmed")     # exact arithmetic, jus
 
 # graph polynomials and a picture
 g = diagram("kite"); g.U(), g.F(); g.plot()
+
+# and back: the graph of a list of propagators, and which families are the same integrals
+kin = {"p1^2": 0, "p2^2": 0, "p1.p2": "s/2"}
+f = family(["l1", "l2", "p1 + p2 - l2", "p1 + p2 - l1", "l1 - p1", "l2 - l1"], kin=kin, loops="l1 l2")
+f2 = family(["k1", "k2 - k1", "k1 + p1", "p2 - k1", "k2 + p1", "p2 - k2"], kin=kin, loops="k1 k2")
+integral_to_graph(f).plot()                    # the planar two-loop vertex, drawn again
+topology_mappings([f2], preferred=[f])         # line map and loop-momentum shift (FCLoopFindTopologyMappings)
+
+# Feynman rules from a Lagrangian (FeynCalc's FeynRule): the three-gluon vertex
+G = field("G", "vector", colour="adjoint"); a, b, c, e = color_indices("a b c e")
+mu, nu, rho, al, be = lorentz_indices("mu nu rho al be"); k1, k2, k3 = momenta("q1 q2 q3"); g_s = var("g_s")
+F = lambda: field_strength(G, al, be, e, g_s)
+feynman_rule(-F()*F()/4, [(G, k1, mu, a), (G, k2, nu, b), (G, k3, rho, c)])
 ```
 
 ## Function reference
@@ -116,8 +164,13 @@ The tested results are checked against another program, a known answer or a dire
 | Series, discontinuities, raised powers, fermion lines, projectors | Package-X 2.1.1 (`tests/test_px_parity.sage`, `tests/test_dirac_px.sage`); finite differences where Package-X gives Indeterminate | every digit printed |
 | Pentagons | LoopTools 2.16 (E0), direct Feynman-parameter integration | 1e-14 |
 | Tree-level \|M\|^2 (`process`) | FeynArts + FeynCalc 10.2: 38 SM processes with every mass kept, among them e+e- -> W+W-, ZZ, ZH, t t~, W+W- -> W+W-, gamma gamma -> W+W-, g g -> t t~, u g -> d W+ and decays (`tests/test_feyncalc.sage`); 2 -> 3 and 1 -> 3 processes with masses (e+e- -> mu+mu- gamma, e+e- -> u u~ g, e+e- -> Z H gamma, mu- -> e- nu_e~ nu_mu, t -> b e+ nu_e, H -> e- e+ gamma) at random phase-space points, epsilon tensors included (`tests/test_feyncalc_3body.sage`) | 50 digits |
-| One-loop corrections (`virtual`, `loop_amplitude`) | FeynCalc + Package-X: e+e- -> mu+mu- in QED (vertices, vacuum polarization, IR-divergent boxes), H -> b b~ with the gluon loop, Z -> nu nu~ with all electroweak loops, the electron, gluon and ghost self-energies and the ghost-gluon vertex at xi = 1 and 3 (`tests/test_feyncalc_loop.sage`, `tests/test_diagrams.sage`) | poles and finite parts, 1e-15 |
-| Textbook formulas | Peskin and Schroeder, read on the printed page: (5.11)-(5.13), (5.21), (5.87), (5.105)-(5.106), (7.90)-(7.91), (10.41), the QCD beta function (16.73)-(16.85) from feynsage's own counterterms, (21.107)-(21.108) (`tests/test_books.sage`, `tests/test_process.sage`) | exact |
+| One-loop corrections (`virtual`, `loop_amplitude`) | FeynCalc's TID reduction, exactly in d: the coefficient of every scalar integral for e+e- -> mu+mu- in QED (vertices, vacuum polarization, IR-divergent boxes), e+e- -> gamma gamma, H -> b b~ with the gluon loop and Z -> nu nu~ with all electroweak loops; after Package-X the poles and finite parts; the electron, gluon and ghost self-energies and the ghost-gluon vertex at xi = 1 and 3 (`tests/test_feyncalc_loop.sage`, `tests/test_diagrams.sage`) | identical in d; 1e-15 after the eps expansion |
+| Loop-induced decays (`process("H -> g g").width()`) | H -> g g and H -> gamma gamma against the projector calculation of `examples/02`; H -> Z gamma the same at xi = 1 and 3 | every digit printed; 30 digits |
+| Textbook formulas | Peskin and Schroeder, read on the printed page: (5.11)-(5.13), (5.21), (5.87), (5.105)-(5.106), (7.90)-(7.91) (the textbook's x integral done by the computer), (10.41), the QCD beta function (16.73)-(16.85) from feynsage's own counterterms, (21.107)-(21.108), and Final Project III, pp. 776-777: Gamma(h -> f f~), the heavy-quark limit of Gamma(h -> g g) and the m_h << m_W limit of Gamma(h -> gamma gamma) with its -21/4; bound states, Section 5.3: (5.54), (5.57) and the positronium lifetime of Problem 5.4 (a), Gamma = alpha^5 m/2 (`tests/test_books.sage`, `tests/test_process.sage`) | exact (one numerical point for the +i0 branch of (7.91)) |
+| Two spinor chains (`fierz`, `sirlin`, `clifford_decompose`) | explicit 4x4 matrices and random spinors; the (V-A) x (V-A) Fierz invariance; FeynCalc's SirlinSimplify example (`tests/test_fierz.sage`) | exact |
+| Feynman rules from a Lagrangian (`feynman_rule`, `field_strength`, `covariant_derivative`) | Peskin and Schroeder (phi^4 p. 95, QED p. 124, scalar QED Problem 9.1, the gluon and ghost vertices Figs. 16.1 and 16.5); FeynCalc's FeynRule for the quark-gluon, four-gluon and HEFT H g g, H g g g vertices, value by value (`tests/test_feynrule.sage`) | exact |
+| Loop integrals as graphs (`integral_to_graph`, `topology_mappings`, `subtopologies`, `complete_basis`, `apart`, `dimension_raise`/`dimension_lower`, `cuts`) | FeynCalc 10.2: the examples of FCLoopIntegralToGraph, FCLoopFindTopologyMappings (the same line maps and momentum shifts), FCLoopFindSubtopologies (19 and 36 subtopologies), FCLoopBasisFindCompletion, FCGraphCuttableQ, and FeynCalc's FCLoopGLIRaiseDimension / LowerDimension for the kite; every graph of the diagram library back from its momenta; the closed-form tadpole and IBP for the dimension shifts (`tests/test_topology.sage`) | identical |
+| Symbolic integrals (`integrate_checked`) | a numerical integral (GSL, mpmath) at three random points of the other symbols for every answer; the massless triangle and box by exact sector integration against their Gamma-function and Mellin-Barnes results, with only the free integrators and again with FriCAS and with Wolfram (`tests/test_integrators.sage`) | 1e-8 per check; 40 digits for the triangle and box |
 | Diagram generation | FeynArts 3.12: topology counts (11 cases up to two loops) and diagram counts (13 processes up to 388 one-loop diagrams); FeynCalc 10.2 for e+e- -> mu+mu- in the SM and Bhabha; an explicit helicity sum for e+e- -> W+W- | identical counts; 20 digits |
 
 Package-X and LoopTools both fail at one point we found (C0(-4,-3,-1; 0,0,1)). See

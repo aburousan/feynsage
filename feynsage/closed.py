@@ -161,6 +161,7 @@ class J:
 
     @staticmethod
     def of(x):
+        """x as a J (a plain expression has no i0 part, so both copies are x)."""
         return x if isinstance(x, J) else J(x)
 
     @staticmethod
@@ -179,18 +180,22 @@ class J:
     def __rtruediv__(s, o): return J.of(o) / s
 
     def limit(s):
+        """The same quantity with the infinitesimals dropped: J(e0, e0)."""
         return J(s.e0)
 
 
 def jsqrt(z):
+    """sqrt of a J: the limit is SqrtL(e0, ef), the root of e0 on the side the i0's put sqrt(ef)."""
     return J(SqrtL(z.e0, z.ef), sqrt(z.ef))
 
 
 def jlog(z):
+    """log of a J, with the i0's kept (log(ef)), so the branch is the right one."""
     return log(z.ef)
 
 
 def jli2(z):
+    """Li2 of a J, with the i0's kept (Li2(ef))."""
     return polylog(2, z.ef)
 
 
@@ -265,6 +270,7 @@ class Conditional:
         return n[0]
 
     def leaves(self):
+        """The size of the result: the number of leaves (symbols and numbers) in the value and the definitions."""
         return self._count(self.value) + sum(self._count(d) for _, d in self.defs)
 
     def inline(self):
@@ -276,6 +282,7 @@ class Conditional:
         return Conditional(v, conds)
 
     def subs(self, *a, **k):
+        """Substitute in the value, the conditions and every definition (as Sage's subs)."""
         return Conditional(self.value.subs(*a, **k), [c.subs(*a, **k) if hasattr(c, 'subs') else c for c in self.conditions],
                            [(s, d.subs(*a, **k)) for s, d in self.defs])
 

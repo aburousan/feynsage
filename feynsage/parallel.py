@@ -62,6 +62,7 @@ _TASK = None
 
 
 def _run(i):
+    """Evaluate item i of the inherited task and replace symbolic functions for pickling the result."""
     f, items = _TASK
     return unbind(f(items[i]))
 
@@ -163,6 +164,7 @@ def unbind(x):
     found = {}
 
     def walk(e):
+        """Collect registered symbolic function operators by name from expression e and its operands."""
         op = e.operator()
         name = getattr(op, 'name', None)
         if callable(name):
@@ -203,6 +205,7 @@ def rebind(x):
     found = {}
 
     def walk(e):
+        """Collect operators in e whose names match the registry but whose function objects differ."""
         op = e.operator()
         name = getattr(op, 'name', None)
         if callable(name):

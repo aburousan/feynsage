@@ -15,6 +15,7 @@ class FormError(RuntimeError):
     """FORM stopped with an error.  .program is the FORM program that was run, .output FORM's reply."""
 
     def __init__(self, message, program="", output=""):
+        """Store the error message with the generated FORM program and its output."""
         super().__init__(message)
         self.program, self.output = program, output
 
@@ -39,15 +40,20 @@ class SubprocessBackend:
     name = 'subprocess'
 
     def __init__(self):
+        """Prepare a backend with a lazily created work directory and numbered jobs."""
         self._dir = None
         self._count = itertools.count()
 
     def _workdir(self):
+        """Return the temporary job directory, creating it if needed."""
         if self._dir is None or not os.path.isdir(self._dir):
             self._dir = tempfile.mkdtemp(prefix='feynsage_form_')
         return self._dir
 
     def run(self, program, threads=1):
+        """Run the FORM source string program and return its standard output as text.
+        Use tform for threads > 1 when available, otherwise use FORM.
+        Raise FormError if the executable is missing or the job fails."""
         cmd = [_form.FORM, '-q']
         if threads and threads > 1:
             tf = _form._tform()
@@ -85,6 +91,9 @@ def _default():
 
 
 def backend():
+    """Return the shared FORM backend, creating it on first use.
+    FEYNSAGE_BACKEND=subprocess selects a new process per job, otherwise the default is persistent.
+    A backend chosen with set_backend() is reused."""
     if _BACKEND[0] is None:
         _BACKEND[0] = _default()
     return _BACKEND[0]

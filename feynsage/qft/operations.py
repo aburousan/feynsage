@@ -55,6 +55,7 @@ def _execute(prog, exprs, lines_per_expr=0, vec_ids=(), post_ids=(), trace4=True
 
 
 def _check(prog, dim, eps_in_d, gamma5_scheme="NDR"):
+    """Check the gamma5 scheme and reject epsilon contractions in symbolic dimension unless allowed."""
     if gamma5_scheme not in ("NDR", "NDR-even"):
         raise NotImplementedError('only gamma5_scheme="NDR" (anticommuting gamma5) and "NDR-even" are implemented; '
                                   'in 4 dimensions (dim=4) FORM traces gamma5 exactly and no scheme is needed')
@@ -65,6 +66,7 @@ def _check(prog, dim, eps_in_d, gamma5_scheme="NDR"):
 
 
 def _threads(threads):
+    """Resolve the FORM thread count from the argument or FEYNSAGE_FORM_THREADS, defaulting to one."""
     if threads is None:
         import os
         try:
@@ -75,12 +77,12 @@ def _threads(threads):
 
 
 # ---------------------------------------------------------------------------- gamma5 in d dimensions
-def _ndr(coef, factors, drop_odd=False):
+def _ndr(coef, factors, drop_odd=False, report=False):
     """Anticommuting gamma5 in d dimensions: [(c, factors without gamma5)] equal to the trace of
     coef * product(factors), or raise when the trace with one gamma5 left over is ambiguous.
     drop_odd: leave out the traces with one gamma5 (gamma5_scheme="NDR-even", for quantities whose
     parity-odd part is known to vanish, e.g. a parity-even form factor with too few momenta for an
-    epsilon tensor)."""
+    epsilon tensor).  report=True also returns whether a non-vanishing gamma5-odd part was dropped."""
     branches = [(SR(coef), [], 0)]                 # (coefficient, factors so far, gamma5 parity)
     for F in factors:
         c5 = F.gamma5_coefficient()
@@ -92,17 +94,20 @@ def _ndr(coef, factors, drop_odd=False):
             if not c5.is_trivial_zero():
                 new.append((c * c5, fs, 1 - par))
         branches = new
-    out = []
+    out, dropped = [], False
     for c, fs, par in branches:
         if par == 0:
             out.append((c, fs))
             continue
         ngam = sum(1 for F in fs if F.odd_even()[1].items)
-        if ngam < 4 or drop_odd:
+        if ngam < 4:
             continue                                # Tr[gamma5 x (fewer than 4 gammas)] = 0
+        if drop_odd:
+            dropped = True
+            continue
         raise DiracError("a trace with gamma5 and %d other gamma matrices in d dimensions is ambiguous with an "
                          "anticommuting gamma5 (NDR).  Use dim=4, or do the gamma5 part in 4 dimensions." % ngam)
-    return out
+    return (out, dropped) if report else out
 
 
 
@@ -134,6 +139,7 @@ def _canonical_tensors(e):
 
 
 def _vr_factor(F, vr):
+    """Apply momentum substitutions to a Dirac factor and expand its slashes and coefficient tensors."""
     if not vr:
         return F
     items = []
@@ -156,6 +162,7 @@ def _apply_vector_rules(expr, vr):
     fac = lambda F: _vr_factor(F, vr)
 
     def chain(ch):
+        """Apply the momentum rules to the factors of a chain while keeping its spinor endpoints."""
         return Chain(ch.left, tuple(fac(F) for F in ch.factors), ch.right) if ch is not None else None
     return DiracExpr([(_canonical_tensors(SR(c).subs(vr)), chain(o), tuple(chain(x) for x in cl))
                       for c, o, cl in expr.terms])
@@ -164,11 +171,19 @@ def _apply_vector_rules(expr, vr):
 def _line_texts(prog, coef, lines, dim4, drop_odd=False):
     """A term coef * Tr(line_1) * Tr(line_2) ... -> FORM text (NDR for gamma5 in d dims)."""
     alts = [(SR(coef), [])]
+    odd_lines = 0
     for n, factors in enumerate(lines, 1):
         if dim4:
             alts = [(c, ch + [(n, list(factors))]) for c, ch in alts]
         else:
-            alts = [(c * c2, ch + [(n, f2)]) for c, ch in alts for c2, f2 in _ndr(1, factors, drop_odd)]
+            even, dropped = _ndr(1, factors, drop_odd, report=True)
+            odd_lines += dropped
+            alts = [(c * c2, ch + [(n, f2)]) for c, ch in alts for c2, f2 in even]
+    if odd_lines >= 2:
+        # two lines each with an epsilon tensor: eps.eps is a product of metrics, not zero after the integration
+        raise DiracError("%d fermion lines each have a trace with one gamma5 and four or more gamma matrices: "
+                         "their epsilon tensors contract with each other, so gamma5_scheme=\"NDR-even\" cannot drop "
+                         "them.  Work in dim=4 or treat the gamma5 part in 4 dimensions." % odd_lines)
     texts = []
     for c, ch in alts:
         parts = [prog.chain(f, n) for n, f in ch]
@@ -178,6 +193,7 @@ def _line_texts(prog, coef, lines, dim4, drop_odd=False):
 
 
 def _trace_terms(expr):
+    """Return coefficients and factor lists for traces, rejecting expressions with spinors."""
     if isinstance(expr, DiracExpr):
         k = expr.kind()
         if k not in ('matrix', None):
@@ -304,6 +320,7 @@ def _index_counts(e, acc):
 
 
 def _factor_indices(F, acc):
+    """Add each index's largest occurrence count among the factor's summands to acc."""
     best = {}
     for a, c in F.items:
         sub = _index_counts(c, {})
@@ -317,6 +334,7 @@ def _factor_indices(F, acc):
 
 
 def _term_index_counts(t):
+    """Count summed-index candidates in a term's coefficient and all its Dirac factors."""
     c, o, cl = t
     acc = _index_counts(c, {})
     for ch in ([o] if o is not None else []) + list(cl):
@@ -326,12 +344,14 @@ def _term_index_counts(t):
 
 
 def _rename_factor(F, sub):
+    """Substitute indices in a factor's gamma atoms and scalar coefficients."""
     by_name = {str(k): v for k, v in sub.items()}
     return Factor([((a[0], by_name.get(str(a[1]), a[1])) if a[0] == 'i' else a, c.subs(sub) if sub else c)
                    for a, c in F.items])
 
 
 def _swap_vectors(F, sub):
+    """Replace momentum atoms in a factor by name, leaving their coefficients unchanged."""
     by_name = {str(k): v for k, v in sub.items()}
     return Factor([((a[0], by_name.get(str(a[1]), a[1])) if a[0] == 'p' else a, c) for a, c in F.items])
 
@@ -363,11 +383,16 @@ def conjugate(M, complex_symbols=()):
         [ubar(p2) G u(p1)]^* = ubar(p1) Gbar u(p2),   Gbar = gamma^0 G^dagger gamma^0
     (the order of the matrices is reversed, gamma5 -> -gamma5, i -> -i).  Summed Lorentz indices are
     renamed (mu -> mu_c) so that M * conjugate(M) has no index four times.  All symbols are taken real
-    except those listed in complex_symbols.  Anything that is not a DiracExpr goes to Sage's conjugate.
+    except those listed in complex_symbols.  A Sage expression with four-vectors or Lorentz indices (a
+    trace such as Tr[... gamma5] with its Epsilon) is treated the same way; any other Sage expression goes
+    to Sage's conjugate.
     """
     if not isinstance(M, DiracExpr):
-        from sage.all import conjugate as _sage_conjugate
-        return _sage_conjugate(M)
+        e = SR(M)
+        if not any(str(x) in T._KIND for x in e.variables()):
+            from sage.functions.other import conjugate as _sage_conjugate
+            return _sage_conjugate(M)
+        return sum((c for c, o, cl in conjugate(DiracExpr([(e, None, ())]), complex_symbols).terms), SR(0))
     k = M.kind()
     if k not in ('scalar', None):
         raise DiracError("conjugate() is for amplitudes (spinor bilinears and numbers); for a Dirac matrix G "

@@ -24,8 +24,17 @@ from .momenta import add
 
 
 class IntegralFamily:
+    """A family of integrals Int prod_r d^d l_r prod_i D_i^(-a_i).
+    name labels the family and loops lists loop momentum names. kinematics is a
+    Kinematics object. propagators is an ordered list of (momentum dict, mass^2).
+    D_i = q_i^2 - m_i^2 in Minkowski signature or q_i^2 + m_i^2 in Euclidean
+    signature, as set by kinematics. Negative indices represent numerators.
+    IBP needs a complete propagator basis of the scalar products involving loops."""
 
     def __init__(self, name, loops, kinematics, propagators):
+        """Store name, loop names, kinematics and ordered (momentum dict, squared mass) propagators.
+        Build the scalar-product map when their number equals L(L + 1)/2 + L E.
+        In that case, raise ValueError if the propagators are linearly dependent."""
         self.name = name
         self.loops = list(loops)
         self.kin = kinematics
@@ -44,6 +53,7 @@ class IntegralFamily:
 
     # ------------------------------------------------------------------ scalar products
     def _sp_index(self, a, b):
+        """Return the index of scalar product a.b in the loop-product list or None if absent."""
         for n, (x, y) in enumerate(self.sp_pairs):
             if (x, y) == (a, b) or (x, y) == (b, a):
                 return n
@@ -171,6 +181,7 @@ class IntegralFamily:
                 ident = {}
 
                 def put(idx, c):
+                    """Add coefficient c for index tuple idx to the current identity and remove cancellations."""
                     idx = tuple(idx)
                     ident[idx] = ident.get(idx, K(0)) + c
                     if ident[idx] == 0:

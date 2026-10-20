@@ -149,6 +149,7 @@ def _crossings(order, edges):
 
 
 def _momentum_tex(q):
+    """Format a momentum dict q with integer coefficients as a LaTeX string enclosed in dollar signs."""
     parts = []
     for name, c in q.items():
         s = name if len(name) == 1 else "%s_{%s}" % (name[0], name[1:])
@@ -326,6 +327,7 @@ def draw_sectors(g, sectors, titles=None, ncols=5, size=1.9, **kw):
 
 # ---------------------------------------------------------------------- one-line plots
 def _eval_point(args):
+    """Evaluate args = (function or expression, variable, value) as complex, returning NaN on numeric errors."""
     f, var, x = args
     try:
         if callable(f) and not hasattr(f, 'variables'):

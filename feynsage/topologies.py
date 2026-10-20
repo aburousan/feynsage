@@ -43,18 +43,23 @@ class Topology:
 
     @property
     def loops(self):
+        """The number of loops, internal lines - internal vertices + 1."""
         return len(self.internal_lines()) - self.V + 1
 
     def external_lines(self):
+        """The lines with an external leg ('x', k) at one end."""
         return [l for l in self.lines if l[0][0] == 'x' or l[1][0] == 'x']
 
     def internal_lines(self):
+        """The lines between two internal vertices ('v', i) and ('v', j) (the propagators)."""
         return [l for l in self.lines if l[0][0] == 'v' and l[1][0] == 'v']
 
     def degree(self, v):
+        """The number of line ends at internal vertex v (a self-loop counts twice)."""
         return sum((a == ('v', v)) + (b == ('v', v)) for a, b in self.lines)
 
     def key(self):
+        """A canonical form of the graph (with the legs fixed): equal for two labellings of the same topology."""
         return _canonical(self.lines, self.E)
 
     def __repr__(self):

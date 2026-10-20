@@ -33,12 +33,12 @@ def dot(a, b):
 
 
 def comp(p, mu):
-    """The component p^mu."""
+    """The component p^mu, as the symbol p__mu used inside this module (dirac.py's own notation)."""
     return SR.var('%s__%s' % (p, mu))
 
 
 def metric(mu, nu):
-    """g^{mu nu}."""
+    """The metric g^{mu nu} as the symbol g__mu__nu; g^mu_mu = D (the dimension symbol of this module)."""
     mu, nu = sorted((mu, nu))
     return D if mu == nu else SR.var('g__%s__%s' % (mu, nu))
 
@@ -114,6 +114,8 @@ class _Order:
         self.left, self.right, self.sp = left, right, dict(sp or {})
 
     def key(self, it):
+        """The sort position of a gamma matrix it = (kind, name): the left spinor's momentum, then Lorentz
+        indices, other momenta, and the right spinor's momentum last."""
         kind, name = it
         if kind == 'p' and name == self.right:
             return (3, name)
@@ -122,7 +124,7 @@ class _Order:
         return (1, name) if kind == 'i' else (2, name)
 
     def half_anti(self, a, b):
-        """{g^a, g^b}/2."""
+        """{gamma^a, gamma^b}/2 for two items: g^{mu nu} for two indices, a.b for two momenta, a^mu for one of each."""
         if a[0] == 'i' and b[0] == 'i':
             return metric(a[1], b[1])
         if a[0] == 'p' and b[0] == 'p':
@@ -329,6 +331,7 @@ class LineResult:
         self.parts, self.left, self.right = parts, left, right
 
     def coefficients(self):
+        """{(structure, chiral projector): coefficient} as a dict."""
         return dict(self.parts)
 
     def __getitem__(self, key):
@@ -347,6 +350,8 @@ class LineResult:
 
 
 def structure_name(st, ch):
+    """A readable name of a Dirac structure st with its chiral part ch ('1', '5', 'L', 'R'), as LineResult prints
+    it: e.g. 'g^mu PL', 'p1/ g5', 'sigma^{mu nu}', '1'."""
     def one(x):
         return x[1] if x[0] == 'i' else x[1]
     if not st:
@@ -1038,9 +1043,11 @@ class LineProduct:
         self.parts, self.lines = parts, lines
 
     def items(self):
+        """The ((structure, chiral), ...) keys with their coefficients."""
         return self.parts.items()
 
     def coefficients(self):
+        """{((structure, chiral), ...): coefficient} as a dict, one (structure, chiral) per fermion line."""
         return dict(self.parts)
 
     def __getitem__(self, k):

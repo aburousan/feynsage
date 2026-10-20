@@ -1,11 +1,12 @@
-# process().squared(average=False) for 2 -> 3 and 1 -> 3 processes against FeynArts + FeynCalc at random physical
-# phase-space points (60 digits).  The points (momenta, masses, couplings) are in tests/feyncalc_ref/points_3body.json,
-# FeynCalc's values (made by tests/feyncalc_ref/oracle_3body.wl, exact rationals) in values_3body.json.  Epsilon
-# tensors of the momenta are evaluated from the components; their part must be zero at tree level.
-#     sage tests/test_feyncalc_3body.sage [nproc]
-import sys, os, re, time, random
+# process().squared(average=False) for 2 -> 3 and 1 -> 3 processes against FeynArts + FeynCalc, exactly, two ways:
+#  formula: FeynCalc's whole result in the scalar products (feyncalc_ref/oracle_3body.wl with ORACLE_SYMBOLIC=1,
+#           out3_<name>.m.gz) and feynsage's, as rational functions of the same independent invariants;
+#  points:  rational phase-space points (points_3body.json from make_points.sage: every momentum, mass and coupling
+#           rational, exactly on shell), where both sides are rational numbers (values_3body.json from oracle_3body.wl).
+# Epsilon tensors are kept on both sides; at tree level their coefficient must vanish identically.
+#     sage tests/test_feyncalc_3body.sage [nproc] [names]
+import sys, os, re, time, json, gzip
 from feynsage import process
-from feynsage import models as MD
 from feynsage.qft import tensors as T
 NP = int(sys.argv[1]) if len(sys.argv) > 1 else 16
 ONLY = sys.argv[2:]
@@ -13,84 +14,87 @@ MASSLESS = {'uu_ggg': ['u'], 'ee_wwa': ['e'], 'ee_zha': ['e'], 'ud_wza': ['u', '
 PROCS = {'ee_mma': 'e- e+ -> mu- mu+ gamma', 'ee_uug': 'e- e+ -> u u~ g', 'uu_ggg': 'u u~ -> g g g',
          'ee_wwa': 'e- e+ -> W+ W- gamma', 'ee_zha': 'e- e+ -> Z H gamma', 'ud_wza': 'u d~ -> W+ Z gamma',
          'mu_enn': 'mu- -> e- nu_e~ nu_mu', 't_benu': 't -> b e+ nu_e', 'h_eea': 'H -> e- e+ gamma'}
-NAMES = ['EL', 'SW', 'CW', 'MW', 'MZ', 'MH', 'ME', 'MM', 'MU', 'MD', 'MC', 'MT', 'MB', 'GS'] + \
+NAMES = ['EL', 'SW', 'CW', 'MZ', 'MH', 'ME', 'MM', 'MU', 'MD', 'MC', 'MT', 'MB', 'GS', 'E_eps'] + \
         ['d%d%d' % (i, j) for i in range(1, 6) for j in range(i + 1, 6)]
-loc = {n: SR.var(n) for n in NAMES}
-def _ev(txt):
-    txt = re.sub(r'Sqrt\[', 'sqrt(', txt).replace(']', ')').replace('^', '**')
-    return SR(sage_eval(txt, locals=loc))
-def read_fc(path):
-    lines = open(path).read().strip().split('\n')
-    if 'DEN' not in lines:
-        return _ev(' '.join(lines))
-    k = lines.index('DEN')
-    return sum((_ev(l) for l in lines[:k]), SR(0)) / _ev(' '.join(lines[k + 1:]))
-RF = RealField(200)
-def boost(p, b):                      # p along the velocity b (3-vector)
-    b2 = sum(x * x for x in b)
-    if b2 == 0:
-        return p
-    g = 1 / sqrt(1 - b2); bp = sum(x * y for x, y in zip(b, p[1:]))
-    E = g * (p[0] + bp)
-    return [E] + [p[i + 1] + ((g - 1) * bp / b2 + g * p[0]) * b[i] for i in range(3)]
-def two_body(M, m1, m2):
-    P = sqrt((M**2 - (m1 + m2)**2) * (M**2 - (m1 - m2)**2)) / (2 * M)
-    c = RF(random.uniform(-1, 1)); ph = RF(random.uniform(0, 2 * pi.n(200))); s_ = sqrt(1 - c**2)
-    k = [P * s_ * cos(ph), P * s_ * sin(ph), P * c]
-    return [sqrt(P**2 + m1**2)] + k, [sqrt(P**2 + m2**2)] + [-x for x in k]
-def three_body(M, m):                  # in the rest frame of M
-    m45 = RF(random.uniform(float(m[1] + m[2]), float(M - m[0])))
-    a, b = two_body(M, m[0], m45)
-    c, d = two_body(m45, m[1], m[2])
-    bv = [x / b[0] for x in b[1:]]
-    return [a, boost(c, bv), boost(d, bv)]
-mdot = lambda a, b: a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3]
-def point(P):
-    sw = RF(random.uniform(0.3, 0.6)); mz = RF(random.uniform(85, 100))
-    v = {loc['SW']: sw, loc['CW']: sqrt(1 - sw**2), loc['MZ']: mz, loc['MW']: mz * sqrt(1 - sw**2),
-         loc['EL']: RF(random.uniform(0.2, 0.4)), loc['GS']: RF(random.uniform(0.8, 1.3)), loc['MH']: RF(random.uniform(110, 140))}
-    for n in ('ME', 'MM', 'MU', 'MD', 'MC', 'MB'):
-        v[loc[n]] = RF(random.uniform(1, 30))
-    v[loc['MT']] = RF(random.uniform(200, 300))
-    m = [RF(SR(x).subs(v)) for x in P.masses]
-    if len(P.p_in) == 2:
-        rs = RF(random.uniform(float(sum(m[2:]) + 50), float(sum(m[2:]) + 900)))
-        rs = max(rs, m[0] + m[1] + 1)
-        p1, p2 = two_body(rs, m[0], m[1])
-        moms = [p1, p2] + three_body(rs, m[2:])
-    else:
-        moms = [[m[0], 0, 0, 0]] + three_body(m[0], m[1:])
-    n = len(moms)
-    for i in range(n):                                     # momentum conservation check
-        pass
-    d = {loc['d%d%d' % (i + 1, j + 1)]: mdot(moms[i], moms[j]) for i in range(n) for j in range(i + 1, n)}
-    dots = {T.dot(P.momenta[i], P.momenta[j]): mdot(moms[i], moms[j]) for i in range(n) for j in range(i + 1, n)}
-    return v, d, dots
-import json
+loc = {n: SR.var(n) for n in NAMES + ['MW']}
+R = PolynomialRing(QQ, NAMES + ['fsI'])
+IDEAL = R.ideal([R('SW^2 + CW^2 - 1'), R('fsI^2 + 1')])
 REF = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'feyncalc_ref')
-pts = json.load(open(os.path.join(REF, 'points_3body.json'))); fcv = json.load(open(os.path.join(REF, 'values_3body.json')))
+pts = json.load(open(os.path.join(REF, 'points_3body.json')))
+fcv = json.load(open(os.path.join(REF, 'values_3body.json')))
+
+FQ = R.fraction_field()
+
+def independent(P):
+    """The products with the last leg and d_(n-2)(n-1) in terms of the others, from p_i.(sum p_in - sum p_out) = 0,
+    and every EPS of the momenta as a multiple of E_eps = EPS(p1, ..., p4) (zero for a decay: three independent
+    momenta).  Returns the scalar-product symbols for Dot(p_i, p_j), the eliminated ones and the EPS rule."""
+    n, nin = len(P.momenta), len(P.p_in)
+    sg = [1 if k < nin else -1 for k in range(n)]
+    d = lambda i, j: P.masses[i]^2 if i == j else loc['d%d%d' % (min(i, j) + 1, max(i, j) + 1)]
+    sol = solve([sum(sg[k]*d(i, k) for k in range(n)) == 0 for i in range(n)],
+                [d(i, n - 1) for i in range(n - 1)] + [d(n - 3, n - 2)], solution_dict=True)[0]
+    last = [-sg[k]*sg[n - 1] for k in range(n - 1)]             # p_n in terms of p_1 ... p_(n-1)
+    vec = lambda q: last if str(q) == str(P.momenta[n - 1]) else [int(str(q) == str(b)) for b in P.momenta[:n - 1]]
+    eps = lambda x: matrix(QQ, [vec(q) for q in x.operands()]).det()*loc['E_eps'] if n == 5 else 0
+    dots = {T.dot(P.momenta[i], P.momenta[j]): d(i, j) for i in range(n) for j in range(i + 1, n)}
+    return dots, sol, eps
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
+from fc_text import evaluate, mathematica, items
+
+def in_field(txt, sol):
+    """A formula (Python syntax) evaluated in the fraction field over Q: the eliminated products, M_W = M_Z c_W
+    and i put in."""
+    names = {k: FQ(R(k)) for k in R.variable_names()}
+    names.update({'MW': names['MZ']*names['CW'], 'I': names['fsI']})
+    names.update({str(k): evaluate(str(v).replace('^', '**'), names) for k, v in sol.items()})
+    return evaluate(txt, names)
+
+def zero(f):
+    """f = 0 in the fraction field, with s_W^2 + c_W^2 = 1 and i^2 = -1."""
+    return IDEAL.reduce(f.numerator()) == 0
+
+def formula_check(P, fs):
+    dots, sol, eps = independent(P)
+    a = SR(fs).subs(dots)
+    a = a.subs({x: eps(x) for x in a.find(T.EPS(*[SR.wild(i) for i in range(4)]))})
+    fc0, fce = [in_field(mathematica(x), sol) for x in items(gzip.open(os.path.join(REF, 'out3_%s.m.gz' % name), 'rt').read())]
+    A = in_field(str(a).replace('^', '**'), sol)
+    E = R('E_eps')
+    A0, Ae = A.numerator().subs({E: 0})/A.denominator(), A.numerator().derivative(E)
+    return zero(A0 - fc0) and zero(FQ(Ae)) and zero(fce)
+
+def point_check(P, fs):
+    n = len(P.momenta)
+    for rec, (fc0, fce) in zip(pts[name]['points'], fcv[name]):
+        v = {loc[k]: QQ(x) for k, x in rec.items() if not k.startswith('d') and k != 'moms'}
+        dots = {T.dot(P.momenta[i], P.momenta[j]): QQ(rec['d%d%d' % (i + 1, j + 1)]) for i in range(n) for j in range(i + 1, n)}
+        e = SR(fs).subs(dots).subs(v)
+        comp = {P.momenta[i]: [QQ(x) for x in rec['moms'][i]] for i in range(n)}
+        epses = e.find(T.EPS(*[SR.wild(i) for i in range(4)]))
+        epsval = {x: matrix(QQ, [[comp[q][0], -comp[q][1], -comp[q][2], -comp[q][3]] for q in x.operands()]).det() for x in epses}
+        a, a0 = QQ(e.subs(epsval)), QQ(e.subs({x: 0 for x in epses}))
+        if not (a0 == QQ(fc0) and a == a0 and QQ(fce) == 0):
+            return False
+    return True
+
 res = []
 for name, text in PROCS.items():
-    if ONLY and name not in ONLY: continue
-    if name not in fcv:
-        print('MISS %-8s %s' % (name, text)); continue
+    if ONLY and name not in ONLY:
+        continue
+    has_f, has_p = os.path.exists(os.path.join(REF, 'out3_%s.m.gz' % name)), name in fcv
+    if not (has_f or has_p):
+        print('MISS %-8s %-26s (no FeynCalc result yet)' % (name, text)); continue
     t0 = time.time()
     P = process(text, massless=MASSLESS.get(name, []))
     fs = P.squared(average=False, nproc=NP)
-    worst = 0
-    for rec, fcval in zip(pts[name]['points'], fcv[name]):
-        v = {loc[k]: RF(x) for k, x in rec.items() if not k.startswith('d') and k != 'moms'}
-        n = len(P.momenta)
-        dots = {T.dot(P.momenta[i], P.momenta[j]): RF(rec['d%d%d' % (i + 1, j + 1)]) for i in range(n) for j in range(i + 1, n)}
-        e0 = SR(fs).subs(dots).subs(v)
-        epses = e0.find(T.EPS(*[SR.wild(i) for i in range(4)]))
-        comp = {P.momenta[i]: [RF(x) for x in rec['moms'][i]] for i in range(n)}
-        epsval = {x: matrix(RF, [[comp[q][0], -comp[q][1], -comp[q][2], -comp[q][3]] for q in x.operands()]).det() for x in epses}
-        a_full = CC(e0.subs(epsval)); a = RF(e0.subs({x: 0 for x in epses})); b = RF(fcval)
-        if epses:
-            print('   feynsage epsilon part / total: %.1e' % (abs(a_full - a)/abs(a)))
-        worst = max(worst, abs(a / b - 1))
-    line = '%-4s %-8s %-26s %3d diagrams  rel.diff %.1e  %6.1f s' % ('ok' if worst < 1e-35 else 'DIFF', name, text, len(P.diagrams), float(worst), time.time() - t0)
+    f_ok = formula_check(P, fs) if has_f else None
+    p_ok = point_check(P, fs) if has_p else None
+    word = lambda ok, yes: 'not made yet' if ok is None else (yes if ok else 'DIFFERENT')
+    line = '%-4s %-8s %-26s %3d diagrams  formula: %-12s  rational points: %-12s %6.1f s' % (
+        'ok' if False not in (f_ok, p_ok) else 'DIFF', name, text, len(P.diagrams),
+        word(f_ok, 'identical'), word(p_ok, 'equal'), time.time() - t0)
     print(line); sys.stdout.flush(); res.append(line)
 nok = sum(l.startswith('ok') for l in res)
-print('ALL 3-BODY FEYNCALC CHECKS PASS (%d processes)' % nok if nok == len(res) and res else 'FAILED')
+print('ALL 3-BODY FEYNCALC CHECKS PASS (%d processes)' % nok if res and nok == len(res) else 'FAILED')

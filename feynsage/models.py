@@ -24,6 +24,10 @@ from sage.all import SR, sqrt, I
 
 
 class Particle:
+    """A field of a model: name and antiparticle name (equal for a self-conjugate field), kind 'F' (fermion),
+    'V' (vector), 'S' (scalar) or 'U' (ghost), mass, electric charge (in units of e), colour None, '3', '3b' or '8',
+    a LaTeX name and, for a gauge boson, the name of its gauge parameter xi."""
+
     def __init__(self, name, anti, kind, mass=0, charge=0, colour=None, latex=None, xi=None):
         self.name, self.anti, self.kind = name, anti, kind          # kind: F, V, S, U
         self.mass, self.charge, self.colour = SR(mass), charge, colour
@@ -32,6 +36,7 @@ class Particle:
 
     @property
     def self_conjugate(self):
+        """True for a field that is its own antiparticle (photon, Z, H, gluon, G0)."""
         return self.name == self.anti
 
     def __repr__(self):
@@ -39,6 +44,10 @@ class Particle:
 
 
 class Vertex:
+    """A Feynman rule: the fields (all incoming), the Lorentz kind (e.g. 'FFV', 'VVV', 'SSV'; see the module text
+    for the structures), the overall factor (with its i) and the coefficients of the structures, and the colour
+    structure None, 'delta', 'T', 'f' or 'ffff'."""
+
     def __init__(self, fields, kind, factor, coeffs=(1,), colour=None):
         self.fields, self.kind = tuple(fields), kind
         self.factor, self.coeffs = SR(factor), tuple(SR(c) for c in coeffs)
@@ -49,6 +58,10 @@ class Vertex:
 
 
 class Model:
+    """A set of particles and vertices (Feynman rules) with its parameters, as SM() and QED() build them.  The
+    antiparticles are added by themselves; vertices whose coefficients all vanish are dropped.  model.field(name)
+    finds a field (aliases like "e-" or "photon" work), model.find([fields]) the vertices of a field content."""
+
     def __init__(self, name, particles, vertices, params=None):
         self.name = name
         self.particles = {p.name: p for p in particles}
@@ -65,12 +78,15 @@ class Model:
             self._by_set.setdefault(tuple(sorted(v.fields)), []).append(v)
 
     def field(self, name):
+        """The Particle called name (an alias such as "e-", "gamma" or "electron" is resolved first); KeyError with
+        the list of fields if there is none."""
         name = self.aliases.get(name, name)
         if name not in self.particles:
             raise KeyError("no field %r in model %s (fields: %s)" % (name, self.name, ', '.join(sorted(self.particles))))
         return self.particles[name]
 
     def anti(self, name):
+        """The name of the antiparticle of the field name (e.g. 'e' -> 'e~', 'A' -> 'A')."""
         return self.field(name).anti
 
     def find(self, fields):
@@ -114,7 +130,10 @@ LATEX = {'ne': r'\nu_e', 'nm': r'\nu_\mu', 'nt': r'\nu_\tau', 'e': 'e', 'mu': r'
 ALIASES = {'e-': 'e', 'e+': 'e~', 'mu-': 'mu', 'mu+': 'mu~', 'tau-': 'ta', 'tau+': 'ta~', 'tau': 'ta',
            'photon': 'A', 'gamma': 'A', 'a': 'A', 'h': 'H', 'gluon': 'g', 'nu_e': 'ne', 'nu_mu': 'nm',
            'nu_tau': 'nt', 'nu_e~': 'ne~', 'nu_mu~': 'nm~', 'nu_tau~': 'nt~',
-           'ubar': 'u~', 'dbar': 'd~', 'sbar': 's~', 'cbar': 'c~', 'bbar': 'b~', 'tbar': 't~'}
+           'ubar': 'u~', 'dbar': 'd~', 'sbar': 's~', 'cbar': 'c~', 'bbar': 'b~', 'tbar': 't~',
+           # names in words, as in a textbook
+           'electron': 'e', 'positron': 'e~', 'muon': 'mu', 'antimuon': 'mu~', 'higgs': 'H', 'top': 't',
+           'antitop': 't~', 'bottom': 'b', 'antibottom': 'b~', 'up': 'u', 'down': 'd', 'charm': 'c', 'strange': 's'}
 
 
 def _gR(Q):
@@ -138,8 +157,12 @@ def QED(muons=True, taus=True):
 
 
 def SM(qcd=True, xi=1):
-    """The Standard Model (and QCD) of FeynArts' SM.mod / SMQCD.mod at tree level, R_xi gauge
-    parameter xi for A, Z and W (xi = 1: Feynman-'t Hooft, the FeynArts default)."""
+    """The Standard Model (and QCD) of FeynArts' SM.mod / SMQCD.mod at tree level in R_xi gauge.  xi: one gauge
+    parameter for all gauge bosons (1: Feynman-'t Hooft, the FeynArts default; a number or a symbol), or one per
+    boson, xi={"A": xiA, "Z": xiZ, "W": xiW, "g": xig} (missing ones are 1).  As in FeynArts, a scalar-ghost
+    coupling carries the xi of its antighost: xi_Z for uZ~, xi_W for u+~ and u-~.
+        SM(xi=var('xi'))      SM(xi={"W": var('xiW'), "Z": var('xiZ')})"""
+    xi = _xi_values(xi)
     ps = [Particle('A', 'A', 'V', 0, 0, latex=r'\gamma', xi='xiA'),
           Particle('Z', 'Z', 'V', MZ, 0, latex='Z', xi='xiZ'),
           Particle('W-', 'W+', 'V', MW, -1, latex='W^-', xi='xiW'),
@@ -228,8 +251,8 @@ def SM(qcd=True, xi=1):
            Vertex(('G-', 'W+', 'Z'), 'SVV', -I * EL * MW * SW / CW),
            Vertex(('G+', 'W-', 'A'), 'SVV', -I * EL * MW),
            Vertex(('G-', 'W+', 'A'), 'SVV', -I * EL * MW)]
-    # ---------------- ghosts (the gauge parameters xi are set to `xi`)
-    x = SR(xi)
+    # ---------------- ghosts: a scalar-ghost coupling carries the xi of the antighost's gauge boson (FeynArts SM.mod)
+    xZ, xW = xi['xiZ'], xi['xiW']
     vs += [Vertex(('u-~', 'u-', 'A'), 'UUV', -I * EL, (1, 0)),
            Vertex(('u+~', 'u+', 'A'), 'UUV', I * EL, (1, 0)),
            Vertex(('u-~', 'u-', 'Z'), 'UUV', I * EL * CW / SW, (1, 0)),
@@ -242,17 +265,17 @@ def SM(qcd=True, xi=1):
            Vertex(('uA~', 'u-', 'W+'), 'UUV', I * EL, (1, 0)),
            Vertex(('u+~', 'uA', 'W+'), 'UUV', -I * EL, (1, 0)),
            Vertex(('uA~', 'u+', 'W-'), 'UUV', -I * EL, (1, 0)),
-           Vertex(('H', 'uZ~', 'uZ'), 'SUU', -I * EL * MZ * x / (2 * SW * CW)),
-           Vertex(('H', 'u-~', 'u-'), 'SUU', -I * EL * MW * x / (2 * SW)),
-           Vertex(('H', 'u+~', 'u+'), 'SUU', -I * EL * MW * x / (2 * SW)),
-           Vertex(('G0', 'u+~', 'u+'), 'SUU', EL * MW * x / (2 * SW)),
-           Vertex(('G0', 'u-~', 'u-'), 'SUU', -EL * MW * x / (2 * SW)),
-           Vertex(('G+', 'uZ~', 'u-'), 'SUU', I * EL * MZ * x / (2 * SW)),
-           Vertex(('G-', 'uZ~', 'u+'), 'SUU', I * EL * MZ * x / (2 * SW)),
-           Vertex(('G+', 'u+~', 'uZ'), 'SUU', I * EL * (SW ** 2 - CW ** 2) * MW * x / (2 * CW * SW)),
-           Vertex(('G-', 'u-~', 'uZ'), 'SUU', I * EL * (SW ** 2 - CW ** 2) * MW * x / (2 * CW * SW)),
-           Vertex(('G+', 'u+~', 'uA'), 'SUU', I * EL * MW * x),
-           Vertex(('G-', 'u-~', 'uA'), 'SUU', I * EL * MW * x)]
+           Vertex(('H', 'uZ~', 'uZ'), 'SUU', -I * EL * MZ * xZ / (2 * SW * CW)),
+           Vertex(('H', 'u-~', 'u-'), 'SUU', -I * EL * MW * xW / (2 * SW)),
+           Vertex(('H', 'u+~', 'u+'), 'SUU', -I * EL * MW * xW / (2 * SW)),
+           Vertex(('G0', 'u+~', 'u+'), 'SUU', EL * MW * xW / (2 * SW)),
+           Vertex(('G0', 'u-~', 'u-'), 'SUU', -EL * MW * xW / (2 * SW)),
+           Vertex(('G+', 'uZ~', 'u-'), 'SUU', I * EL * MZ * xZ / (2 * SW)),
+           Vertex(('G-', 'uZ~', 'u+'), 'SUU', I * EL * MZ * xZ / (2 * SW)),
+           Vertex(('G+', 'u+~', 'uZ'), 'SUU', I * EL * (SW ** 2 - CW ** 2) * MW * xW / (2 * CW * SW)),
+           Vertex(('G-', 'u-~', 'uZ'), 'SUU', I * EL * (SW ** 2 - CW ** 2) * MW * xW / (2 * CW * SW)),
+           Vertex(('G+', 'u+~', 'uA'), 'SUU', I * EL * MW * xW),
+           Vertex(('G-', 'u-~', 'uA'), 'SUU', I * EL * MW * xW)]
     # ---------------- QCD
     if qcd:
         ps += [Particle('g', 'g', 'V', 0, 0, '8', latex='g', xi='xiG'),
@@ -263,5 +286,19 @@ def SM(qcd=True, xi=1):
     M = Model('SM' + ('QCD' if qcd else ''), ps, vs)
     M.aliases = dict(ALIASES)
     M.aliases.update({'W': 'W-', 'G': 'G-'})
-    M.xi = SR(xi)
+    M.xi = xi if len(set(str(v) for v in xi.values())) > 1 else xi['xiZ']
     return M
+
+
+def _xi_values(xi):
+    """{xiA, xiZ, xiW, xiG: value} from one value for all or a dict with keys "A", "Z", "W", "g" (or xiA, ...)."""
+    names = {'A': 'xiA', 'Z': 'xiZ', 'W': 'xiW', 'g': 'xiG'}
+    if not isinstance(xi, dict):
+        return {n: SR(xi) for n in names.values()}
+    out = {n: SR(1) for n in names.values()}
+    for k, v in xi.items():
+        key = names.get(k, k)
+        if key not in out:
+            raise KeyError("gauge parameter %r: give A, Z, W or g" % k)
+        out[key] = SR(v)
+    return out

@@ -19,6 +19,11 @@ from sage.all import SR, gamma, I, prod
 
 
 def feynman_parametrize(fam, powers=None, dim=None):
+    """The Feynman-parameter form of the integrals of a family (see the module text above for the formula).
+    fam: an integral family (family() or IntegralFamily); powers: the propagator powers a_i (numbers or symbols;
+    default the symbols a1, ..., at); dim: the dimension (default the symbol D).  Returns (prefactor, integrand,
+    variables x_i); the integral is prefactor * Int prod dx_i delta(1 - sum x_i) integrand.
+        feynman_parametrize(fam, (1, 1, 1, 1))"""
     D = SR.var('D') if dim is None else SR(dim)
     U, F = fam.UF()
     xs = [SR(str(v)) for v in U.parent().gens()]

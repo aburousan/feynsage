@@ -14,6 +14,7 @@ from . import tensors as T
 
 
 class ParseError(ValueError):
+    """FORM output has an unknown name, unsupported factor or unexpected Dirac structure."""
     pass
 
 
@@ -61,13 +62,17 @@ def _args(s):
 
 
 class Reader:
+    """Read FORM expressions using the name map and metric convention of a compiler.Program.
+    Scalar factors become Sage expressions and open Dirac lines become lists of atoms."""
     def __init__(self, program):
+        """Keep the compiler program and initialise caches for factors and FORM dummy indices."""
         self.p = program
         self.cache = {}
         self.dummies = {}
 
     # -- names back to Sage
     def _obj(self, n):
+        """Recover a Sage object by its FORM name, declaring Lorentz indices for FORM-generated dummies."""
         hit = self.p.sage_of.get(n)
         if hit is not None:
             return hit[1]
@@ -78,6 +83,7 @@ class Reader:
         raise ParseError("FORM returned the unknown name %s" % n)
 
     def _slot_obj(self, n):
+        """Recover the Sage object used in a FORM tensor slot."""
         return self._obj(n)
 
     def atom(self, s):
@@ -90,6 +96,7 @@ class Reader:
         return r
 
     def _atom(self, s):
+        """Parse one FORM factor as a scalar or a list of Dirac atoms on a numbered line."""
         if s[0].isdigit():
             return ('s', SR(QQ(s)))
         if s == 'i_':
@@ -178,6 +185,9 @@ class Reader:
         return out
 
     def scalar(self, body):
+        """Return a Sage scalar from the printed FORM expression body, without its name or semicolon.
+        Restore tensors and opaque expressions using the program map.
+        Raise ParseError if any untraced Dirac matrices remain."""
         ts = self.terms(body)
         if any(l for _, l in ts):
             raise ParseError("Dirac matrices left in a result that should be a number")
@@ -187,6 +197,7 @@ class Reader:
 
 
 def _depth_ok(s):
+    """Return whether the parentheses in s are balanced without an unmatched closing bracket."""
     d = 0
     for ch in s:
         d += ch == '('

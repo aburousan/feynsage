@@ -66,5 +66,52 @@ check("ghost-gluon vertex at xi = 3 (gluon propagator with 1/k^4), projected on 
       agree(M, {}, -532.95863765882536541706251399331216130694,
             1236.42732437085308388880613800105358716556 - 1674.33894073619028947572101362347534092017*I))
 
+# ---------------------------------------------------------------- exact, in d dimensions, before any eps expansion
+# FeynCalc's TID result (virtual*.wl with SYMBOLIC=1, pave_<tag>.m.gz): coefficients times A0, B0, C0, D0, with D,
+# s, t and the masses symbols, against feynsage's virtual(masters=True).  Both sets of masters are put in the
+# canonical form of feynsage.pv.pave(); FeynCalc's TID writes the integral as i pi^2 * PaVe, feynsage's M has
+# 1/(16 pi^2) * master, so FeynCalc = i 16 pi^4 feynsage term by term.  No scheme constant enters: nothing is
+# expanded in eps.  The difference is reduced over Q with i^2 = -1 and s_W^2 + c_W^2 = 1 (after M_W = M_Z c_W).
+import os, gzip, re
+from feynsage.pv import pave, PaVeA0, PaVeB0, PaVeC0, PaVeD0
+REF = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'feyncalc_ref')
+def read_pave(path):
+    txt = gzip.open(path, 'rt').read()
+    txt = txt.replace('Pi', 'pi').replace('[', '(').replace(']', ')').replace('^', '**')
+    fA = lambda a: pave('A', [a]); fB = lambda *a: pave('B', list(a))
+    fC = lambda *a: pave('C', list(a)); fD = lambda *a: pave('D', list(a))
+    names = {n: SR.var(n) for n in ['s', 't', 'ME', 'MM', 'ML', 'EL', 'MH', 'MB', 'MW', 'MZ', 'SW', 'CW', 'GS']}
+    names.update({'D': var('d'), 'A0': fA, 'B0': fB, 'C0': fC, 'D0': fD, 'I': I, 'pi': pi, 'Sqrt': sqrt})
+    return SR(sage_eval(txt, locals=names))
+def same_in_d(a, b):
+    """a - b = 0 as a function: masters become symbols, then exact rational-function arithmetic over Q."""
+    e = (SR(a) - SR(b)).subs({MW: MZ*CW})
+    ms = sorted(set(e.find(PaVeA0(SR.wild(0)))) | set(e.find(PaVeB0(*[SR.wild(i) for i in range(3)]))) |
+                set(e.find(PaVeC0(*[SR.wild(i) for i in range(6)]))) | set(e.find(PaVeD0(*[SR.wild(i) for i in range(10)]))), key=str)
+    sym = {m: SR.var('fsM%d' % k) for k, m in enumerate(ms)}
+    e = e.subs(sym).subs({I: SR.var('fsI'), pi: SR.var('fsPi')})
+    gens = sorted(set(str(v) for v in e.variables()) | {'fsI', 'SW', 'CW'})
+    R = PolynomialRing(QQ, gens)
+    J = R.ideal([R('fsI^2 + 1'), R('SW^2 + CW^2 - 1')])
+    F = R.fraction_field()(str(e).replace('^', '**'))
+    return J.reduce(F.numerator()) == 0, len(ms)
+kappa16 = I*16*pi^4
+SYM = [('ee_mumu_vp', "e- e+ -> mu- mu+", "QED", [5, 6, 7], 'vacuum polarization'),
+       ('ee_mumu_vertex', "e- e+ -> mu- mu+", "QED", [3, 4], 'vertex corrections'),
+       ('ee_mumu_box', "e- e+ -> mu- mu+", "QED", [1, 2], 'boxes'),
+       ('ee_aa', "e- e+ -> gamma gamma", "QED", None, 'all diagrams (e, mu, tau loops, IR-divergent boxes)'),
+       ('hbb', "H -> b b~", None, None, 'QCD vertex'),
+       ('z_nn', "Z -> nu_e nu_e~", None, None, 'all electroweak loops')]
+for tag, text, model, dg, what in SYM:
+    path = os.path.join(REF, 'pave_%s.m.gz' % tag)
+    if not os.path.exists(path):
+        print("MISS %s (no FeynCalc reduction)" % tag); continue
+    P = process(text, model=model) if model else process(text, exclude_fields=['g', 'ug'] if tag == 'z_nn' else ())
+    if tag == 'hbb':                                       # the gluon loop only, as above
+        dg = [k + 1 for k, d_ in enumerate(P.loop_diagrams()) if any(f[0] == 'g' for f in d_.fields)]
+    fs = P.virtual(average=False, diagrams=dg, masters=True, polarization_gauge='feynman')   # FeynCalc's -g
+    ok, nm = same_in_d(read_pave(path), kappa16*fs)
+    check("%s one loop, %s: FeynCalc's TID reduction = feynsage's, exactly in d (%d masters)" % (text, what, nm), ok)
+
 print("time %.0f s" % (time.time() - t_start))
 print("ALL FEYNCALC LOOP CHECKS PASS" if not FAIL else "FAILED: %s" % FAIL)

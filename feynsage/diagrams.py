@@ -37,9 +37,11 @@ class Diagram:
 
     @property
     def internal(self):
+        """The internal lines as (line number, (field, from, to)): both ends are vertices."""
         return [(k, f) for k, f in enumerate(self.fields) if f[1][0] == 'v' and f[2][0] == 'v']
 
     def propagator_fields(self):
+        """The names of the fields on the internal lines (the propagators), in line order."""
         return [f[0] for k, f in self.internal]
 
     def __repr__(self):
@@ -47,10 +49,15 @@ class Diagram:
         return 'Diagram(%s -> %s: %s)' % (' '.join(self.ext_in), ' '.join(self.ext_out), inner or 'contact')
 
     def amplitude(self, p_in, p_out, **kw):
+        """M of this tree diagram with the incoming and outgoing momenta given (keywords gauge, widths, colour,
+        ... as diagrams._amplitude); None in unitary gauge for a diagram with Goldstone bosons or ghosts."""
         return _amplitude(self, p_in, p_out, **kw)
 
 
 class DiagramList(list):
+    """The diagrams of a process (a list of Diagram), as insert_fields() returns them, with the topologies they
+    came from: .counts() per topology, .draw() a figure, .amplitudes() and .loop_amplitude() the amplitudes."""
+
     def __init__(self, items, tops, per_top):
         super().__init__(items)
         self.tops, self.per_top = tops, per_top
@@ -60,6 +67,7 @@ class DiagramList(list):
         return list(self.per_top)
 
     def draw(self, ncols=4, size=2.2):
+        """A matplotlib figure of all diagrams, numbered from 1, ncols per row, size inches each."""
         from .diagram_plot import draw_diagrams
         return draw_diagrams(self, ncols=ncols, size=size)
 
@@ -78,9 +86,9 @@ class DiagramList(list):
         prod = M * Mc
         return prod if isinstance(prod, type(SR(1))) else spin_sum(prod)
 
-    def loop_amplitude(self, p_in, p_out, project, kin, xi=1, nproc=None):
+    def loop_amplitude(self, p_in, p_out, project, kin, xi=1, nproc=None, masters=False):
         """One-loop M of every diagram (see diagrams.loop_amplitude), diagrams in parallel."""
-        return loop_amplitude(self, p_in, p_out, project, kin, xi=xi, nproc=nproc)
+        return loop_amplitude(self, p_in, p_out, project, kin, xi=xi, nproc=nproc, masters=masters)
 
     def amplitude(self, p_in, p_out, **kw):
         """Sum of the amplitudes M of all diagrams."""
@@ -320,7 +328,7 @@ def _amplitude(diag, p_in, p_out, gauge=None, colour=True, prefix='d', shared=No
         p = model.particles[name]
         external = s[0] == 'x'
         if p.kind == 'V':
-            if external or (xi is not None and xi == 1):
+            if external or (xi is not None and _xi(p, xi) == 1):
                 mu = index('%sl%d' % (prefix, k))
                 lidx[(k, s)] = lidx[(k, t)] = mu
             else:
@@ -362,6 +370,7 @@ def _amplitude(diag, p_in, p_out, gauge=None, colour=True, prefix='d', shared=No
         if widths and (name in widths or p.anti in widths):
             G = widths.get(name, widths.get(p.anti))
             q2 = q2 + I * p.mass * G                     # q^2 - M^2 + i M Gamma in every denominator
+        x = _xi(p, xi) if xi is not None else None
         if p.kind == 'V':
             M2 = p.mass ** 2
             mu, nu = lidx[(k, s)], lidx[(k, t)]
@@ -369,12 +378,12 @@ def _amplitude(diag, p_in, p_out, gauge=None, colour=True, prefix='d', shared=No
                 factor *= (-I / q2) * T.metric(mu, nu)          # massless: no unitary gauge, use xi = 1
             elif xi is None:
                 factor *= (-I / (q2 - M2)) * (T.metric(mu, nu) - T.comp(q, mu) * T.comp(q, nu) / M2)
-            elif xi == 1:
+            elif x == 1:
                 factor *= -I / (q2 - M2)
             else:
-                factor *= (-I / (q2 - M2)) * (T.metric(mu, nu) - (1 - xi) * T.comp(q, mu) * T.comp(q, nu) / (q2 - xi * M2))
+                factor *= (-I / (q2 - M2)) * (T.metric(mu, nu) - (1 - x) * T.comp(q, mu) * T.comp(q, nu) / (q2 - x * M2))
         elif p.kind in ('S', 'U'):
-            m2 = p.mass ** 2 * (xi if p.xi is not None else 1)
+            m2 = p.mass ** 2 * (x if p.xi is not None else 1)
             factor *= I / (q2 - m2)
     for v in range(top.V):
         if vfac[v][1] is None:
@@ -612,7 +621,7 @@ def _symmetry_factor(top, fields, model):
 
 
 def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', shared=None, spinors=False,
-                    conserve=False):
+                    conserve=False, gamma5_scheme='NDR'):
     """
     (numerator, propagators, external indices) of a one-loop (or tree) diagram:
         i M = int d^d l/(2 pi)^d  numerator / prod (q_i^2 - m_i^2)
@@ -620,6 +629,10 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
     with a free Lorentz index on every external vector (no polarization vectors);
     propagators: [(q_i, m_i)] of the lines that carry the loop momentum.
     """
+    if xi is None:
+        raise NotImplementedError("unitary gauge is not implemented at one loop (the limit xi -> oo does not in "
+                                  "general commute with the loop integration).  Use R_xi with a symbolic xi, "
+                                  "SM(xi=var('xi')) or one xi per boson: physical results do not depend on it")
     from .qft import objects as O, tensors as T
     from .qft.operations import dirac_trace
     from .qft.color import quark_colors, color_indices
@@ -639,7 +652,7 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
         p = model.particles[name]
         external = s[0] == 'x'
         if p.kind == 'V':
-            if external or xi == 1:
+            if external or _xi(p, xi) == 1:
                 mu = index('%sl%d' % (prefix, k) if not external else 'mu%d' % s[1])
                 lidx[(k, 'S')] = lidx[(k, 'T')] = mu
                 if external:
@@ -676,22 +689,23 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
         p = model.particles[name]
         q = mom[k]
         q2 = T.dot(q, q)
+        x = _xi(p, xi)
         if p.kind == 'V':
             M2 = p.mass ** 2
             mu, nu = lidx[(k, 'S')], lidx[(k, 'T')]
             kk = T.comp(q, mu) * T.comp(q, nu)
-            if xi == 1:
+            if x == 1:
                 opts = [(-I, [p.mass])]
             elif l_free(q):
-                opts = [(-I * (T.metric(mu, nu) - (1 - xi) * kk / (q2 - xi * M2)), [p.mass])]
+                opts = [(-I * (T.metric(mu, nu) - (1 - x) * kk / (q2 - x * M2)), [p.mass])]
             elif M2.is_trivial_zero():
                 # -i [g - (1 - xi) k k/k^2]/k^2: the second piece has the propagator twice
-                opts = [(-I * T.metric(mu, nu), [0]), (I * (1 - xi) * kk, [0, 0])]
+                opts = [(-I * T.metric(mu, nu), [0]), (I * (1 - x) * kk, [0, 0])]
             else:
                 # partial fractions: -i[g - k k/M^2]/(k^2 - M^2) - i (k k/M^2)/(k^2 - xi M^2)
-                opts = [(-I * (T.metric(mu, nu) - kk / M2), [p.mass]), (-I * kk / M2, [sqrt(xi) * p.mass])]
+                opts = [(-I * (T.metric(mu, nu) - kk / M2), [p.mass]), (-I * kk / M2, [sqrt(x) * p.mass])]
         elif p.kind in ('S', 'U'):
-            opts = [(I, [p.mass * (sqrt(xi) if p.xi is not None else 1)])]
+            opts = [(I, [p.mass * (sqrt(x) if p.xi is not None else 1)])]
         else:
             opts = [(I, [p.mass])]                  # fermion: i (k/ + m) goes into the Dirac string
         if l_free(q):
@@ -714,7 +728,7 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
             factor *= Permutation([ranks.index(x) + 1 for x in order]).sign()
         rest = [k for k in F if k not in used]
         if rest:
-            factor *= _closed_fermion_loop(diag, rest, mom, vfac, model)
+            factor *= _closed_fermion_loop(diag, rest, mom, vfac, model, gamma5_scheme)
         for ch in reversed(chains):
             factor = ch * factor
     elif open_ends:
@@ -731,20 +745,24 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
             if arrow[k][1][0] == 'v':
                 enter.setdefault(arrow[k][1][1], []).append(k)
         k0 = [k for k in open_ends if arrow[k][1][0] == 'x'][0]       # the arrow leaves the diagram here
-        X, k = None, k0
+        X, k, on_line = None, k0, {k0}
         while True:
             v = arrow[k][0][1]
             fac, dirac, legs = vfac[v]
             X = fac * dirac if X is None else X * (fac * dirac)
             (kin_,) = enter[v]
+            on_line.add(kin_)
             if arrow[kin_][0][0] == 'x':
                 break
             q, m = mom[kin_], model.particles[diag.fields[kin_][0]].mass
             X = X * (O.slash(q) + m)
             k = kin_
+        rest = [k for k in F if k not in on_line]          # a closed fermion loop beside the open line
+        if rest:
+            factor *= _closed_fermion_loop(diag, rest, mom, vfac, model, gamma5_scheme)
         factor = factor * X
     elif F:
-        factor *= _closed_fermion_loop(diag, F, mom, vfac, model)
+        factor *= _closed_fermion_loop(diag, F, mom, vfac, model, gamma5_scheme)
     loop_lines = [k for k, f in enumerate(diag.fields) if f[1][0] == 'v' and SR(mom[k]).has(lmom)]
     if loop_lines and all(model.particles[diag.fields[k][0]].kind == 'U' for k in loop_lines):
         factor *= -1                     # a closed ghost loop (an open ghost line through the loop has no sign)
@@ -781,7 +799,7 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
     return terms, ext, colour_factor_
 
 
-def _closed_fermion_loop(diag, F, mom, vfac, model):
+def _closed_fermion_loop(diag, F, mom, vfac, model, gamma5_scheme='NDR'):
     """-Tr[...] of the closed fermion loop made of the internal fermion lines F (in d dimensions)."""
     from .qft import objects as O
     from .qft.operations import dirac_trace
@@ -801,7 +819,7 @@ def _closed_fermion_loop(diag, F, mom, vfac, model):
         v = arrow[kin][0][1]
         if v == v0:
             break
-    return -dirac_trace(chain, dim='d')
+    return -dirac_trace(chain, dim='d', gamma5_scheme=gamma5_scheme)
 
 
 def _loop_fermion_chains(diag, mom, pext, vfac, model):
@@ -869,19 +887,34 @@ def _to_loop_string(expr, lname):
     return s
 
 
-def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None):
+def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None, gamma5_scheme='NDR', masters=False):
     """
     M (not i M) of every one-loop diagram, projected to a scalar and reduced to A0, B0, C0, D0:
         project(numerator, external_indices) -> a Sage expression without free indices
     (for example the contraction with a form-factor projector), kin: the scalar products of the
     external momenta for loop() ({"p1^2": 0, "p1.p2": "MH^2/2"}).  Returns the list of results (Sage
     expressions with 1/eps poles); finite_part(sum) is the finite amplitude when the poles cancel.
-    Closed fermion loops are traced in d dimensions (NDR); Feynman-'t Hooft gauge by default.
+    Closed fermion loops are traced in d dimensions with an anticommuting gamma5 (NDR); gamma5_scheme="NDR-even"
+    drops the traces with one gamma5 (right when their epsilon tensors vanish after the integration, as with at
+    most four external legs).  Feynman-'t Hooft gauge by default.
     The diagrams are projected and reduced in parallel (nproc: see feynsage.parallel; 1 = serial).
+    masters=True: each result as sum c(d) * master, exact in d with the masters PaVeA0 ... PaVeD0 in the
+    canonical form of feynsage.pv.pave() (as FeynCalc's TID gives it), nothing expanded in eps.
     """
     from .qft import tensors as T
     from .qft.operations import contract
     from .pv import loop
+    if len(diags):
+        model = diags[0].model
+        mxi = getattr(model, 'xi', None)
+        # only the electroweak ghosts couple to the Goldstone/Higgs fields with xi in the vertex; the gluon
+        # ghost's coupling does not depend on xi
+        ghosts = any(model.particles[f[0]].kind == 'U' and model.particles[f[0]].colour != '8'
+                     for d in diags for f in d.fields)
+        if ghosts and mxi is not None and any(not (SR(_xi_named(mxi, n)) - SR(_xi_named(_xi_arg(xi), n))).is_trivial_zero()
+                                               for n in ('xiA', 'xiZ', 'xiW')):
+            raise ValueError("the ghost-scalar couplings of the model were made with xi = %s but the propagators "
+                             "ask for xi = %s: make the diagrams with SM(xi=%s)" % (mxi, xi, xi))
     lmom = _one(T._declare(lname, 'vector'))
     sh = _Shared()
     # the external kinematics as substitutions in the numerator (so no p.q is left in a denominator)
@@ -900,7 +933,8 @@ def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None
     from .parallel import pmap
     jobs = []
     for i, dg in enumerate(diags):
-        terms, ext, col = _loop_integrand(dg, p_in, p_out, lmom, xi=SR(xi), prefix='d%d' % i, shared=sh)
+        terms, ext, col = _loop_integrand(dg, p_in, p_out, lmom, xi=_xi_arg(xi), prefix='d%d' % i, shared=sh,
+                                          gamma5_scheme=gamma5_scheme)
         # the colour factor does not depend on l: summed here, multiplied back after the integral.
         # With four-gluon vertices: one colour factor for each choice of their Lorentz structures.
         if isinstance(col, tuple):
@@ -938,7 +972,10 @@ def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None
                     m = [k for k, v in back.items() if v is m or (v - m).is_trivial_zero()][0]
                 pr.append([str(qs), str(m)])
             res = loop(_to_loop_string(num, lname), *pr, kin=kin)
-            val = res.coefficients().get('1', SR(0)) if hasattr(res, 'coefficients') else SR(res)
+            if masters and hasattr(res, 'masters'):
+                val = res.masters(canonical=True).get('1', SR(0))
+            else:
+                val = res.coefficients().get('1', SR(0)) if hasattr(res, 'coefficients') else SR(res)
             if back:
                 val = SR(val).subs(back)
             total += val / (16 * SR.pi() ** 2)          # i M = i/(16 pi^2) * loop(...)  ->  M
@@ -946,6 +983,22 @@ def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None
             return sum((SR(total).subs(pick) * c for pick, c in col), SR(0))
         return col * total
     return pmap(reduce_one, jobs, nproc=nproc)
+
+
+def _xi_named(xi, name):
+    """The value of the gauge parameter called name (xiA, xiZ, xiW, xiG) in xi: one value for all, or a dict."""
+    return xi.get(name, SR(1)) if isinstance(xi, dict) else xi
+
+
+def _xi(p, xi):
+    """The gauge parameter of the propagator of particle p: its own entry when xi is a dict per boson."""
+    return SR(_xi_named(xi, p.xi)) if isinstance(xi, dict) else xi
+
+
+def _xi_arg(xi):
+    """xi as the loop routines take it: SR(xi), or {xiA, xiZ, xiW, xiG: value} from a dict per boson."""
+    from .models import _xi_values
+    return _xi_values(xi) if isinstance(xi, dict) else SR(xi)
 
 
 def _rational_poly(m):

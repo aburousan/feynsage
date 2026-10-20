@@ -1,8 +1,8 @@
-# process().squared(average=False) against FeynArts + FeynCalc for 38 tree processes of the Standard Model
-# (all masses kept, Feynman gauge, every spin, polarization and colour summed).  The FeynCalc results are
+# process().squared(average=False) against FeynArts + FeynCalc for 38 tree processes of the Standard Model,
+# exactly: the two formulas are the same rational function (all masses kept, Feynman gauge, every spin, polarization and colour summed).  The FeynCalc results are
 # stored in tests/feyncalc_ref/out_<name>.m.gz; tests/feyncalc_ref/oracle.wl makes them again (Mathematica).
 #     sage tests/test_feyncalc.sage [nproc] [names...]
-import sys, os, re, time, random, gzip
+import sys, os, time, gzip
 from feynsage import process
 from feynsage import models as MD
 NP = int(sys.argv[1]) if len(sys.argv) > 1 else 16
@@ -19,27 +19,27 @@ PROCS = {
  'h_tt': 'H -> t t~', 'z_hh': 'Z -> e- e+', 't_bw': 't -> b W+', 'h_ww': 'H -> W+ W-', 'w_ud': 'W+ -> u d~', 'z_tt': 'Z -> t t~'}
 NAMES = ['EL', 'SW', 'CW', 'MW', 'MZ', 'MH', 'ME', 'MM', 'MU', 'MD', 'MC', 'MT', 'MB', 'GS', 's', 't', 'u']
 loc = {n: SR.var(n) for n in NAMES}
-def _ev(txt):
-    txt = re.sub(r'Sqrt\[', 'sqrt(', txt).replace(']', ')').replace('^', '**')
-    return SR(sage_eval(txt, locals=loc))
-def read_fc(path):
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
+from fc_text import evaluate, mathematica
+# Exact: both sides are rational functions of s, t, the masses and the couplings.  FeynCalc's text is evaluated
+# straight in the fraction field over Q (u = sum m^2 - s - t, M_W = M_Z c_W put in); the numerator of the
+# difference is reduced modulo s_W^2 + c_W^2 - 1.  Zero means the two are the same function.
+EXACT_NAMES = ['EL', 'SW', 'CW', 'MZ', 'MH', 'ME', 'MM', 'MU', 'MD', 'MC', 'MT', 'MB', 'GS', 's', 't']
+RQ = PolynomialRing(QQ, EXACT_NAMES)
+FQ = RQ.fraction_field()
+IDEAL = RQ.ideal([RQ('SW^2 + CW^2 - 1')])
+def in_field(txt, u_val):
+    names = {k: FQ(RQ(k)) for k in EXACT_NAMES}
+    names['MW'] = names['MZ']*names['CW']
+    names['u'] = evaluate(str(u_val).replace('^', '**'), names) if u_val != 0 else FQ(0)
+    return evaluate(mathematica(txt), names)
+def read_fc(path, u_val):
     lines = gzip.open(path, 'rt').read().strip().split('\n')
     if 'DEN' not in lines:
-        return _ev(' '.join(lines))
+        return in_field(' '.join(lines), u_val)
     k = lines.index('DEN')
-    num = sum((_ev(l) for l in lines[:k]), SR(0))
-    return num / _ev(' '.join(lines[k + 1:]))
-RF = RealField(200)
-random.seed(int(11))
-def point():
-    sw = RF(random.uniform(0.3, 0.6)); mz = RF(random.uniform(85, 100))
-    v = {loc['SW']: sw, loc['CW']: sqrt(1 - sw**2), loc['MZ']: mz, loc['MW']: mz*sqrt(1 - sw**2), loc['EL']: RF(random.uniform(0.2, 0.4)),
-         loc['GS']: RF(random.uniform(0.8, 1.3)), loc['MH']: RF(random.uniform(110, 140))}
-    for n in ('ME', 'MM', 'MU', 'MD', 'MC', 'MB'):
-        v[loc[n]] = RF(random.uniform(1, 30))
-    v[loc['MT']] = RF(random.uniform(200, 300))
-    v[loc['s']] = RF(random.uniform(2e5, 9e5)); v[loc['t']] = -RF(random.uniform(1e3, 9e4))
-    return v
+    return sum((in_field(l, u_val) for l in lines[:k]), FQ(0)) / in_field(' '.join(lines[k + 1:]), u_val)
+
 res = []
 for name, text in PROCS.items():
     if ONLY and name not in ONLY: continue
@@ -48,20 +48,14 @@ for name, text in PROCS.items():
         print('MISS %-8s %-24s (no FeynCalc output)' % (name, text)); continue
     t0 = time.time()
     try:
-        fc = read_fc(path)
         P = process(text)
         fs = P.squared(average=False, nproc=NP)
-        m2 = sum(m**2 for m in P.masses)
-        worst = 0
-        for k in range(3):
-            v = point()
-            if len(P.masses) == 4:
-                v[loc['u']] = m2.subs(v) - v[loc['s']] - v[loc['t']]
-            a, b = RF(SR(fs).subs(v)), RF(SR(fc).subs(v))
-            worst = max(worst, abs(a/b - 1))
-        line = '%-4s %-8s %-24s %3d diagrams  rel.diff %.1e  %6.1f s' % ('ok' if worst < 1e-40 else 'DIFF', name, text, len(P.diagrams), float(worst), time.time() - t0)
+        u_val = sum(m**2 for m in P.masses) - loc['s'] - loc['t'] if len(P.masses) == 4 else 0
+        exact = IDEAL.reduce((read_fc(path, u_val) - in_field(str(fs), u_val)).numerator()) == 0
+        line = '%-4s %-8s %-24s %3d diagrams  %s  %6.1f s' % ('ok' if exact else 'DIFF', name, text, len(P.diagrams),
+                                                             'identical' if exact else 'NOT IDENTICAL', time.time() - t0)
     except Exception as ex:
         line = 'ERR  %-8s %-24s %s' % (name, text, repr(ex)[:200])
     print(line); sys.stdout.flush(); res.append(line)
 nok = sum(l.startswith('ok') for l in res)
-print('ALL FEYNCALC CHECKS PASS (%d processes)' % nok if nok == len(res) else 'FAILED: %d of %d' % (len(res) - nok, len(res)))
+print('ALL FEYNCALC CHECKS PASS, EXACTLY (%d processes)' % nok if nok == len(res) else 'FAILED: %d of %d' % (len(res) - nok, len(res)))

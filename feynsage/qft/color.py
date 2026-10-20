@@ -39,6 +39,8 @@ def quark_colors(names):
 
 
 def is_adjoint(x):
+    """Return whether x is a Sage symbol declared as an adjoint colour index.
+    These indices label the N^2 - 1 gluon colours and are made with color_indices()."""
     try:
         return x.is_symbol() and T._KIND.get(str(x)) == 'adjoint'
     except AttributeError:
@@ -46,6 +48,8 @@ def is_adjoint(x):
 
 
 def is_fundamental(x):
+    """Return whether x is a Sage symbol declared as a fundamental colour index.
+    These indices label the N quark colours and are made with quark_colors()."""
     try:
         return x.is_symbol() and T._KIND.get(str(x)) == 'fundamental'
     except AttributeError:
@@ -53,6 +57,7 @@ def is_fundamental(x):
 
 
 def _need(x, test, what, fn):
+    """Convert x to a Sage expression and raise TypeError unless it passes the colour-index test."""
     x = SR(x)
     if not test(x):
         raise TypeError("%s: %s is not %s (declare it with %s)" % (fn, x, what,
@@ -83,6 +88,7 @@ def f_color(a, b, c):
 
 
 def _fresh_quark():
+    """Declare and return a quark colour index whose name is not yet registered."""
     while True:
         n = 'qc%d' % next(_COUNT)
         if n not in T._KIND:

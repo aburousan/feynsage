@@ -1,8 +1,9 @@
 (* Sum over all spins, polarizations and colours of |M|^2 at tree level in the FeynArts SM (Feynman gauge),
    computed by FeynCalc, written as InputForm in s, t, u for the comparison with feynsage (tests/test_feyncalc.sage).
    Run in this folder:  WolframKernel -script oracle.wl   (ORACLE_ONLY=ee_ww,gg_tt for a few), then gzip out_*.m.
-   Photons are summed with -g, gluons with the physical sum (reference: another massless external momentum),
-   massive vectors with -g + k k/M^2, as process() does. *)
+   Gluons are summed over their physical polarizations (reference: another massless external momentum), so are
+   photons when there are two or more massless vectors; a single photon with -g; massive vectors with -g + k k/M^2,
+   as process() does. *)
 $FeynCalcStartupMessages = False; $LoadAddOns = {"FeynArts"};
 Quiet[Get["FeynCalc`"]]; $FCAdvice = False;
 env = Environment["ORACLE_ONLY"]; only = If[!StringQ[env] || env === "", All, StringSplit[env, ","]];
@@ -38,8 +39,8 @@ run[name_, in_List, out_List] := Module[{all = Join[in, out], n, mom, ms, tops, 
   sq = (amp ComplexConjugate[amp]) // FeynAmpDenominatorExplicit // FermionSpinSum // DiracSimplify //
        SUNSimplify[#, Explicit -> True, SUNNToCACF -> False] &;
   Do[If[MemberQ[vec, all[[i]]],
-     sq = Which[all[[i]] === "gamma", DoPolarizationSums[sq, mom[[i]], 0],
-       all[[i]] === "g", DoPolarizationSums[sq, mom[[i]],
+     sq = Which[all[[i]] === "gamma" && Count[ms[[Flatten[Position[all, "gamma" | "g"]]]], 0] < 2, DoPolarizationSums[sq, mom[[i]], 0],
+       all[[i]] === "g" || all[[i]] === "gamma", DoPolarizationSums[sq, mom[[i]],
           First[Select[Delete[Range[n], i], ms[[#]] === 0 &] /. {} -> {Mod[i, n] + 1}] /. j_Integer :> mom[[j]]],
        True, DoPolarizationSums[sq, mom[[i]]]]], {i, n}];
   sq = sq // FCE // DiracSimplify // SUNSimplify[#, SUNNToCACF -> False] & // ExpandScalarProduct;

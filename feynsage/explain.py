@@ -30,6 +30,7 @@ def explainable(f):
 
     @functools.wraps(f)
     def wrapper(*args, explain=False, **kw):
+        """Print f's description when explain=True, then call f with args and kw and return its result."""
         if explain:
             info(f)
         return f(*args, **kw)

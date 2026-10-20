@@ -66,10 +66,11 @@ class _Num:
         self.d = S.EPS
 
     def x(self, v):
+        """An invariant or squared mass as a V pair."""
         return V.of(v)
 
     def f(self, z):
-        """The factor z - i0 for a real z."""
+        """The factor z - i0 for a real z: the number gets -i eps max(1, |z|), the exact side is z."""
         z = V.of(z) if not isinstance(z, V) else z
         return V(z.n - 1j * self.d * max(1, abs(z.n)), z.e)
 
@@ -95,6 +96,7 @@ class _Num:
         return -self.li2c(*[(z, -e) for z, e in fac]) - L * L / 2
 
     def pi2(self):
+        """pi^2 as a V pair."""
         return V(mp.pi ** 2, pi ** 2)
 
     def K(self, z, m, mp_):
@@ -142,28 +144,35 @@ class _Sym:
     """Symbols: LogM for logarithms of -i0 factors and Li2c for continued dilogarithms."""
 
     def x(self, v):
+        """An invariant or squared mass, as a symbol."""
         return SR(v)
 
     def f(self, z):
+        """The factor z - i0: kept as z, the i0 is carried by LogM and Li2c."""
         return SR(z)
 
     def ln(self, *fac):
+        """sum e log(z - i0) over (factor, e) pairs: log(z) when z is surely positive, LogM(z) otherwise."""
         from .pv import LogM
         return sum((e * (log(z) if _positive(z) else LogM(z)) for z, e in fac), SR(0))
 
     def li2c(self, *fac):
+        """The continued dilogarithm Li2(1 - prod z^e) as the symbol Li2c(z1, e1, z2, e2, ...)."""
         args = []
         for z, e in fac:
             args += [SR(z), SR(e)]
         return Li2c(*args)
 
     def pi2(self):
+        """pi^2."""
         return pi ** 2
 
     def K(self, *a):
+        """Not available with symbols: the boxes with K functions need numbers (raises _NeedsNumbers)."""
         raise _NeedsNumbers()
 
     def gamma_pm(self, *a):
+        """Not available with symbols (raises _NeedsNumbers)."""
         raise _NeedsNumbers()
 
 

@@ -17,6 +17,7 @@ def mom(**kw):
 
 
 def add(a, b, cb=1):
+    """a + cb b for momenta as {name: coefficient}; zero coefficients are dropped."""
     out = dict(a)
     for k, v in b.items():
         out[k] = out.get(k, 0) + cb * v
@@ -56,6 +57,7 @@ class Kinematics:
             self.rules[(b, a)] = val
 
     def ext_sp(self, a, b):
+        """The scalar product a.b of two external momenta, as given in the kinematics (KeyError if it was not given)."""
         if (a, b) not in self.rules:
             raise KeyError("scalar product %s.%s not given" % (a, b))
         return self.rules[(a, b)]

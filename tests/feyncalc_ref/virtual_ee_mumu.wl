@@ -28,6 +28,17 @@ Print["p4 left: ", !FreeQ[x, p4]];
 Print["spin sum done ", Round[AbsoluteTime[] - t0]];
 x = TID[x, l, ToPaVe -> True];
 Print["TID done ", Round[AbsoluteTime[] - t0]];
+TAG = "ee_mumu_" <> which;
+If[Environment["SYMBOLIC"] === "1",
+  (* the reduction itself, exact in D: coefficients times A0, B0, C0, D0 (squared masses), written for
+     tests/test_feyncalc_loop.sage, which compares it term by term with feynsage's virtual(masters=True) *)
+  Module[{y = FeynAmpDenominatorExplicit[x] // ExpandScalarProduct, f = "pave_" <> TAG <> ".m"},
+   y = y /. {SMP["m_e"] -> ME, SMP["m_mu"] -> MM, SMP["m_tau"] -> ML, SMP["e"] -> EL, SMP["m_H"] -> MH, SMP["m_b"] -> MB,
+      SMP["m_W"] -> MW, SMP["m_Z"] -> MZ, SMP["sin_W"] -> SW, SMP["cos_W"] -> CW, SMP["g_s"] -> GS, SUNN -> 3};
+   Print["heads left: ", Union[Cases[y, h_[___] /; !MemberQ[{Plus, Times, Power, Complex, Rational, A0, B0, C0, D0}, h] :> h, Infinity]]];
+   WriteString[f, ToString[y, InputForm]]; Close[f];
+   Print["SYMBOLIC written ", f, "  ", Round[AbsoluteTime[] - t0], " s"]];
+  Exit[]];
 x = If[which === "vertex", PaXEvaluate[x, PaXImplicitPrefactor -> 1], PaXEvaluate[x, PaXImplicitPrefactor -> 1, PaXC0Expand -> True, PaXD0Expand -> True]];
 x = FeynAmpDenominatorExplicit[x] // ExpandScalarProduct;
 Print["PaX done ", Round[AbsoluteTime[] - t0]];

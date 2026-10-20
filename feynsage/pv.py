@@ -152,6 +152,11 @@ def _c0_evalf(self, *args, parent=None, algorithm=None):
         v = c0_value(*_exact_args(args), full=True)
     except ZeroDivisionError:
         v = c0_numeric(*[float(a) for a in args])
+    except ArithmeticError as e:                    # the closed form failed its own check: say so, then integrate
+        import warnings
+        warnings.warn("C0: the closed form failed (%s); the value comes from numerical integration (about 6 digits)"
+                      % e)
+        v = c0_numeric(*[float(a) for a in args])
     return _to_parent(v, parent)
 
 
@@ -162,6 +167,11 @@ def _d0_evalf(self, *args, parent=None, algorithm=None):
     try:
         v = d0_value(*_exact_args(args), full=True)
     except ZeroDivisionError:
+        v = d0_numeric(*[float(a) for a in args])
+    except ArithmeticError as e:                    # the closed form failed its own check: say so, then integrate
+        import warnings
+        warnings.warn("D0: the closed form failed (%s); the value comes from numerical integration (about 6 digits)"
+                      % e)
         v = d0_numeric(*[float(a) for a in args])
     return _to_parent(v, parent)
 
@@ -552,9 +562,11 @@ class Kin:
         self.sp = {k: self.to_K(v) for k, v in raw.items()}
 
     def to_K(self, x):
+        """x (an expression or a string) as an element of the field K = Q(d, invariants, masses)."""
         return self.K(str(sr(x)))
 
     def dot(self, u, v):
+        """The scalar product of two momenta given as {name: coefficient} (e.g. {'p1': 1, 'p2': -1}), in K."""
         K = self.K
         return sum((K(cu) * K(cv) * self.sp[tuple(sorted((a, b)))] for a, cu in u.items() for b, cv in v.items()), K(0))
 
@@ -657,6 +669,8 @@ def _simplex_integral(groups, n, Msq, sfun, N, k):
     if len(groups) == 1:
         Kd = N - 1 + sum(n)
 
+        # the j-th derivative of f(z) = z^(s + Kd)/((s + 1)...(s + Kd)); the integral is the divided difference
+        # of f over the squared masses, and a repeated mass needs the derivatives of f
         def deriv(j, z):
             if z.is_trivial_zero():
                 return sr(0)                 # 0^(c - eps) = 0 in dimensional regularisation
@@ -705,6 +719,7 @@ def _simplex_integral(groups, n, Msq, sfun, N, k):
         if min(vals) <= 0 or roots:
             raise ZeroDivisionError("vanishing Gram determinant above threshold (Delta changes sign): "
                                     "not covered; move the kinematics slightly")
+    from .integrators import integrate_checked, IntegrationError
     s0 = 2 + k - N
     L = log(Delta)
     out = sr(0)
@@ -712,10 +727,10 @@ def _simplex_integral(groups, n, Msq, sfun, N, k):
     for j in range(jmax + 1):
         integrand = (y ** a * (1 - y) ** b * Delta ** s0 * (-L) ** j / factorial(j)).expand()
         try:
-            val = integrate(integrand, y, 0, 1)
-        except ValueError:                           # Maxima asks for the sign of a symbolic combination
-            raise ZeroDivisionError("vanishing Gram determinant: the Feynman-parameter integral needs the "
-                                    "sign of a symbolic combination; give numbers")
+            val = integrate_checked(integrand, y, 0, 1)
+        except IntegrationError:                     # e.g. the answer needs the sign of a symbolic combination
+            raise ZeroDivisionError("vanishing Gram determinant: no integrator gave a checked answer for the "
+                                    "Feynman-parameter integral; give numbers")
         out += val * eps ** j
     return weight * out
 
@@ -739,13 +754,18 @@ class _Engine:
         self.use_pv = True                           # False: projection only (kept as a check)
 
     def dot(self, u, v):
+        """u.v for momenta as {name: coefficient}, from the kinematics."""
         return self.kin.dot(u, v)
 
     def msq(self, m):
+        """The squared mass m^2 in K."""
         return self.K(m) ** 2
 
     # masters ----------------------------------------------------------------
     def master(self, props):
+        """The scalar integral of the propagators props = [(momentum, mass), ...] as {master key: coefficient}:
+        ('A', m), ('B', p^2, m1, m2), ('C', ...), ('D', ...) in Package-X order; scaleless integrals give {},
+        a propagator that appears twice goes through weighted() and five propagators through pentagon()."""
         if len({_key(q) for q, _ in props}) == 1 and all(self.msq(m) == 0 for _, m in props):
             return {}                                # massless tadpole (any power): scaleless, zero
         groups = {}
@@ -908,6 +928,8 @@ class _Engine:
 
     # span of the momenta ---------------------------------------------------------
     def span_coeffs(self, props, v):
+        """The rational c_i with v = sum_i c_i q_i, q_i the momenta of props[1:] (props[0] carries q = 0);
+        None if v is not in their span."""
         Q = [p[0] for p in props[1:]]
         if not v:
             return [0] * len(Q)
@@ -1001,6 +1023,8 @@ class _Engine:
         return labs
 
     def structures(self, props, r):
+        """The tensor structures of a rank-r integral: (k, ms) means k metric tensors times the momenta of the
+        propagators labelled ms (only linearly independent momenta), symmetrised over the r indices."""
         labs = self.independent(props)
         return [(k, ms) for k in range(r // 2 + 1)
                 for ms in itertools.combinations_with_replacement(labs, r - 2 * k)]
@@ -1036,6 +1060,8 @@ class _Engine:
         return res
 
     def terms_of(self, struct, r):
+        """The distinct ways to put the r indices on one structure (k, ms): a list of factor lists, each factor
+        ('g', i, j) for g^{mu_i mu_j} or ('q', label, i) for q_label^{mu_i}."""
         key = ('terms', struct, r)
         if key in self.cache:
             return self.cache[key]
@@ -1052,6 +1078,8 @@ class _Engine:
         return out
 
     def contract_terms(self, t1, t2, props):
+        """The full contraction of two index placements t1 and t2 (from terms_of) in d dimensions, in K:
+        closed chains of metrics give d, open chains the scalar products of their end momenta."""
         slots = {}
         for side, t in ((0, t1), (1, t2)):
             for fi, f in enumerate(t):
@@ -1214,6 +1242,9 @@ class _Engine:
         return res
 
     def tensor(self, props, r):
+        """The rank-r tensor integral Int l^mu1 ... l^mur / prod D_i as {structure: {master: coefficient}}:
+        Passarino-Veltman recursion when the Gram matrix is invertible, Feynman parameters for a light-like
+        two-point function, otherwise projection on the structures with their Gram matrix (cached)."""
         key = ('T', tuple((_key(q), m) for q, m in props), r)
         if key in self.cache:
             return self.cache[key]
@@ -1304,8 +1335,8 @@ class _Engine:
             k, ms = struct
             poly = prod([lam[lab] for lab in ms], X(1))
             F = sr(0)
-            for coef, mon in zip(poly.coefficients(), poly.monomials()):
-                n = list(mon.exponents()[0])
+            for ex, coef in poly.dict().items():                 # not zip(coefficients, monomials):
+                n = list(ex) if hasattr(ex, '__iter__') else [ex]  # their orders differ in one variable
                 F += coef * _simplex_integral(groups, n, Msq, lambda i, j: -e * _SR(sij(i, j)), N, k)
             pref = (-1) ** len(ms) / prod([(4 - 2 * eps) + 2 * i for i in range(k)], sr(1))
             dh = 2 - eps
@@ -1321,6 +1352,8 @@ class _Engine:
         return res
 
     def contract_tensor(self, T, lv, props):
+        """The tensor integral T (from tensor()) contracted with the vectors lv: l.v_1 ... l.v_r becomes
+        sum over structures and their index placements of products of scalar products, as {master: coefficient}."""
         r = len(lv)
         total = {}
         for struct, coef in T.items():
@@ -1444,6 +1477,88 @@ def _masters_view(dct, euclidean):
     return total
 
 
+# ---------------------------------------------------------------------------- canonical masters
+# The scalar integrals as inert functions of the invariants and the SQUARED masses, Package-X order:
+#   PaVeA0(m^2), PaVeB0(p^2; m0^2, m1^2), PaVeC0(s1, s12, s2; m0^2, m1^2, m2^2),
+#   PaVeD0(s1, s2, s3, s4, s12, s23; m0^2, m1^2, m2^2, m3^2)
+# in one canonical form, so that two programs' reductions can be compared term by term, exactly in d.
+def _pave_latex(name):
+    from sage.all import latex
+    return lambda self, *args: r'%s\left(%s\right)' % (name, ', '.join(str(latex(a)) for a in args))
+
+
+PaVeA0 = function('PaVeA0', nargs=1, print_latex_func=_pave_latex('A_0'))
+PaVeB0 = function('PaVeB0', nargs=3, print_latex_func=_pave_latex('B_0'))
+PaVeC0 = function('PaVeC0', nargs=6, print_latex_func=_pave_latex('C_0'))
+PaVeD0 = function('PaVeD0', nargs=10, print_latex_func=_pave_latex('D_0'))
+# the pairs (i, j) of propagators that each Package-X invariant sits between
+_PAIRS = {2: [(0, 1)], 3: [(0, 1), (1, 2), (0, 2)], 4: [(0, 1), (1, 2), (2, 3), (0, 3), (0, 2), (1, 3)]}
+
+
+def pave(kind, args):
+    """The scalar integral kind ('A', 'B', 'C', 'D') with Package-X-ordered arguments (invariants, then squared
+    masses) in canonical form.  An n-point scalar integral depends only on its n propagator masses and on the
+    invariants (q_i - q_j)^2 between pairs of propagators, so every relabelling of the propagators gives the same
+    integral; the canonical form is the smallest of the n! relabellings.  Degenerate bubbles are written with A0,
+    exactly in d dimensions:
+        B0(0; a, b) = (A0(a) - A0(b))/(a - b),   B0(0; 0, a) = A0(a)/a,   B0(0; a, a) = (d - 2)/(2a) A0(a),
+        B0(a; 0, a) = (d - 2)/(2 (d - 3) a) A0(a)   (on shell, from integration by parts),
+    and scaleless integrals vanish."""
+    a = [sr(x).expand() for x in args]
+    z = lambda x: sr(x).expand().is_trivial_zero()
+    if kind == 'A':
+        return sr(0) if z(a[0]) else PaVeA0(a[0])
+    n = {'B': 2, 'C': 3, 'D': 4}[kind]
+    pairs = _PAIRS[n]
+    inv = dict(zip(pairs, a[:len(pairs)]))
+    msq = a[len(pairs):]
+    if kind == 'B':
+        p2, m0, m1 = inv[(0, 1)], msq[0], msq[1]
+        if z(p2):
+            if z(m0) and z(m1):
+                return sr(0)
+            if z(m0) or z(m1):
+                m = m1 if z(m0) else m0
+                return PaVeA0(m) / m
+            if z(m0 - m1):
+                return (Dim - 2) / (2 * m0) * PaVeA0(m0)
+            return (PaVeA0(m0) - PaVeA0(m1)) / (m0 - m1)
+        for x, y in ((m0, m1), (m1, m0)):
+            if z(x) and z(p2 - y):
+                return (Dim - 2) / (2 * (Dim - 3) * y) * PaVeA0(y)
+    if all(z(x) for x in a):
+        return sr(0)
+    best = None
+    for perm in itertools.permutations(range(n)):
+        # the invariant between propagators i and j after the relabelling perm
+        def pinv(i, j):
+            i, j = perm[i], perm[j]
+            return inv[(min(i, j), max(i, j))]
+        cand = [pinv(i, j) for i, j in pairs] + [msq[perm[i]] for i in range(n)]
+        key = tuple(str(x) for x in cand)
+        if best is None or key < best[0]:
+            best = (key, cand)
+    f = {'B': PaVeB0, 'C': PaVeC0, 'D': PaVeD0}[kind]
+    return f(*best[1])
+
+
+def _masters_canonical(dct):
+    """sum_M c_M(d) M with the masters in the canonical form of pave() (exact in d, nothing expanded; a 4 - 2 eps
+    from the Dirac algebra in the numerator is written in d too)."""
+    total = sr(0)
+    for key, c in dct.items():
+        c = _SR(c).subs({eps: (4 - Dim) / 2})
+        k = key[0]
+        if k == 'X':                                  # vanishing Gram determinant: already a final value
+            total += c * _XREG[key[1]][0]
+            continue
+        n = {'A': 1, 'B': 2, 'C': 3, 'D': 4}[k]
+        vals = [_SR(x) for x in key[1:]]
+        ninv = len(vals) - n
+        total += c * pave(k, vals[:ninv] + [m ** 2 for m in vals[ninv:]])
+    return total
+
+
 # ---------------------------------------------------------------------------- results
 class LoopResult:
     """What loop() returns.  Print it, or use .coefficients(), .masters(), .info()."""
@@ -1465,6 +1580,7 @@ class LoopResult:
         return {st: _disc_dict(dct, self.K, s, t) for st, dct in self.raw}
 
     def coefficients(self):
+        """{tensor structure: expression in eps}, the structures as strings, e.g. {'1': ...} or {'p^mu': ...}."""
         return dict(self.parts)
 
     def __getitem__(self, structure):
@@ -1473,11 +1589,16 @@ class LoopResult:
     def __iter__(self):
         return iter(self.parts)
 
-    def masters(self):
-        """The same result before the eps expansion: exact coefficients in d times the masters."""
+    def masters(self, canonical=False):
+        """The same result before the eps expansion: exact coefficients in d times the masters.
+        canonical=True: the masters as PaVeA0, PaVeB0, PaVeC0, PaVeD0 of squared masses in the canonical form of
+        pave() (the form to compare with FeynCalc's TID or Package-X's LoopRefine before the eps expansion)."""
+        if canonical:
+            return {st: _masters_canonical(dct) for st, dct in self.raw}
         return dict(self.master_parts)
 
     def info(self):
+        """Print what the result means: the normalisation of the integral and the functions in it."""
         print(self.description)
 
     def _repr_latex_(self):

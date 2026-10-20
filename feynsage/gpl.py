@@ -41,13 +41,16 @@ class GPL:
 
     @staticmethod
     def const(c):
+        """The constant c (empty words in x and y)."""
         return GPL({((), ()): c})
 
     @staticmethod
     def word(wx=(), wy=(), c=1):
+        """One term c G(wx; x) G(wy; y); wx, wy are tuples of letters, e.g. GPL.word((0, 1), (), 2) = 2 G(0, 1; x)."""
         return GPL({(tuple(wx), tuple(wy)): c})
 
     def items(self):
+        """The terms as a list of ((wx, wy), c)."""
         return [(k, c) for k, c in self.t.values()]
 
     def __add__(self, other):
@@ -70,6 +73,7 @@ class GPL:
     __mul__ = __rmul__
 
     def is_zero(self):
+        """True if no term is left (the coefficients are simplified as terms are added)."""
         return not self.t
 
     def prepend_x(self, a):
@@ -82,6 +86,8 @@ class GPL:
         return out
 
     def prepend_y(self, a):
+        """Int_0^y dt/(t - a) of this function at fixed x: the letter a goes in front of every y word
+        (the x words do not depend on y)."""
         out = GPL()
         for (wx, wy), c in self.items():
             out._add((wx, (SR(a),) + wy), c)

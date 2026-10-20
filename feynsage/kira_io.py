@@ -31,6 +31,11 @@ def _top_level_split(text):
 
 
 def read_kira(path, family_name=None):
+    """Read a single-family Kira reduction table from path in Mathematica .m syntax.
+    Return {index tuple: Sage expression in master integrals}, turning F[a,b]
+    into the symbolic function F(a,b). family_name optionally replaces the
+    family name in the expressions. Rational coefficients are kept exact.
+    Example: read_kira("kira_targets.m", family_name="F")."""
     text = open(path).read()
     text = text.strip().lstrip('{').rstrip('}')
     out = {}

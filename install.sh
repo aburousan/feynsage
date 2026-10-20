@@ -5,15 +5,20 @@
 #   ./install.sh            install (and install FORM / SageMath if they are missing)
 #   ./install.sh --test     install, then run the test suite
 #   ./install.sh --no-deps  install feynsage only, do not touch FORM or SageMath
+#   ./install.sh --with-fricas   also install FriCAS, the strongest free integrator (optional, a long build
+#                                when Sage has to compile it)
+#   ./install.sh --with-wolfram  explain how to add the free Wolfram Engine as an integrator (optional)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RUN_TESTS=0; DEPS=1
+RUN_TESTS=0; DEPS=1; FRICAS=0; WOLFRAM=0
 for a in "$@"; do
   case "$a" in
     --test) RUN_TESTS=1 ;;
     --no-deps) DEPS=0 ;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    --with-fricas) FRICAS=1 ;;
+    --with-wolfram) WOLFRAM=1 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
   esac
 done
 
@@ -96,6 +101,47 @@ else
   [ "$PLATFORM" = mac ] && warn "install one with: xcode-select --install"
 fi
 
+# ------------------------------------------------------------------ integrators (optional)
+# feynsage works with the integrators that come with every Sage (Maxima, SymPy, Giac) and checks every
+# answer numerically.  A stronger integrator only makes more integrals come out in closed form.
+if [ "$FRICAS" = 1 ]; then
+  if "$SAGE" -c "from sage.features.fricas import FriCAS; import sys; sys.exit(0 if FriCAS().is_present() else 1)" 2>/dev/null; then
+    say "FriCAS: already installed"
+  else
+    CONDA="$(command -v mamba || command -v conda || true)"
+    case "$SAGE" in
+      */envs/*) ENVDIR="${SAGE%/bin/sage}" ;;
+      *) ENVDIR="" ;;
+    esac
+    if [ -n "$CONDA" ] && [ -n "$ENVDIR" ]; then
+      say "installing FriCAS from conda-forge into $ENVDIR"
+      "$CONDA" install -y -p "$ENVDIR" -c conda-forge fricas || warn "conda could not install FriCAS"
+      # conda-forge's FriCAS core is built with one sbcl; a newer sbcl then stops it with "GC strategy mismatch"
+      if ! echo ")quit" | "$ENVDIR/bin/fricas" -nosman >/dev/null 2>&1; then
+        want="$("$ENVDIR/bin/fricas" --version 2>/dev/null | sed -n 's/.*based on sbcl \([0-9.]*\).*/\1/p' | head -1)"
+        if [ -n "$want" ]; then
+          say "FriCAS was built with sbcl $want: installing that version"
+          "$CONDA" install -y -p "$ENVDIR" -c conda-forge "sbcl=$want" || warn "could not install sbcl $want"
+        fi
+      fi
+    else
+      say "installing FriCAS with sage -i (it may be compiled from source: this can take a long time)"
+      "$SAGE" -i fricas || warn "sage -i fricas failed; FriCAS stays optional"
+    fi
+  fi
+fi
+if [ "$WOLFRAM" = 1 ]; then
+  if command -v wolframscript >/dev/null 2>&1 || command -v math >/dev/null 2>&1 || command -v WolframKernel >/dev/null 2>&1 \
+     || [ -x /Applications/Wolfram.app/Contents/MacOS/WolframKernel ] || [ -x "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel" ]; then
+    say "a Wolfram kernel is installed: feynsage will use it as the first integrator"
+  else
+    say "the Wolfram Engine is free for personal and developer use but needs a Wolfram account, so it is not installed here:"
+    echo "      1. download it from https://www.wolfram.com/engine/ and install it"
+    echo "      2. run: wolframscript -activate   (sign in once)"
+    echo "      3. if feynsage does not find the kernel, set FEYNSAGE_WOLFRAM to the path of WolframKernel"
+  fi
+fi
+
 # ------------------------------------------------------------------ feynsage itself
 say "installing feynsage into Sage's Python"
 PREFIX="$("$SAGE" -python -c 'import sys; print(sys.prefix)')"
@@ -111,6 +157,7 @@ import feynsage, feynsage.ff as ff, shutil
 print('feynsage from', feynsage.__file__)
 print('compiled kernel:', 'yes' if ff._clib() is not None else 'no (pure Python fallback)')
 print('FORM:', feynsage.form.FORM if shutil.which('form') or __import__('os').path.exists(feynsage.form.FORM) else 'not found')
+print('integrators, in the order they are tried:', ', '.join(feynsage.available_integrators()))
 " )
 
 if [ "$RUN_TESTS" = 1 ]; then
@@ -120,4 +167,4 @@ if [ "$RUN_TESTS" = 1 ]; then
     echo "--- $t"; "$SAGE" "$t" | tail -3
   done
 fi
-say "done. Try the notebook: examples/feynsage_walkthrough.ipynb (SageMath kernel)"
+say "done. Start with the notebook examples/00_start_here.ipynb (SageMath kernel)"

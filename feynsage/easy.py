@@ -26,10 +26,12 @@ from ._parse import sr
 
 # ---------------------------------------------------------------------------- parsing helpers
 def _names(text):
+    """Return the set of identifier names found in the string form of text."""
     return set(re.findall(r'[A-Za-z_]\w*', str(text)))
 
 
 def _mom(text, names):
+    """Read a linear momentum expression text as a dict of rational coefficients for names."""
     e = sr(str(text))
     out = {}
     for n in names:
@@ -40,6 +42,7 @@ def _mom(text, names):
 
 
 def _kin_pairs(kin):
+    """Convert kin keys such as "p^2" and "p.q" to name pairs with symbolic values."""
     out = {}
     for key, val in (kin or {}).items():
         k = key.replace(' ', '')
@@ -67,6 +70,9 @@ class Family(IntegralFamily):
     """An IntegralFamily built by family(); it remembers how it was written."""
 
     def info(self):
+        """Print the family name, loop and external momenta, metric and propagators.
+        Also print the definition with powers D_i^(-a_i), including the numerator
+        convention. Returns None, e.g. family([("l", "m")]).info()."""
         print("Integral family %r" % self.name)
         print("  loop momenta: %s   external momenta: %s   %s metric"
               % (", ".join(self.loops), ", ".join(self.kin.externals) or "none",
@@ -96,11 +102,13 @@ class Family(IntegralFamily):
         return out
 
     def _ibp_symbolic(self):
+        """Return IBP equations with symbolic powers a1, ..., at as Sage symbolic equalities."""
         from .ff import ibp_templates
         gens = [SR(str(g)) for g in self.kin.R.gens()]
         avars = [SR.var('a%d' % (i + 1)) for i in range(self.t)]
 
         def poly(dct):
+            """Convert an exponent-tuple coefficient dict to a symbolic polynomial in the kinematic generators."""
             tot = SR(0)
             for exps, c in dct.items():
                 term = SR(c)
@@ -226,11 +234,10 @@ def symmetries(fam):
     xs = [('x', i) for i in range(t)]
     gr.add_vertices(xs)
     colours = {}
-    for j, (c, m) in enumerate(zip(G.coefficients(), G.monomials())):
-        v = ('m', j)
+    for j, (exps, c) in enumerate(G.dict().items()):       # (coefficients() and monomials() differ in order
+        v = ('m', j)                                        # for one variable, so not zipped)
         gr.add_vertex(v)
         colours.setdefault(str(c), []).append(v)
-        exps = m.exponents()[0]
         for i, e in enumerate(exps if hasattr(exps, '__iter__') else (exps,)):   # one line: an int
             if e:
                 gr.add_edge(v, ('x', i), e)
@@ -267,6 +274,9 @@ class Reduction:
     """What ibp_reduce() returns: {target: {master: coefficient}} with printing and .info()."""
 
     def __init__(self, table, masters, method, seconds, fam):
+        """Store table = {target: {master: coefficient}}, cancelling common coefficient factors.
+        masters lists the master index tuples, method names the reducer, seconds is
+        the elapsed time in seconds and fam is the integral family."""
         table = {t: {m: _tidy_coefficient(c) for m, c in row.items()} for t, row in table.items()}
         self.table, self.masters, self.method, self.seconds, self.fam = table, masters, method, seconds, fam
 
@@ -288,6 +298,9 @@ class Reduction:
         return draw_reduction(self.table, graph, targets=targets, rename=rename, size=size, fontsize=fontsize)
 
     def info(self):
+        """Print the number of reduced targets, family name, method and elapsed seconds.
+        Explain the sum over masters and list their labels, with d the space-time
+        dimension. Returns None, e.g. ibp_reduce(fam, [(2, 1)]).info()."""
         print("Reduction of %d integrals of family %r with the %s reducer (%.1f s)."
               % (len(self.table), self.fam.name, self.method, self.seconds))
         print("Each target %s is written as sum_M c_M(d, invariants) M over the master integrals"
@@ -295,6 +308,7 @@ class Reduction:
         print("M = %s; d is the space-time dimension." % ", ".join(self._lab(m) for m in self.masters))
 
     def _repr_latex_(self):
+        """Return the reduction equations as an aligned LaTeX string enclosed in display-math delimiters."""
         from sage.all import latex
         rows = []
         for t, row in self.table.items():
@@ -312,10 +326,12 @@ class Reduction:
         return r'$$\begin{aligned} %s \end{aligned}$$' % r' \\[6pt] '.join(rows)
 
     def _latex_(self):
+        """Return the aligned reduction equations in LaTeX without display-math delimiters for Sage."""
         # used by Sage's latex() and by %display latex in notebooks
         return self._repr_latex_()[2:-2]
 
     def __repr__(self):
+        """Return one text equation per target, with factored coefficients multiplying master labels."""
         lines = []
         for t, row in self.table.items():
             terms = ["[%s] %s" % (c.factor() if hasattr(c, 'factor') else c, self._lab(m)) for m, c in row.items()]

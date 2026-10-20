@@ -33,6 +33,9 @@ class IBPSystem:
     """All identities of a Reducer's seeds, with polynomial coefficients."""
 
     def __init__(self, reducer, rmax, smax=0):
+        """Build polynomial IBP rows from reducer with at most rmax dots and smax numerator powers.
+        Include enabled symmetry identities. The family may have d and at most one
+        other symbolic invariant. Columns are ordered from hardest to simplest integral."""
         import numpy as np
         self.red = reducer
         fam = reducer.fam
@@ -257,6 +260,7 @@ class IBPSystem:
         memo = {}
 
         def solve(j):                             # integral j in terms of non-pivot columns
+            """Return pivot column j in terms of non-pivot columns modulo p, caching the result."""
             if j in memo:
                 return memo[j]
             out = {}
@@ -309,6 +313,7 @@ def ibp_templates(fam):
             terms = {}                         # shift -> [c0, c_1..c_t] in K
 
             def put(shift, which, c):
+                """Add c at shift to the constant slot (which=0) or the coefficient of a_which."""
                 row = terms.setdefault(tuple(shift), [K(0)] * (t + 1))
                 row[which] += c
             if vname == lr:
@@ -351,6 +356,7 @@ def _as_dict(poly):
 
 
 def _mono_mod(e, pt, p):
+    """Evaluate the monomial with exponent tuple e at the coordinate sequence pt modulo prime p."""
     t = 1
     for x, k in zip(pt, e):
         t = t * pow(x, k, p) % p
@@ -358,6 +364,7 @@ def _mono_mod(e, pt, p):
 
 
 def _eval_mod(terms, pt, p):
+    """Evaluate terms given as (coefficient, exponent tuple) pairs at pt modulo prime p."""
     s = 0
     for c, e in terms:
         t = c % p
@@ -406,9 +413,13 @@ class Thiele:
     """Incremental Thiele (continued-fraction) interpolation of a rational function."""
 
     def __init__(self, F):
+        """Start an empty continued-fraction interpolant over the finite field F."""
         self.F, self.xs, self.a = F, [], []
 
     def value(self, x):
+        """Evaluate the current continued fraction at the field element x.
+        At least one sample must have been added. Return a field value or None if a
+        zero intermediate denominator prevents evaluation."""
         v = self.a[-1]
         for k in range(len(self.a) - 2, -1, -1):
             if v == 0:
@@ -417,6 +428,9 @@ class Thiele:
         return v
 
     def add(self, x, y):
+        """Append the field-valued sample (x, y) to the Thiele continued fraction.
+        Return True on success. If a reciprocal difference would divide by zero,
+        return False and leave the stored samples and coefficients unchanged."""
         r = y
         for xk, ak in zip(self.xs, self.a):
             if r == ak:
@@ -442,10 +456,15 @@ class _Recon:
     """Reconstruct many univariate rational functions from shared samples."""
 
     def __init__(self, F, agree=2):
+        """Start keyed interpolants over F, requiring agree successive matching samples for each key."""
         self.F, self.agree = F, agree
         self.T, self.ok = {}, {}
 
     def feed(self, x, vals):
+        """Update interpolants with vals = {key: field value} at the field point x.
+        Count successive matches with each current interpolant and reset the count
+        on a mismatch before trying to add the point. Keys already at agree matches
+        are skipped. Missing keys are untouched and the method returns None."""
         for key, y in vals.items():
             T = self.T.setdefault(key, Thiele(self.F))
             if not T.a:
@@ -460,6 +479,8 @@ class _Recon:
                 T.add(x, y)
 
     def done(self, keys):
+        """Return whether every key in keys has at least agree successive matching samples.
+        An unseen key has count zero. An empty collection of keys returns True."""
         return all(self.ok.get(k, 0) >= self.agree for k in keys)
 
 
@@ -488,12 +509,14 @@ _POOL_SYS = None
 
 
 def _pool_sample(args):
+    """Return a sample from the worker's IBP system for args = (targets, prime, point)."""
     targets, p, point = args
     return _POOL_SYS.sample(targets, p, point)
 
 
 # ---------------------------------------------------------------------- driver
 def _primes(start=2**62):
+    """Yield descending primes strictly below start."""
     p = start
     while True:
         p = previous_prime(p)
@@ -687,6 +710,8 @@ def _lift(residues, R, K):
         M = prod(p for p, _, _ in forms)
 
         def lift(mon, which):
+            """Reconstruct mon's rational coefficient by CRT, with which=1 for numerator or 2 for denominator.
+            Return None if rational reconstruction from the available primes fails."""
             res = [int(f[which].dict().get(mon, 0)) for f in forms]
             ps = [f[0] for f in forms]
             c = crt(res, ps)

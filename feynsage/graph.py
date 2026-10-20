@@ -23,8 +23,17 @@ from .momenta import add
 
 
 class FeynmanGraph:
+    """A Feynman graph for Symanzik polynomials and loop-momentum routing.
+    lines is an ordered list of (vertex, vertex, mass^2) internal edges, allowing
+    parallel edges and self-loops. externals maps vertices to incoming momentum
+    dicts whose sum must vanish. kinematics supplies external scalar products
+    and the Minkowski or Euclidean convention. Parameters x1, x2, ... follow
+    the line order. U() and F() return the graph polynomials."""
 
     def __init__(self, lines, externals, kinematics):
+        """Store internal lines, incoming external momenta and the Kinematics object.
+        Create one Feynman parameter per line and raise ValueError if the external
+        momenta do not sum to zero. Line masses are supplied as squared masses."""
         self.lines = [(u, v, m2) for (u, v, m2) in lines]
         self.ext = {k: dict(v) for k, v in externals.items()}
         self.kin = kinematics
@@ -46,6 +55,7 @@ class FeynmanGraph:
 
     # ------------------------------------------------------------------ graph theory
     def _graph(self, keep):
+        """Return a Sage multigraph with all vertices and the zero-based line indices in keep."""
         G = Graph(multiedges=True, loops=True)
         G.add_vertices(self.vertices)
         for i in keep:
@@ -54,6 +64,7 @@ class FeynmanGraph:
         return G
 
     def _is_forest(self, G):
+        """Return whether the Sage multigraph G has no cycles, including loops or parallel-edge cycles."""
         # a multigraph is a forest iff edges = vertices - components (no cycles, no multi-edges used twice)
         return G.size() == G.order() - len(G.connected_components())
 
@@ -143,6 +154,7 @@ class FeynmanGraph:
         parent = {v: v for v in self.vertices}
 
         def find(v):
+            """Find the representative of vertex v after contractions, shortening parent paths."""
             while parent[v] != v:
                 parent[v] = parent[parent[v]]
                 v = parent[v]

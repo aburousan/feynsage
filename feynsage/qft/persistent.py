@@ -30,9 +30,13 @@ _END = 'FSJOBEND'
 
 
 class PersistentForm:
+    """Run FORM jobs through pipes to a process kept alive between calls.
+    Start FORM on the first job and use SubprocessBackend if pipe startup fails or threads > 1.
+    Call close() to stop the owned process and release its pipes."""
     name = 'persistent'
 
     def __init__(self):
+        """Write the pipe initialisation program and register cleanup without starting FORM yet."""
         self.proc = None
         self._broken = False
         self._sub = SubprocessBackend()
@@ -44,6 +48,7 @@ class PersistentForm:
 
     # -- process
     def _start(self):
+        """Start FORM and complete the external-channel handshake over two pipes."""
         r_child, w_parent = os.pipe()
         r_parent, w_child = os.pipe()
         self.proc = subprocess.Popen([_form.FORM, '-q', '-pipe', '%d,%d' % (r_child, w_child), self._init],
@@ -61,11 +66,14 @@ class PersistentForm:
         os.write(self.w, ('#prompt %s\n#-\n' % _PROMPT).encode())
 
     def _alive(self):
+        """Return whether this process owns a running FORM child, discarding an inherited child reference."""
         if self.proc is not None and getattr(self, 'owner', None) != os.getpid():
             self.proc = None             # a forked child (parallel.pmap): never share the parent's pipes
         return self.proc is not None and self.proc.poll() is None
 
     def close(self):
+        """Stop the FORM child owned by this process and close its pipe descriptors.
+        Do nothing to a parent's FORM child after a fork. Return None."""
         if self.proc is not None and getattr(self, 'owner', None) != os.getpid():
             self.proc = None
             return
@@ -128,6 +136,9 @@ class PersistentForm:
         return '\n'.join(lines)
 
     def run(self, program, threads=1):
+        """Run the FORM source string program and return the printed expression bodies as text.
+        threads > 1 uses the subprocess backend, which chooses tform when available.
+        Retry a failed pipe job once with a fresh process, then raise FormError."""
         if threads and threads > 1:
             return self._sub.run(program, threads)
         if self._broken:

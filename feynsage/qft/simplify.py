@@ -25,10 +25,14 @@ class _Order(_d._Order):
     """The ordering of feynsage.dirac with the tensors of feynsage.qft."""
 
     def __init__(self, left, right, dimv, euclid, names):
+        """Store the spinor endpoint momenta, dimension, metric convention and symbol lookup."""
         super().__init__(left=left, right=right)
         self.dimv, self.euclid, self.names = dimv, euclid, names
 
     def half_anti(self, a, b):
+        """Return half the anticommutator of two gamma slots a and b.
+        Slots are ('i', index name) or ('p', momentum name). Return a metric, component or scalar product.
+        An equal pair of Lorentz indices gives the configured dimension."""
         N = self.names
         if a[0] == 'i' and b[0] == 'i':
             if a[1] == b[1]:

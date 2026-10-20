@@ -15,28 +15,35 @@ _PLAIN = re.compile(r'[A-Za-z][A-Za-z0-9]*$')
 
 
 def _colt():
+    """Return the wildcard pattern for a fundamental colour generator T_color(a, i, j)."""
     from .color import COLT
     return COLT(SR.wild(0), SR.wild(1), SR.wild(2))
 
 
 def _colf():
+    """Return the wildcard pattern for a structure constant f_color(a, b, c)."""
     from .color import COLF
     return COLF(SR.wild(0), SR.wild(1), SR.wild(2))
 
 
 class CompileError(TypeError):
+    """A Sage expression or convention cannot be translated into the supported FORM syntax."""
     pass
 
 
 def _opname(e):
+    """Return the Sage expression's operator name, or None for an atom."""
     op = e.operator()
     return None if op is None else getattr(op, '__name__', str(op))
 
 
 class Program:
-    """Names and declarations of one FORM run."""
+    """Translate Sage tensors and Dirac factors to FORM text while keeping a map back to Sage.
+    dim is 4 or a symbolic dimension. euclidean=False selects the Minkowski tensor convention.
+    Names, declarations and opaque scalar placeholders belong to this one calculation."""
 
     def __init__(self, dim=4, euclidean=False):
+        """Set the metric convention and dimension and initialise the FORM name maps."""
         self.euclidean = bool(euclidean)
         self.has_eps = False
         self.has_color = False
@@ -57,6 +64,9 @@ class Program:
 
     # -- names
     def name(self, kind, x):
+        """Return a unique FORM name for the Sage object x of the given kind.
+        kind is symbol, vector, index, adjoint or fundamental. Record the reverse map for the parser.
+        Repeated requests for the same kind and printed Sage name reuse the name."""
         key = (kind, str(x))
         n = self.form_of.get(key)
         if n is not None:
@@ -73,6 +83,8 @@ class Program:
         return s
 
     def opaque(self, e):
+        """Return a FORM symbol standing for the whole Sage expression e.
+        Expressions with the same printed text share a placeholder and the parser restores e."""
         k = str(e)
         n = self.opaque_keys.get(k)
         if n is None:
@@ -87,6 +99,8 @@ class Program:
         return n
 
     def declarations(self):
+        """Return FORM declarations for all names and opaque scalars registered so far.
+        Include the dimension and colour declarations required by this calculation."""
         groups = {'symbol': [], 'vector': [], 'index': [], 'adjoint': [], 'fundamental': []}
         for (kind, _), n in self.form_of.items():
             groups[kind].append(n)
@@ -122,9 +136,13 @@ class Program:
         raise CompileError("%s is neither a Lorentz index nor a momentum (declare it with lorentz_indices or momenta)" % x)
 
     def _has_tensor_symbols(self, e):
+        """Return whether e contains a registered momentum or Lorentz-index symbol."""
         return any(T.is_index(v) or T.is_momentum(v) for v in e.variables())
 
     def number(self, e):
+        """Return FORM text for a numeric Sage expression e.
+        Write rational real and imaginary parts explicitly, using i_ for the imaginary unit.
+        Other numeric expressions are stored as opaque scalar symbols."""
         try:
             q = QQ(e)
             return '(%s)' % q if q.denominator() != 1 or q < 0 else str(q)
@@ -159,7 +177,8 @@ class Program:
             b, x = args
             if x.is_integer():
                 n = int(x)
-                if n >= 0 and (b.has(_colt()) or b.has(_colf())):
+                if n >= 0 and (b.has(_colt()) or b.has(_colf()) or any(T.is_index(v) for v in b.variables())):
+                    # written out as a product: FORM contracts d_(a,b)*d_(a,b) but not d_(a,b)^2
                     return '*'.join('(%s)' % self.scalar(b) for _ in range(n)) or '1'   # fresh indices each time
                 if n >= 0:
                     return '(%s)^%d' % (self.scalar(b), n)
@@ -201,6 +220,7 @@ class Program:
         return self.opaque(e)
 
     def _momenta_only_in_dots(self, e):
+        """Check that each momentum occurs inside a dot product or epsilon tensor."""
         op = _opname(e)
         if op is None:
             return not T.is_momentum(e)
@@ -209,6 +229,9 @@ class Program:
         return all(self._momenta_only_in_dots(a) for a in e.operands())
 
     def tensor(self, op, args):
+        """Return FORM text for tensor type op with ordered Sage arguments args.
+        op is dot, comp, g, delta, Eps or eps. Expand linear momentum combinations as needed.
+        Check the metric convention and convert Minkowski Eps to i_*e_."""
         if op == 'dot':
             if all(T.is_momentum(a) for a in args):
                 return '%s.%s' % tuple(self.name('vector', a) for a in args)
@@ -238,6 +261,8 @@ class Program:
 
     # -- Dirac matrices
     def factor(self, F, line):
+        """Return FORM text for the Dirac Factor F on integer spin line line.
+        Translate its unit matrix, gamma5, indexed gamma matrices and slashed momenta with their coefficients."""
         parts = []
         for a, c in F.items:
             if a[0] == '1':
@@ -263,6 +288,7 @@ class Program:
         out, run = [], []
 
         def flush():
+            """Append the pending run of gamma slots as one FORM g_ factor and clear it."""
             if run:
                 out.append('g_(%d,%s)' % (line, ','.join(run)))
                 run.clear()

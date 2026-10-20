@@ -45,14 +45,17 @@ class Factor:
         self._key = None
 
     def key(self):
+        """A hashable key of the combination (the same for equal factors), cached."""
         if self._key is None:
             self._key = tuple((_akey(a), str(c)) for a, c in self.items)
         return self._key
 
     def is_zero(self):
+        """True if every coefficient vanished."""
         return not self.items
 
     def scale(self, c):
+        """The factor times the number c."""
         return Factor([(a, c * x) for a, x in self.items])
 
     def odd_even(self):
@@ -70,12 +73,14 @@ class Factor:
         return Factor([(a, -conj(c) if a[0] == '5' else conj(c)) for a, c in self.items])
 
     def gamma5_coefficient(self):
+        """The coefficient of gamma5 in this combination (0 if there is none)."""
         for a, c in self.items:
             if a[0] == '5':
                 return c
         return SR(0)
 
     def without_gamma5(self):
+        """The same combination with its gamma5 term removed."""
         return Factor([(a, c) for a, c in self.items if a[0] != '5'])
 
     def _shown(self):
@@ -140,13 +145,16 @@ class Spinor:
 
     @property
     def row(self):
+        """True for ubar and vbar (row spinors, at the left end of a line)."""
         return self.kind in ('ubar', 'vbar')
 
     @property
     def particle(self):
+        """'u' for u and ubar, 'v' for v and vbar."""
         return self.kind[0]          # 'u' or 'v'
 
     def key(self):
+        """(kind, momentum, mass) as strings: equal for the same spinor."""
         return (self.kind, str(self.p), str(self.m))
 
     def partner_key(self):
@@ -175,9 +183,11 @@ class Chain:
 
     @property
     def closed(self):
+        """True if the chain has a spinor at both ends, so it is a number (ubar ... u)."""
         return self.left is not None and self.right is not None
 
     def key(self):
+        """A hashable key: the two end spinors and the factors in between."""
         return (self.left.key() if self.left else None, tuple(f.key() for f in self.factors),
                 self.right.key() if self.right else None)
 
@@ -195,6 +205,8 @@ class Chain:
 
 # ---------------------------------------------------------------------------- the expression
 class DiracError(TypeError):
+    """An expression that does not make sense in Dirac space (a number added to a spinor line, a momentum given
+    to gamma(), a mixed sum of rows and columns, an ambiguous gamma5 trace in d dimensions, ...)."""
     pass
 
 
@@ -225,6 +237,8 @@ class DiracExpr:
         return 'row' if o.left is not None else 'column'
 
     def kind(self):
+        """What the expression is: 'scalar' (a number or closed lines), 'matrix' (an open Dirac matrix), 'row'
+        (ubar ... ) or 'column' (... u); DiracError if the terms do not agree, None for zero."""
         ks = {self._tkind(t) for t in self.terms}
         if len(ks) > 1:
             raise DiracError("mixed expression: %s" % sorted(ks))
@@ -320,14 +334,17 @@ class DiracExpr:
         return dirac_trace(self, **kw)
 
     def conjugate(self):
+        """The complex conjugate (see conjugate): gamma^0 G^dagger gamma^0 on each line, ends exchanged."""
         from .operations import conjugate
         return conjugate(self)
 
     def bar(self):
+        """gamma^0 G^dagger gamma^0 of a Dirac matrix (see dirac_bar)."""
         from .operations import dirac_bar
         return dirac_bar(self)
 
     def is_zero(self):
+        """True if no term is left."""
         return not self.terms
 
     def __len__(self):
@@ -412,7 +429,7 @@ def _single(atom, c=1):
 
 
 def one():
-    """The 4x4 unit matrix in Dirac space."""
+    """The 4x4 unit matrix in Dirac space (Tr 1 = 4), e.g. slash(p) + m*one()."""
     return DiracExpr([(SR(1), Chain(None, (), None), ())])
 
 
@@ -431,7 +448,7 @@ def gamma(*args, **kw):
             return _single(('i', xs))
         if xs is not None and T.is_momentum(xs):
             raise DiracError("gamma(%s): %s is a momentum; write slash(%s) for gamma^mu %s_mu" % (xs, xs, xs, xs))
-    from sage.all import gamma as _euler_gamma
+    from sage.functions.gamma import gamma as _euler_gamma         # not sage.all: a .sage script may have replaced it there
     return _euler_gamma(*args, **kw)
 
 
@@ -449,12 +466,12 @@ def gamma5():
 
 
 def PL():
-    """The chiral projector (1 - gamma5)/2."""
+    """The left-handed chiral projector P_L = (1 - gamma5)/2."""
     return DiracExpr([(SR(1), Chain(None, (Factor([(('1',), Integer(1) / 2), (('5',), -Integer(1) / 2)]),), None), ())])
 
 
 def PR():
-    """The chiral projector (1 + gamma5)/2."""
+    """The right-handed chiral projector P_R = (1 + gamma5)/2."""
     return DiracExpr([(SR(1), Chain(None, (Factor([(('1',), Integer(1) / 2), (('5',), Integer(1) / 2)]),), None), ())])
 
 
@@ -489,7 +506,7 @@ def sigma(*args, **kw):
     sigma^{mu nu} p_nu).  With other arguments it is Sage's divisor function sigma(n, k)."""
     from sage.all import I
     if len(args) != 2 or kw or not all(_is_slot(x) for x in args):
-        from sage.all import sigma as _sage_sigma
+        from sage.arith.misc import sigma as _sage_sigma
         return _sage_sigma(*args, **kw)
     mu, nu = args
     return (I / 2) * (_g_or_slash(mu) * _g_or_slash(nu) - _g_or_slash(nu) * _g_or_slash(mu))
@@ -535,5 +552,5 @@ def ubar(p, m=0):
 
 
 def vbar(p, m=0):
-    """v-bar(p) = v(p)^dagger gamma^0 (a row)."""
+    """v-bar(p) = v(p)^dagger gamma^0 with mass m (a row: it stands at the left end of a line)."""
     return _sp('vbar', p, m)

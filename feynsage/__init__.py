@@ -16,7 +16,7 @@ from .laporta import Reducer
 from .graph import FeynmanGraph
 from .ff import reduce_ff, IBPSystem
 from .easy import family, graph, diagram, symmetries, ibp_reduce, kinematics
-from .pv import loop, A0, B0, PVB, PVC, PVD, C0, D0, DiscB, LogM, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, eps, mu, explicit
+from .pv import loop, A0, B0, PVB, PVC, PVD, C0, D0, DiscB, LogM, pave, PaVeA0, PaVeB0, PaVeC0, PaVeD0, uv_part, pole_parts, finite_part, c0_numeric, d0_numeric, eps, mu, explicit
 from .scalar import d0_closed, d0_value
 from . import ir
 from .tex import eq, notation
@@ -49,9 +49,16 @@ from .de import derivative, diff_reduce, differential_equation
 from .kira_io import read_kira
 from .counting import critical_points, master_count
 from .calculus import delta_integrate, principal_value, integrate_termwise, tidy
+from .integrators import integrate_checked, set_integrators, available_integrators, IntegrationError
+from .topology import (integral_to_graph, canonical_form, momentum_shift, topology_mappings, map_integral,
+                       subtopologies, scaleless, basis_status, complete_basis, apart, dimension_lower,
+                       dimension_raise, cuts, cuttable, NotAGraphError, find_topologies)
+from .tdec import tdec
+from .fierz import fierz, sirlin, clifford_decompose
+from .feynrule import field, d as fd, feynman_rule, field_strength, covariant_derivative, Lag
 from .topologies import topologies, Topology
 from .diagrams import insert_fields, conjugate_amplitude, Diagram, DiagramList, vertex_projector
-from .process import process, Process
+from .process import process, Process, decays
 from .models import SM, QED, Model
 from .expansions import residue
 from .parametric import feynman_parametrize

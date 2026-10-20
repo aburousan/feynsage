@@ -16,7 +16,7 @@ frame.  Particle names: e- e+ mu- mu+ tau- tau+ nu_e nu_e~ ... u u~ d d~ ... t t
 Z, W+, W-, H, g (gluon); an antiparticle is written with ~ (or ubar, dbar, ...).
 """
 import itertools
-from sage.all import SR, sqrt, pi, I, Integer, factorial, prod
+from sage.all import SR, sqrt, pi, I, Integer, factorial, prod, matrix, ZZ, CC
 
 from .qft import tensors as T
 from .qft import objects as O
@@ -33,6 +33,30 @@ sqrt_s = SR.var('sqrt_s', latex_name=r'\sqrt{s}', domain='positive')
 cos_theta = SR.var('cos_theta', latex_name=r'\cos\theta', domain='real')
 _sin = SR.var('fs_sin_theta', latex_name=r'\sin\theta', domain='positive')   # sin(theta) while conjugating
 sin_theta = sqrt(1 - cos_theta ** 2)
+
+
+def _sqrt_kallen(lam, masses):
+    """sqrt(lambda) with the square factors taken out of the root (sqrt(M^4) = M^2, sqrt(M^2 (M^2 - 4 m^2)) =
+    M sqrt(M^2 - 4 m^2)), positive where the decaying mass is larger than the sum of the others."""
+    lam = SR(lam)
+    names = sorted(set(str(v) for v in lam.variables()))
+    if not names:
+        return sqrt(lam)
+    from sage.all import PolynomialRing, QQ
+    R = PolynomialRing(QQ, names)
+    try:
+        f = R(str(lam).replace('^', '**')).factor()
+    except (TypeError, ValueError):
+        return sqrt(lam)
+    out, rest = SR(1), SR(f.unit())              # a negative unit stays under the root
+    for g, e in f:
+        out *= SR(g) ** (e // 2)
+        rest *= SR(g) ** (e % 2)
+    # the sign: positive at a point of the physical region (the decaying mass large, the others 1)
+    pt = {SR.var(n): 1 for n in names}
+    pt[SR(masses[0])] = 100 * len(masses)
+    sign = 1 if (out * sqrt(rest)).subs(pt).n() > 0 else -1
+    return sign * out * sqrt(rest) if not rest.is_trivial_zero() else SR(0)
 
 
 def _kallen(a, b, c):
@@ -54,10 +78,24 @@ _NAMED = {'alpha': None, 'alpha_s': None, 'sw2': None}
 
 
 class Process:
+    """A reaction written as text, "e- e+ -> mu- mu+", with its tree diagrams in a model (default: the Standard
+    Model, SM()).  Momenta p1, p2, ... are numbered in the order written, incoming first; P.s, P.t, P.u are the
+    Mandelstam variables of a 2 -> 2 process.  Make it with process(text, ...); the arguments:
+        model           SM() (default), QED(), "SM", "QED" or any Model
+        loops           0 for the tree diagrams; the one-loop ones come from P.loop_diagrams()
+        gauge           "feynman" (xi = 1, default), "unitary" (no Goldstone bosons) or None (the xi of the model,
+                        e.g. SM(xi=3)) for the tree amplitudes; virtual() works in Feynman gauge (its xi argument)
+        exclude_fields  fields that may not run on internal lines, e.g. ["H", "G0", "G+"]
+        massless        particles whose mass is set to zero everywhere, e.g. ["e", "mu"]
+        widths          {"Z": GZ, ...}: Breit-Wigner propagators (the Goldstones get the width of their vector)
+    The methods (squared, dsigma_dcos, sigma, width, virtual, ...) are listed in feynsage.process.__doc__."""
+
     def __init__(self, text, model=None, loops=0, gauge='feynman', exclude_fields=(), massless=(),
                  widths=None):
+        for arrow in ('-->', '→', '=>', ' > '):          # also the arrows of MadGraph and of a typed formula
+            text = text.replace(arrow, ' -> ')
         if '->' not in text:
-            raise ValueError('write the process as "a b -> c d", e.g. "e- e+ -> mu- mu+"')
+            raise ValueError('write the process as "a b -> c d", e.g. "e- e+ -> mu- mu+" (or "e- e+ > mu- mu+")')
         lhs, rhs = text.split('->')
         self.text = text.strip()
         self.model = model if model is not None else MD.SM()
@@ -100,6 +138,7 @@ class Process:
         return 'process %s: %d diagram%s' % (self.text, len(self.diagrams), '' if len(self.diagrams) == 1 else 's')
 
     def draw(self, **kw):
+        """A figure of the tree diagrams, numbered as diagrams=[...] counts them (keywords as DiagramList.draw)."""
         return self.diagrams.draw(**kw)
 
     def amplitude(self, diagrams=None):
@@ -109,8 +148,9 @@ class Process:
 
     def _no_tree(self):
         if not len(self.diagrams):
-            raise ValueError("%s has no tree diagrams: it starts at one loop.  Use P.loop_diagrams() and "
-                             "loop_amplitude (see examples/02_qft_one_loop.ipynb, section 5, for H -> g g)" % self.text)
+            raise ValueError("%s has no tree diagrams: it starts at one loop.  P.squared(), P.width() and the "
+                             "cross sections use the one-loop amplitude by themselves; P.loop_form_factors() "
+                             "gives its form factors" % self.text)
 
     def _amp(self, diagrams=None):
         from .diagrams import _Shared, _sum_amplitudes
@@ -191,8 +231,10 @@ class Process:
         |M|^2.  Without helicities: summed over all spins and polarizations (and colours) and, with
         average=True, divided by the number of initial spin and colour states (2 for a massive or
         charged fermion, 1 for a neutrino, which is only left-handed); the result is in
-        s, t, u for 2 -> 2 (in the masses for 1 -> 2).  Photons are summed with -g, gluons with the
-        physical sum (reference vector: another external momentum), massive vectors with -g + kk/M^2.
+        s, t, u for 2 -> 2 (in the masses for 1 -> 2).  Gluons are summed over their two physical
+        polarizations (reference vector: another external momentum), so are photons when there are two or
+        more massless vectors (gamma gamma -> W+ W-: -g would be wrong there); a single photon is summed with
+        -g; massive vectors with -g + kk/M^2.  polarization_gauge='feynman' or 'physical' forces one choice.
 
         helicities={"e-": -1, "e+": +1, "W+": 0, "W-": +1}: one helicity configuration in the
         centre-of-mass frame (rest frame for a decay), as a function of sqrt_s and cos_theta.
@@ -204,10 +246,21 @@ class Process:
         the products M_i M_j* of pairs of diagrams are worked out in parallel.
         A particle that appears twice is named by its position: {3: +1} is the third particle.
         """
-        self._no_tree()
+        if not len(self.diagrams):                  # no tree diagrams: the process starts at one loop
+            if helicities:
+                raise NotImplementedError("helicity states of a loop-induced process")
+            r = self._loop_induced(nproc)
+            if average:
+                r = r / prod(self._dof(p) * self._colour_dof(p) for p in self.particles[:len(self.p_in)])
+            return r
         if helicities:
             return self._helicity(helicities, diagrams)
-        r = self._unpolarized(diagrams, polarization_gauge, nproc)
+        key = (tuple(diagrams) if diagrams else None, polarization_gauge, self.gauge,
+               tuple(sorted((str(k), str(v)) for k, v in self.widths.items())) if self.widths else None)
+        cache = self.__dict__.setdefault('_sq_cache', {})
+        if key not in cache:                          # dsigma_dcos, sigma, width, numeric reuse the same |M|^2
+            cache[key] = self._unpolarized(diagrams, polarization_gauge, nproc)
+        r = cache[key]
         if average:
             r = r / prod(self._dof(p) * self._colour_dof(p) for p in self.particles[:len(self.p_in)])
         return r
@@ -239,6 +292,10 @@ class Process:
         which keeps the expression small (four gluons: minutes -> seconds)."""
         if kin:
             r = SR(r).subs(kin)
+        # -g is right for a photon only if the amplitude obeys the Ward identity with every other external vector
+        # unphysical as well: true for one photon (or a QED-like process), not for two photons coupled to W's
+        # (gamma gamma -> W+ W-, H -> gamma gamma).  So with two or more massless vectors the physical sum is used.
+        n_massless = sum(1 for j in self._vector_legs() if self.particles[j].mass.is_trivial_zero())
         for i in legs:
             p = self.particles[i]
             e = SR.var('eps%d' % (i + 1))
@@ -246,7 +303,7 @@ class Process:
                 continue
             if not p.mass.is_trivial_zero():
                 r = polarization_sum(r, e, dim=dim)
-            elif p.colour == '8' or gauge == 'physical':
+            elif p.colour == '8' or gauge == 'physical' or (gauge is None and n_massless >= 2):
                 ref = [q for j, q in enumerate(self.momenta) if j != i][0]
                 ref = next((q for j, q in enumerate(self.momenta) if j != i and self.particles[j].mass.is_trivial_zero()), ref)
                 r = polarization_sum(r, e, gauge='physical', n=ref, dim=dim)
@@ -363,16 +420,155 @@ class Process:
         return _frame(r, allc)
 
     # ------------------------------------------------------------------ one loop
-    def loop_diagrams(self):
-        """The one-loop diagrams of the process (no tadpoles, no corrections on external legs)."""
-        if not hasattr(self, '_loop_diags'):
+    def loop_diagrams(self, mixing=False):
+        """The one-loop diagrams of the process, without tadpoles and without self-energies on external legs.
+        mixing=True keeps the self-energies on an external leg that turn it into a particle of another mass
+        (the gamma-Z mixing on the photon of H -> Z gamma): their propagator 1/(p^2 - M^2) is finite there.
+        Only the diagonal ones, whose propagator would be 1/0, are left out (they belong to renormalization)."""
+        key = '_loop_diags_mix' if mixing else '_loop_diags'
+        if not hasattr(self, key):
             n_in, n_out = len(self.fields_in), len(self.fields_out)
-            self._loop_diags = insert_fields(topologies(1, n_in, n_out, exclude=('tadpoles', 'wf')),
-                                             self.fields_in, self.fields_out, self.model,
-                                             exclude_fields=self._exclude)
-        return self._loop_diags
+            tops = topologies(1, n_in, n_out, exclude=('tadpoles',) if mixing else ('tadpoles', 'wf'))
+            ds = insert_fields(tops, self.fields_in, self.fields_out, self.model, exclude_fields=self._exclude)
+            if mixing:
+                from .diagrams import DiagramList
+                ds = DiagramList([d for d in ds if not self._diagonal_leg(d)], ds.tops, [])
+            setattr(self, key, ds)
+        return getattr(self, key)
 
-    def virtual(self, average=True, xi=1, nproc=None, diagrams=None):
+    def _diagonal_leg(self, diag):
+        """True if an internal line carries the momentum of one external leg with that leg's own mass: cutting it
+        leaves one external leg alone on one side."""
+        lines = diag.fields
+        for k, (name, a0, b0) in enumerate(lines):
+            if a0[0] != 'v' or b0[0] != 'v':
+                continue
+            adj = {}
+            for j, (_, a, b) in enumerate(lines):
+                if j != k:
+                    adj.setdefault(a, []).append(b)
+                    adj.setdefault(b, []).append(a)
+            for start in (a0, b0):
+                side, todo = set(), [start]
+                while todo:
+                    x = todo.pop()
+                    if x not in side:
+                        side.add(x)
+                        todo += adj.get(x, [])
+                if (b0 if start == a0 else a0) in side:
+                    break                                  # a loop line: cutting it leaves the graph connected
+                legs = [x[1] for x in side if x[0] == 'x']
+                if len(legs) == 1 and (SR(self.model.particles[name].mass) - SR(self.particles[legs[0] - 1].mass)).is_trivial_zero():
+                    return True
+        return False
+
+    def _tensor_basis(self, legs, Q):
+        """All tensors of the vector indices of `legs` made of metrics and the momenta Q (no epsilon)."""
+        out = []
+
+        def rec(rest, acc):
+            if not rest:
+                out.append(acc)
+                return
+            i = rest[0]
+            for q in Q:                                    # index i on a momentum
+                rec(rest[1:], acc + [('p', i, q)])
+            for j in rest[1:]:                             # index i paired with index j by a metric
+                rec([r for r in rest[1:] if r != j], acc + [('g', i, j)])
+        rec(list(legs), [])
+        return out
+
+    def _tensor_value(self, term, idx):
+        v = SR(1)
+        for t in term:
+            v = v * (T.metric(idx[t[1]], idx[t[2]]) if t[0] == 'g' else T.comp(t[2], idx[t[1]]))
+        return v
+
+    def loop_form_factors(self, nproc=None, xi=1):
+        r"""
+        For a process with no tree diagrams (H -> g g, H -> gamma gamma, g g -> H, ...): the one-loop amplitude
+        M = sum_i c_i T_i, with T_i the tensors of the external vector indices made of metrics and the
+        independent external momenta.  Returns (c, T): c the finite coefficients (the 1/eps poles must cancel;
+        an error otherwise) with their colour structure, T the tensors as tuples ('g', i, j) = g^{mu_i mu_j},
+        ('p', i, q) = q^{mu_i}, i the leg numbers from 0.  Feynman-'t Hooft gauge, d = 4 - 2 eps."""
+        cache = self.__dict__.setdefault('_ff_cache', {})
+        xkey = tuple(sorted((k, str(v)) for k, v in xi.items())) if isinstance(xi, dict) else str(xi)
+        if xkey in cache:
+            return cache[xkey]
+        from .qft.operations import contract
+        from .pv import uv_part, finite_part, eps as eps_
+        from .diagrams import loop_amplitude, _one
+        if any(p.kind == 'F' for p in self.particles):
+            raise NotImplementedError("loop-induced processes with external fermions")
+        legs = self._vector_legs()
+        n = len(self.momenta)
+        # momentum conservation made explicit: the last momentum from the others
+        last = sum(self.p_in, 0 * self.momenta[0]) - sum(self.p_out[:-1], 0 * self.momenta[0])
+        p_out = list(self.p_out[:-1]) + [last]
+        Q = [q for q in self.momenta[:n - 1]] if n > 2 else [self.momenta[0]]
+        kin = self.kinematics()
+        kin_str = {}
+        for key, val in kin.items():
+            a, b = key.operands()
+            if a in Q and b in Q:
+                kin_str[('%s^2' % a) if a == b else ('%s.%s' % (a, b))] = str(SR(val).subs(self._zero))
+        basis = self._tensor_basis(legs, Q)
+        idx_dummy = {i: _one(T._declare('fsTb%d' % i, 'index')) for i in legs}
+        # Gram matrix of the basis in d dimensions (with the kinematics)
+        d = SR.var('d')
+        G = matrix(SR, len(basis), len(basis), lambda a, b: SR(contract(
+            self._tensor_value(basis[a], idx_dummy) * self._tensor_value(basis[b], idx_dummy), dim='d')).subs(kin))
+        loops = self.loop_diagrams(mixing=True)
+        proj = []
+        for b_ in basis:
+            f = lambda num, ext, b_=b_: num * self._tensor_value(b_, {i: ext[i] for i in legs})
+            proj.append(sum(loop_amplitude(loops, list(self.p_in), p_out, f, kin_str, nproc=nproc, xi=xi,
+                                           gamma5_scheme='NDR-even' if n <= 4 else 'NDR'), SR(0)))
+        Gi = G.subs({d: 4 - 2 * eps_}).inverse()
+        c = [sum(Gi[a, b] * proj[b] for b in range(len(basis))) for a in range(len(basis))]
+        poles = [_sm_relations(uv_part(x)) for x in c]
+        if any(not p_.is_trivial_zero() for p_ in poles):
+            # poles on tensors that vanish against physical polarizations (a photon index on the photon's own
+            # momentum) are allowed; the physically contracted amplitude must be finite
+            S = self._pol_matrix(basis)
+            phys = sum(poles[a] * poles[b] * S[a][b] for a in range(len(basis)) for b in range(len(basis)))
+            if not _sm_relations(phys).is_trivial_zero():
+                raise ValueError("the one-loop amplitude of %s is not finite: it needs renormalization" % self.text)
+        c = [finite_part(x, 1) for x in c]
+        cache[xkey] = (c, basis)
+        return cache[xkey]
+
+    def _pol_matrix(self, basis):
+        """S[a][b] = sum over physical polarizations of (T_a . eps*) (T_b . eps*)^*, in the kinematics."""
+        legs = self._vector_legs()
+        n_in = len(self.p_in)
+        pol = {}
+        for i in legs:
+            e = T.polarization('eps%d' % (i + 1), self.momenta[i], mass=self.particles[i].mass)
+            pol[i] = e if i < n_in else T.conjugate_vector(e)
+        kin = self.kinematics()
+        E = [SR(1) * prod((T.dot(pol[t[1]], pol[t[2]]) if t[0] == 'g' else T.dot(t[2], pol[t[1]])) for t in b_)
+             for b_ in basis]
+        S = []
+        for a in range(len(basis)):
+            row = []
+            for b in range(len(basis)):
+                r = self._sum_vectors(SR(E[a] * conjugate_amplitude(E[b])), legs, 'physical', kin)
+                row.append(SR(r).subs(kin).subs(self._zero))
+            S.append(row)
+        return S
+
+    def _loop_induced(self, nproc=None, xi=1):
+        """sum over polarizations and colours of |M|^2 for a process without tree diagrams (finite one loop).
+        The polarizations are summed over physical states only (unphysical parts of a one-loop tensor need
+        not obey the Ward identity)."""
+        c, basis = self.loop_form_factors(nproc, xi)
+        S = self._pol_matrix(basis)
+        total = sum(S[a][b] * c[a] * _conj(c[b]) for a in range(len(basis)) for b in range(len(basis))
+                    if not S[a][b].is_trivial_zero())
+        return self._colour(SR(total))
+
+    def virtual(self, average=True, xi=1, nproc=None, diagrams=None, masters=False, polarization_gauge=None):
         r"""
         The one-loop correction to |M|^2: sum over spins, polarizations and colours of M0^* M1, with
         M0 the tree amplitude and M1 the unrenormalized one-loop amplitude (all diagrams of
@@ -383,8 +579,14 @@ class Process:
         after the integration.  The virtual correction to the
         cross section is 2 Re of it; for 2 -> 2 the result is in s and t (u = sum m^2 - s - t).
         diagrams=[1, 4]: only those loop diagrams.  The diagrams are done in parallel (nproc).
+        masters=True: the result before the eps expansion, sum c(d) * master with the scalar integrals
+        PaVeA0, PaVeB0, PaVeC0, PaVeD0 of squared masses (canonical form of feynsage.pv.pave()), exact in d:
+        the compact form FeynCalc's TID gives, and the one to compare with it term by term.
+        polarization_gauge: as in squared().  The unrenormalized M1 is not transverse (without the mass
+        counterterm Sigma(p) u(p) != 0 on shell), so the photon polarization sum changes it until the
+        counterterms are added; 'feynman' (-g) is FeynCalc's DoPolarizationSums[..., 0].
         """
-        from .diagrams import _Shared, _loop_integrand, _to_loop_string, _rational_poly
+        from .diagrams import _Shared, _loop_integrand, _to_loop_string, _rational_poly, _xi_arg
         from .qft.operations import contract
         from .pv import loop
         from .parallel import pmap
@@ -409,7 +611,7 @@ class Process:
         idx = diagrams or range(1, len(loops) + 1)
         jobs = []
         for k in idx:
-            terms, ext, col = _loop_integrand(loops[k - 1], self.p_in, self.p_out, lmom, xi=SR(xi),
+            terms, ext, col = _loop_integrand(loops[k - 1], self.p_in, self.p_out, lmom, xi=_xi_arg(xi),
                                               prefix='v%d' % k, shared=sh, spinors=True, conserve=True)
             if isinstance(col, tuple):
                 raise NotImplementedError("four-gluon vertices in virtual(); use loop_amplitude")
@@ -432,7 +634,7 @@ class Process:
                 g5 = 'NDR-even' if len(self.momenta) <= 4 else 'NDR'
                 x = spin_sum(x * M0c, dim='d', gamma5_scheme=g5) if not isinstance(x * M0c, type(SR(1))) else x * M0c
                 x = self._colour(x)
-                x = self._sum_vectors(x, legs, None, kin, dim='d')
+                x = self._sum_vectors(x, legs, polarization_gauge, kin, dim='d')
                 x = SR(contract(SR(x).subs(kin), dim='d')).subs(kin).subs(self._zero).expand()
                 if not props:
                     total += -I * x
@@ -449,7 +651,10 @@ class Process:
                         m = [kk for kk, vv in back.items() if (vv - m).is_trivial_zero()][0]
                     pr.append([str(qs), str(m)])
                 res = loop(_to_loop_string(x, 'l'), *pr, kin=kin_str)
-                val = res.coefficients().get('1', SR(0)) if hasattr(res, 'coefficients') else SR(res)
+                if masters and hasattr(res, 'masters'):
+                    val = res.masters(canonical=True).get('1', SR(0))
+                else:
+                    val = res.coefficients().get('1', SR(0)) if hasattr(res, 'coefficients') else SR(res)
                 if back:
                     val = SR(val).subs(back)
                 total += val / (16 * pi ** 2)
@@ -467,7 +672,7 @@ class Process:
         numerically with the Standard-Model numbers; keywords as in numeric(), e.g. width(MW=80.4)."""
         if len(self.p_in) == 1 and len(self.p_out) == 2:
             M2, a, b = [m ** 2 for m in self.masses]
-            P = sqrt(_kallen(M2, a, b)) / (2 * self.masses[0])
+            P = _sqrt_kallen(_kallen(M2, a, b), self.masses) / (2 * self.masses[0])
             return self.symmetry_factor() * P / (8 * pi * M2) * self.squared()
         if len(self.p_in) == 1 and len(self.p_out) == 3:
             return self._width3(**values)
@@ -560,6 +765,41 @@ class Process:
         return val * GEV2_TO_PB if unit == 'pb' else val
 
 
+def _sm_relations(expr):
+    """expr with the Standard-Model relations M_W = M_Z c_W and s_W^2 = 1 - c_W^2 put in, simplified."""
+    e = SR(expr)
+    if e.has(MD.MW) or e.has(MD.SW):
+        e = e.subs({MD.MW: MD.MZ * MD.CW}).subs({MD.SW: sqrt(1 - MD.CW ** 2)})
+    return e.simplify_full()
+
+
+def _conj(expr):
+    """Complex conjugate with every symbol real: numbers are conjugated, feynsage's loop functions (C0, DiscB,
+    LogM, ...) and log, polylog get conjugate(...) around them, colour objects stay."""
+    from .parallel import _registry
+    from sage.functions.other import conjugate as _c
+    reg = set(_registry())
+    e = SR(expr)
+
+    def walk(x):
+        if x.is_numeric():
+            return x.conjugate()
+        op = x.operator()
+        if op is None:
+            return x
+        name = getattr(op, 'name', None)
+        nm = name() if callable(name) else None
+        if nm in reg or nm in ('log', 'polylog', 'dilog', 'sqrt', 'Li2'):
+            return _c(x)
+        if nm == 'pow' or str(op).endswith('pow>'):
+            b_, ex = x.operands()
+            if ex.is_numeric() and ex in ZZ:
+                return walk(b_) ** ex
+            return _c(x)
+        return op(*[walk(o) for o in x.operands()])
+    return walk(e)
+
+
 def _tidy(expr):
     """sin(theta) back as sqrt(1 - cos^2), sin^2 as 1 - cos^2."""
     e = SR(expr).subs({_sin ** 2: 1 - cos_theta ** 2})
@@ -584,7 +824,58 @@ def _frame(expr, comps):
     return e.subs(sub)
 
 
+def decays(particle, model=None, loops=True, **values):
+    """All two-body decays of a particle with their widths and branching ratios, at tree level, plus the
+    loop-induced ones (H -> g g, H -> gamma gamma, ...) when loops=True.  Numbers with the Standard-Model
+    values (keywords as in Process.numeric, e.g. MH=125).  Returns a list of (final state, Gamma in GeV, BR),
+    largest first, and prints a table.
+
+        decays("H")      decays("Z")      decays("t")      decays("W+")"""
+    M_ = model if model is not None else MD.SM()
+    X = M_.field(particle).name
+    mX = M_.particles[X].mass
+    hidden = ('G0', 'G+', 'G-', 'uA', 'uZ', 'u+', 'u-', 'ug', 'uA~', 'uZ~', 'u+~', 'u-~', 'ug~')
+    finals = set()
+    for vx in M_.vertices:
+        if len(vx.fields) != 3 or X not in vx.fields:
+            continue
+        rest = list(vx.fields)
+        rest.remove(X)
+        out = tuple(sorted(M_.anti(f) for f in rest))
+        if any(f in hidden or M_.anti(f) in hidden for f in out):
+            continue
+        finals.add(out)
+    if loops and M_.particles[X].kind in ('S', 'V'):
+        for out in (('A', 'A'), ('g', 'g'), ('A', 'Z')):
+            if all(f in M_.particles for f in out):
+                finals.add(out)
+    rows = []
+    for out in sorted(finals):
+        P = Process('%s -> %s %s' % (particle, out[0], out[1]), model=M_)
+        m1, m2 = [SR(P.numeric(m, **values)) for m in P.masses[1:]]
+        if float(SR(P.numeric(mX, **values))) <= float(m1 + m2):
+            continue
+        if not len(P.diagrams) and not loops:
+            continue
+        try:
+            G = CC(SR(P.numeric(P.width(), **values)).n()).real()
+        except Exception as ex:                  # a channel feynsage cannot do yet is left out, with a note
+            print("   (%s -> %s %s left out: %s)" % (particle, out[0], out[1], str(ex).splitlines()[0][:80]))
+            continue
+        if G > 0:
+            rows.append(('%s %s' % out, float(G)))
+    total = sum(g for _, g in rows)
+    rows = sorted([(f, g, g / total) for f, g in rows], key=lambda r: -r[1])
+    print("%s decays (tree level%s):  total width %.6g GeV" % (particle, " and one-loop-induced" if loops else "", total))
+    for f, g, br in rows:
+        print("   %-12s  Gamma = %-12.6g GeV   BR = %.4f" % (f, g, br))
+    return rows
+
+
 def process(text, model=None, **kw):
+    """A reaction in one line: process("e- e+ -> mu- mu+") is Process("e- e+ -> mu- mu+").  See Process for the
+    arguments and feynsage.process.__doc__ for what to do with it, e.g.
+        P = process("e- e+ -> mu- mu+", model="QED", massless=["e", "mu"]);  P.squared()"""
     return Process(text, model=model, **kw)
 
 

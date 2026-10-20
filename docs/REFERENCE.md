@@ -392,14 +392,17 @@ All names **(top)**.
 | `fd(mu, X)` (also `feynsage.feynrule.d`) | the derivative d_mu of a field or a product (Leibniz rule) |
 | `field_strength(A, mu, nu, a, g)` | F^a_{mu nu} = d_mu A^a_nu - d_nu A^a_mu + g f^{abc} A^b_mu A^c_nu (FeynCalc's FieldStrength) |
 | `covariant_derivative(mu, psi, A, g, i=None)` | D_mu psi_i = d_mu psi_i - i g (T^a)_{ij} A^a_mu psi_j (FeynCalc's CovariantD); without colour d_mu + i g A_mu |
-| `feynman_rule(L, legs, factor_i=True)` | the vertex for legs [(field, momentum, Lorentz index, colour index), ...], all momenta incoming: i times the sum over the terms of L with exactly these fields, over all assignments of identical fields, d_mu -> -i p_mu; a Dirac matrix for a fermion line (bilinears), f^{abc} kept and put in a fixed order |
+| `feynman_rule(L, legs, factor_i=True)` | the vertex for legs [(field, momentum, Lorentz index, colour index), ...], all momenta incoming: i times the sum over the terms of L with exactly these fields, over all assignments of identical fields, d_mu -> -i p_mu; a Dirac matrix for one fermion line; for four-fermion terms a sum of products of chains [ubar(p_a) G u(p_b)] (the spinors only mark the Dirac index of the legs), with the sign of i d/d(leg 1) ... d/d(leg n) L, Grassmann derivatives in the order of the legs; f^{abc} kept and put in a fixed order |
 
 Lagrangians are written with `+`, `-`, `*`, `**`, numbers, symbols and the objects of the qft layer
 (`gamma(mu)`, `metric`, `f_color`, `T_color`): `-lam/24*phi()**4`, `-e*psi.bar()*gamma(mu)*psi()*A(mu)`,
 `-field_strength(G, al, be, a, g)*field_strength(G, al, be, a, g)/4`. Summed indices are renamed before the
 legs are attached. Checks (`tests/test_feynrule.sage`): phi^4, QED, scalar QED, the three- and four-gluon
 and ghost vertices against Peskin and Schroeder (pp. 95, 124, 312, 507, 515); the quark-gluon, four-gluon and
-the HEFT H g g and H g g g vertices against FeynCalc's FeynRule, value by value. Not yet: four-fermion terms.
+the HEFT H g g and H g g g vertices against FeynCalc's FeynRule, value by value; four-fermion vertices
+((psibar psi)^2, (psibar g^mu psi)^2) against the Grassmann derivative of L with explicit matrices for all 256
+Dirac index values (FeynCalc's FeynRule treats such fields as commuting and misses the exchange sign), and the
+Fermi interaction.
 
 ---
 
@@ -416,6 +419,45 @@ All names **(top)**. Valid in four dimensions only.
 Checks (`tests/test_fierz.sage`): every identity with explicit 4x4 matrices (Peskin's chiral basis) and random
 complex spinors, the (V-A) x (V-A) Fierz invariance, and SirlinSimplify's documentation example
 [g^mu g^rho g^nu P_L] x [g_mu g_tau g_nu P_L] = 4 g^{rho tau} [g^a P_L] x [g_a P_L].
+
+---
+
+## bmhv: gamma5 in the BMHV ('t Hooft-Veltman) scheme
+
+All names **(top)**. d = 4 + (d - 4): every object has a four-dimensional (bar) and a (d-4)-dimensional (hat) part;
+gamma5 = i g^0 g^1 g^2 g^3 anticommutes with the barred gammas and commutes with the hatted ones. Use it when a
+gamma5 sits on two fermion lines (where `gamma5_scheme="NDR-even"` stops with an error) or for anomalies.
+
+| Function | What it does | FeynCalc |
+|---|---|---|
+| `bmhv_trace(G, four_dim=())` | Tr[G] for a product of `gamma`, `slash`, `gamma5()`: every gamma5 moved to the right (g5 g^mu = -g^mu g5 + 2 ghat^mu g5), every gamma split into bar and hat, Tr = Tr_4[bars (g5)] Tr_(d-4)[hats]/4, each by FORM. Result in `MetricBar`, `MetricHat`, `CompBar`, `CompHat`, `DotBar`, `DotHat` and `Epsilon` (4-dimensional); `four_dim` momenta have no hat part | DiracTrace with $BreitMaison = True |
+| `to_d(e)` | the bar objects as full minus hat (gbar = g - ghat, ...), the form FeynCalc prints | |
+| `bmhv_contract(e, four_dim=(), four_indices=())` | repeated indices contracted with ghat.g = ghat, ghat^a_a = d - 4, ghat.p = 0 for four-dimensional p, eps.ghat = 0 | |
+| `bmhv_loop(N, l, props, kin, four_dim=(), four_indices=())` | the one-loop integral of a BMHV numerator: every l in an epsilon tensor or a hat object becomes l^a, `loop()` does the tensor integral, the result is contracted and expanded in eps (d = 4 - 2 eps) | |
+| `canon_epsilon(e)` | epsilon tensors with their arguments in a fixed order (with the sign), so equal ones add up | |
+
+Checks (`tests/test_bmhv.sage`, `tests/test_bmhv_anomaly.sage`): every trace against explicit gamma matrices in
+d = 6 (8x8) and d = 8 (16x16), where the BMHV algebra exists exactly, including a gamma5 in the middle, two gamma5,
+summed indices and d-dimensional loop momenta; FeynCalc's BMHV traces; and the Adler-Bell-Jackiw anomaly of the
+triangle diagrams, i q_mu M^{mu nu lambda} = (e^2/(2 pi^2)) eps^{alpha lambda beta nu} k_alpha p_beta, Peskin and
+Schroeder (19.59)-(19.60), from the (d - 4) x 1/(d - 4) terms, with the poles cancelling.
+
+---
+
+## pauli: Pauli matrices in three dimensions
+
+All names **(top)**.
+
+| Function | What it does | FeynCalc |
+|---|---|---|
+| `cartesian_indices("i j")`, `vectors3("a b")` | Cartesian indices and three-vectors | CartesianIndex, CartesianMomentum |
+| `pauli_simplify(f1, f2, ...)` | sigma.f1 sigma.f2 ... = S + V^c sigma^c as (S, V, c), with sigma^a sigma^b = delta^{ab} + i eps^{abc} sigma^c | PauliSimplify |
+| `pauli_trace(f1, f2, ...)` | Tr[...] = 2 S | PauliTrace |
+| `contract3(e)` | repeated Cartesian indices of delta3, eps3, comp3, dot3 contracted | |
+
+A factor is a Cartesian index (sigma^i) or a three-vector (sigma.a). Checks (`tests/test_pauli.sage`): the
+standard traces and (s.a)(s.b) = a.b + i s.(a x b), and products of up to five factors against explicit 2x2
+matrices for every index value.
 
 ---
 
@@ -462,7 +504,7 @@ process("H -> b b~").width()                        # decay widths
 | `P.helicity_table(configs, nproc=None)` | many helicity states at once; the different fermion-helicity traces are made in parallel |
 | `P.dsigma_dcos(helicities=None)`, `P.sigma(sqrt_s, unit="GeV^-2" or "pb", **values)` | d sigma/d cos theta (with 1/n! for identical final particles) and its integral |
 | `P.width(**values)` | Gamma of a 1 -> 2 decay (a formula in the masses), or of a 1 -> 3 decay (a number: \|M\|^2 integrated over the Dalitz plot with the Standard-Model values, keywords as in `numeric`). A process with no tree diagrams starts at one loop (H -> g g, H -> gamma gamma, H -> Z gamma): `squared()` and `width()` then use the one-loop amplitude by themselves, as a formula in C0, B0, ... (no projector to write). |
-| `P.loop_form_factors(nproc=None, xi=1)` | for a process with no tree diagrams and only external vectors and scalars: the finite one-loop amplitude written as sum_a c_a T_a over the tensors T_a of the external vector indices (metrics and independent momenta), with the list of T_a. The c_a come from the Gram matrix of the T_a in d dimensions; the 1/eps poles must cancel in the physical (transverse) part, else it raises. Self-energies that mix an external leg into a particle of another mass (gamma-Z on the photon of H -> Z gamma) are included. Gauge independent: H -> Z gamma gives the same \|M\|^2 at xi = 1 and xi = 3 (`SM(xi=3)`). |
+| `P.loop_form_factors(nproc=None, xi=1)` | for a process with no tree diagrams and only external vectors and scalars: the finite one-loop amplitude written as sum_a c_a T_a over the tensors T_a of the external vector indices (metrics and independent momenta), with the list of T_a. The c_a come from the Gram matrix of the T_a in d dimensions; the 1/eps poles must cancel in the physical (transverse) part, else it raises. Self-energies that mix an external leg into a particle of another mass (gamma-Z on the photon of H -> Z gamma) are included. Gauge independent: H -> Z gamma gives the same \|M\|^2 at xi = 1 and xi = 3 (`SM(xi=3)`), and `xi="unitary"` (W and Z in unitary gauge, -i(g - k k/M^2)/(k^2 - M^2), no Goldstone or electroweak ghost diagrams; photon and gluon in Feynman gauge) gives the physical H -> gamma gamma form factors of Feynman gauge exactly. |
 | `decays(particle, model=None, loops=True, **values)` | every open two-body decay (tree level, plus the loop-induced ones when `loops`) with Gamma and the branching ratio, largest first, as a printed table and a list: `decays("H")`, `decays("Z", loops=False)`, `decays("t")` |
 | `P.numeric(expr, sqrt_s=, cos_theta=, alpha=, alpha_s=, sw2=, MW=, ...)` | puts in the Standard-Model numbers (`P.values`: alpha(0), PDG masses, on-shell sin theta_W = sqrt(1 - MW^2/MZ^2)); keywords override them |
 | `P.kinematics()`, `P.to_angles()` | the scalar products of the momenta in s, t, u; s, t, u in sqrt_s and cos_theta |
@@ -489,7 +531,7 @@ the amplitudes in the textbook notation of the `qft` layer (squared with FORM).
 | `diags.amplitudes(p_in, p_out, ...)` | the amplitude of each diagram |
 | `diags.squared(p_in, p_out, ...)` | M times its conjugate, summed over fermion spins; then `polarization_sum` and `color_factor` for vectors and colour |
 | `conjugate_amplitude(M, keep=())` **(top)** | the complex conjugate of an amplitude without spinors, with its summed indices renamed |
-| `diags.loop_amplitude(p_in, p_out, project, kin, xi=1)` | one-loop amplitudes, one per diagram, as Laurent series in eps. `project(numerator, ext)` closes the free indices (`ext` = the index of each external leg): a projector, a polarization contraction or a trace. Closed fermion loops are traced (-1 each), closed ghost loops -1 (an open ghost line through the loop has no sign), symmetry factors 1/|Aut|, colour factor separate (a four-gluon vertex gets one colour factor per Lorentz structure). One open fermion line is allowed (its Dirac string goes to `project`). `xi` != 1: R_xi propagators, the vector propagator split into its m_W and sqrt(xi) m_W parts; massless: -i g/k^2 + i(1 - xi) k k/k^4. Checked against FeynCalc: the electron, gluon and ghost self-energies and the ghost-gluon and three-gluon (ghost triangle) vertices, at xi = 1 and 3. |
+| `diags.loop_amplitude(p_in, p_out, project, kin, xi=1)` | one-loop amplitudes, one per diagram, as Laurent series in eps. `project(numerator, ext)` closes the free indices (`ext` = the index of each external leg): a projector, a polarization contraction or a trace. Closed fermion loops are traced (-1 each), closed ghost loops -1 (an open ghost line through the loop has no sign), symmetry factors 1/|Aut|, colour factor separate (a four-gluon vertex gets one colour factor per Lorentz structure). One open fermion line is allowed (its Dirac string goes to `project`). `xi` != 1: R_xi propagators, the vector propagator split into its m_W and sqrt(xi) m_W parts; massless: -i g/k^2 + i(1 - xi) k k/k^4. `xi="unitary"` (or a dict with `"W": "unitary"`, ...): unitary gauge for W and Z at one loop, the diagrams with an internal Goldstone or electroweak ghost left out. Checked against FeynCalc: the electron, gluon and ghost self-energies and the ghost-gluon and three-gluon (ghost triangle) vertices, at xi = 1 and 3. |
 | `vertex_projector(p1, p2, m, mu, part="F2", dim="d")` **(top)** | the Dirac matrix P with Tr[(p1/ + m) P (p2/ + m) X] = F2 (or "F1", "A", "B", "C") for the vertex ubar(p2) X^mu u(p1), exact in d dimensions |
 
 Tests: `tests/test_diagrams.sage` (topology and diagram counts against FeynArts; e+e- -> mu+mu-, Bhabha against

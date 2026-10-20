@@ -183,7 +183,8 @@ def _line_texts(prog, coef, lines, dim4, drop_odd=False):
         # two lines each with an epsilon tensor: eps.eps is a product of metrics, not zero after the integration
         raise DiracError("%d fermion lines each have a trace with one gamma5 and four or more gamma matrices: "
                          "their epsilon tensors contract with each other, so gamma5_scheme=\"NDR-even\" cannot drop "
-                         "them.  Work in dim=4 or treat the gamma5 part in 4 dimensions." % odd_lines)
+                         "them.  Work in dim=4, or use the BMHV scheme of feynsage.bmhv (bmhv_trace for the traces, "
+                         "bmhv_loop for the one-loop integrals with the (d-4)-dimensional parts)." % odd_lines)
     texts = []
     for c, ch in alts:
         parts = [prog.chain(f, n) for n, f in ch]

@@ -8,10 +8,10 @@
 # rational Pythagorean pair, i in Q(i)), both formulas evaluated exactly there.  Two different rational functions
 # agree at random points only by accident (Schwartz-Zippel), and this is about 30 times faster than reducing the
 # whole difference in the field of rational functions, which --exact still does.
-# e+e- -> W+W- gamma and u d~ -> W+ Z gamma only with --slow: their stored FeynCalc results do not agree with
-# feynsage, but feynsage's e+e- -> W+W- gamma is the same at xi = 1 and xi = 3 and the same with -g and with
-# physical photon sums (gauge invariant), so the FeynCalc results (made with feyncalc_ref/oracle_3body.wl) are
-# suspect and are being looked into; they take minutes each.
+# e+e- -> W+W- gamma and u d~ -> W+ Z gamma (only with --slow, minutes each) are compared with MadGraph5_aMC@NLO
+# 3.5.6 (feyncalc_ref/madgraph_3body.json): feynsage agrees to 1e-14.  The FeynCalc results stored for them
+# (out3_ee_wwa, out3_ud_wza, made with oracle_3body.wl) are wrong: they differ from MadGraph by 1.4% and 0.6%,
+# and the one for W+W- gamma fails the soft-photon theorem, which feynsage satisfies.
 #     sage tests/test_feyncalc_3body.sage [nproc] [names] [--exact] [--slow]
 import sys, os, re, time, json, gzip
 from feynsage import process
@@ -137,8 +137,26 @@ res = []
 for name, text in PROCS.items():
     if ONLY and name not in ONLY:
         continue
-    if not ONLY and not SLOW and name in ('ee_wwa', 'ud_wza'):
-        print('skip %-8s %-26s (FeynCalc reference in doubt, see the top of the file; --slow runs it)' % (name, PROCS[name]))
+    if name in ('ee_wwa', 'ud_wza'):
+        if not ONLY and not SLOW:
+            print('skip %-8s %-26s (minutes; --slow compares it with MadGraph)' % (name, PROCS[name]))
+            continue
+        t0 = time.time()
+        P = process(PROCS[name], massless=MASSLESS.get(name, []))
+        fs = P.squared(average=False, nproc=NP)
+        mg = json.load(open(os.path.join(REF, 'madgraph_3body.json')))
+        RF = RealField(120)
+        pv = {loc[k]: RF(v) for k, v in mg['params'].items()}
+        moms = [vector(RF, [RF(x) for x in m.split()]) for m in mg[name]['moms']]
+        moms[4] = vector(RF, [sqrt(sum(x^2 for x in moms[4][1:]))] + list(moms[4][1:]))    # massless photon
+        md = lambda a, b: a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3]
+        e = SR(fs).subs({T.dot(P.momenta[i], P.momenta[j]): md(moms[i], moms[j]) for i in range(5) for j in range(5)}).subs(pv)
+        e = e.subs({MASS: 0 for MASS in [loc[x] for x in ('ME', 'MU', 'MD')]})
+        val = ComplexField(120)(e.subs({x: 0 for x in e.find(T.EPS(*[SR.wild(i) for i in range(4)]))})).real() / mg[name]['average']
+        rel = abs(val / RF(mg[name]['me']) - 1)
+        line = '%-4s %-8s %-26s %3d diagrams  MadGraph: %-30s %6.1f s' % ('ok' if rel < 1e-10 else 'DIFF', name, PROCS[name],
+               len(P.diagrams), 'equal (relative %.1e)' % rel if rel < 1e-10 else 'DIFFERENT (relative %.1e)' % rel, time.time() - t0)
+        print(line); sys.stdout.flush(); res.append(line)
         continue
     has_f, has_p = os.path.exists(os.path.join(REF, 'out3_%s.m.gz' % name)), name in fcv
     if not (has_f or has_p):

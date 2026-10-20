@@ -629,10 +629,11 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
     with a free Lorentz index on every external vector (no polarization vectors);
     propagators: [(q_i, m_i)] of the lines that carry the loop momentum.
     """
-    if xi is None:
-        raise NotImplementedError("unitary gauge is not implemented at one loop (the limit xi -> oo does not in "
-                                  "general commute with the loop integration).  Use R_xi with a symbolic xi, "
-                                  "SM(xi=var('xi')) or one xi per boson: physical results do not depend on it")
+    if xi is None or isinstance(xi, str):
+        xi = _xi_arg('unitary' if xi is None else xi)
+    if _unitary_drop(diag, xi):
+        raise ValueError("this diagram has a Goldstone or electroweak ghost line, which is absent in unitary "
+                         "gauge; leave it out (loop_amplitude and virtual do)")
     from .qft import objects as O, tensors as T
     from .qft.operations import dirac_trace
     from .qft.color import quark_colors, color_indices
@@ -694,7 +695,11 @@ def _loop_integrand(diag, p_in, p_out, lmom, xi=SR(1), colour=True, prefix='d', 
             M2 = p.mass ** 2
             mu, nu = lidx[(k, 'S')], lidx[(k, 'T')]
             kk = T.comp(q, mu) * T.comp(q, nu)
-            if x == 1:
+            if _is_unitary(x):
+                if M2.is_trivial_zero():
+                    raise ValueError("a massless vector boson has no unitary gauge")
+                opts = [(-I * (T.metric(mu, nu) - kk / M2), [p.mass])]          # -i (g - k k/M^2)/(k^2 - M^2)
+            elif x == 1:
                 opts = [(-I, [p.mass])]
             elif l_free(q):
                 opts = [(-I * (T.metric(mu, nu) - (1 - x) * kk / (q2 - x * M2)), [p.mass])]
@@ -904,6 +909,8 @@ def loop_amplitude(diags, p_in, p_out, project, kin, xi=1, lname='l', nproc=None
     from .qft import tensors as T
     from .qft.operations import contract
     from .pv import loop
+    xa = _xi_arg(xi)
+    diags = [d for d in diags if not _unitary_drop(d, xa)]       # unitary gauge: no Goldstone, no EW ghost
     if len(diags):
         model = diags[0].model
         mxi = getattr(model, 'xi', None)
@@ -996,9 +1003,36 @@ def _xi(p, xi):
 
 
 def _xi_arg(xi):
-    """xi as the loop routines take it: SR(xi), or {xiA, xiZ, xiW, xiG: value} from a dict per boson."""
+    """xi as the loop routines take it: SR(xi), or {xiA, xiZ, xiW, xiG: value} from a dict per boson ("unitary"
+    or None: xi_W = xi_Z = oo, the photon and gluon in Feynman gauge)."""
     from .models import _xi_values
-    return _xi_values(xi) if isinstance(xi, dict) else SR(xi)
+    if xi is None or isinstance(xi, (dict, str)):
+        return _xi_values(xi)
+    return SR(xi)
+
+
+def _is_unitary(x):
+    """True for an infinite gauge parameter (the unitary gauge of that boson)."""
+    try:
+        return SR(x).is_infinity()
+    except (TypeError, ValueError):
+        return False
+
+
+def _unitary_drop(diag, xi):
+    """True if the diagram has an internal Goldstone boson or electroweak ghost whose gauge parameter is
+    infinite: in unitary gauge their mass sqrt(xi) M is infinite and they decouple."""
+    if not isinstance(xi, dict):
+        return _is_unitary(xi) and any(diag.model.particles[f[0]].kind in ('S', 'U') and
+                                       diag.model.particles[f[0]].xi is not None for f in diag.fields
+                                       if f[1][0] == 'v' and f[2][0] == 'v')
+    for name, s_, t_ in diag.fields:
+        if s_[0] != 'v' or t_[0] != 'v':                  # internal lines only
+            continue
+        p = diag.model.particles[name]
+        if p.kind in ('S', 'U') and p.xi is not None and _is_unitary(_xi_named(xi, p.xi)):
+            return True
+    return False
 
 
 def _rational_poly(m):

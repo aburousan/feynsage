@@ -20,7 +20,7 @@ the non-abelian ones with FeynCalc's conventions.
 """
 from itertools import permutations, product
 
-from sage.all import SR, I
+from sage.all import SR, I, Permutation
 
 from .qft import tensors as T
 from .qft.objects import DiracExpr
@@ -78,7 +78,9 @@ class Field:
             col = SR(idx.pop(0))
         if idx:
             raise ValueError("too many indices for %s" % self.name)
-        return Lag([(SR(1), None, (_Factor(self, lor, col, ()),))])
+        from .qft.objects import one
+        slots = (one(),) if (self.kind == "dirac" and self.is_bar) else ()      # psibar opens a Dirac matrix
+        return Lag([(SR(1), slots, (_Factor(self, lor, col, ()),))])
 
     def __repr__(self):
         return self.name + ("bar" if self.is_bar and self.kind == "dirac" else "^dagger" if self.is_bar else "")
@@ -102,7 +104,9 @@ class _Factor:
 
 
 class Lag:
-    """A sum of terms coefficient * (Dirac matrix) * fields; built from fields with +, -, * and d()."""
+    """A sum of terms coefficient * (Dirac matrices) * fields; built from fields with +, -, * and d().  Each
+    psibar opens a Dirac matrix, the gamma matrices written after it multiply that matrix, and the k-th psibar
+    of a term goes with its k-th psi: (psibar G psi)(chibar G' chi) has the matrices (G, G')."""
 
     def __init__(self, terms):
         self.terms = [t for t in terms if not (isinstance(t[0], (int,)) and t[0] == 0)]
@@ -123,25 +127,29 @@ class Lag:
 
     def __mul__(self, other):
         if isinstance(other, DiracExpr):
-            return Lag([(c, other if D is None else D * other, F) for c, D, F in self.terms])
+            out = []
+            for c, D, F in self.terms:
+                if not D:
+                    raise ValueError("a Dirac matrix must follow a psibar: write psibar() * gamma(mu) * psi()")
+                out.append((c, D[:-1] + (D[-1] * other,), F))
+            return Lag(out)
         o = _lag(other)
         out = []
         for c1, D1, F1 in self.terms:
             for c2, D2, F2 in o.terms:
-                D = D1 if D2 is None else (D2 if D1 is None else D1 * D2)
-                out.append((c1 * c2, D, F1 + F2))
+                out.append((c1 * c2, D1 + D2, F1 + F2))
         return Lag(out)
 
     def __rmul__(self, other):
         if isinstance(other, DiracExpr):
-            return Lag([(c, other if D is None else other * D, F) for c, D, F in self.terms])
+            raise ValueError("a Dirac matrix must follow a psibar: write psibar() * gamma(mu) * psi()")
         return _lag(other) * self
 
     def __truediv__(self, x):
         return Lag([(c / x, D, F) for c, D, F in self.terms])
 
     def __pow__(self, n):
-        out = Lag([(SR(1), None, ())])
+        out = Lag([(SR(1), (), ())])
         for _ in range(int(n)):
             out = out * self
         return out
@@ -151,14 +159,14 @@ class Lag:
         for c, D, F in self.terms:
             fs = " ".join("%s%s%s" % ("".join("d%s " % m for m in f.derivs), f.f, "" if f.lor is None and f.col is None
                                           else "(%s)" % ", ".join(str(x) for x in (f.lor, f.col) if x is not None)) for f in F)
-            parts.append("(%s)%s %s" % (c, "" if D is None else " " + repr(D), fs))
+            parts.append("(%s)%s %s" % (c, "".join(" [%r]" % x for x in D), fs))
         return " + ".join(parts) or "0"
 
 
 def _lag(x):
     if isinstance(x, Lag):
         return x
-    return Lag([(SR(x), None, ())])
+    return Lag([(SR(x), (), ())])
 
 
 def d(mu, X):
@@ -209,7 +217,7 @@ def _fresh_term(c, D, F):
     sub = {}
     for x in syms:
         sub[x] = _fresh_quark() if is_fundamental(x) else _fresh("colour") if is_adjoint(x) else _fresh("lorentz")
-    D2 = None if D is None else _rename_dirac(D, sub)
+    D2 = tuple(_rename_dirac(x, sub) for x in D)
     return SR(c).subs(sub), D2, tuple(f.renamed(sub) for f in F)
 
 
@@ -250,10 +258,15 @@ def feynman_rule(L, legs, factor_i=True):
     """
     The vertex of the Lagrangian L for the legs [(field, momentum, Lorentz index, colour index), ...] (indices
     only as the field has them; field.bar for psibar, phi^dagger or an antighost; all momenta incoming).
-    Returns i times the sum over the terms of L with exactly these fields; a Dirac matrix (DiracExpr) when
-    the legs are a fermion and an antifermion, else a Sage expression.  factor_i=False leaves out the i.
+    Returns i times the sum over the terms of L with exactly these fields; factor_i=False leaves out the i.
+    One fermion line: the Dirac matrix between psibar and psi (a DiracExpr).  Two or more (four-fermion terms):
+    a sum of products of chains [ubar(p_a) G u(p_b)] ..., where ubar(p_a) and u(p_b) only mark the Dirac index
+    of the psibar leg a and the psi leg b; the sign is that of i d/d(field of leg 1) ... d/d(field of leg n) L
+    with the Grassmann derivatives taken in the order of the legs (fermion fields anticommute, so the exchange
+    terms come with a minus sign).  Else a Sage expression.
     FeynCalc's FeynRule.
     """
+    from .qft.objects import Chain, Spinor
     want = sorted([(lg[0].name, lg[0].is_bar) for lg in legs])
     total = SR(0)
     dirac_total = None
@@ -268,6 +281,9 @@ def feynman_rule(L, legs, factor_i=True):
         for n, lg in enumerate(legs):
             legs_by.setdefault((lg[0].name, lg[0].is_bar), []).append(n)
         keys = sorted(slots)
+        bars = [k for k, f in enumerate(F) if f.f.kind == "dirac" and f.f.is_bar]
+        unbars = [k for k, f in enumerate(F) if f.f.kind == "dirac" and not f.f.is_bar]
+        ferm = [k for k, f in enumerate(F) if f.f.kind in ("dirac", "ghost")]
         for choice in product(*[permutations(legs_by[k]) for k in keys]):
             assign = {}
             for k, perm in zip(keys, choice):
@@ -285,14 +301,30 @@ def feynman_rule(L, legs, factor_i=True):
                 for m in f.derivs:
                     w = w * (-I) * T.comp(p, m)
             w = SR(w).subs(sub)
-            if D is None:
+            if not D:
                 total += w
-            else:
-                Dr = _rename_dirac(D, sub) * w
-                dirac_total = Dr if dirac_total is None else dirac_total + Dr
+                continue
+            if len(D) == 1:                            # one fermion line: the matrix itself
+                Dr = _rename_dirac(D[0], sub) * w
+            else:                                      # several lines: chains between the legs, with signs
+                seq = [assign[k] for k in ferm]
+                sign = Permutation([sorted(seq).index(x) + 1 for x in seq]).sign()
+                terms = [(sign * w, None, ())]
+                for kb, ku, G in zip(bars, unbars, D):
+                    lb, lu = legs[assign[kb]], legs[assign[ku]]
+                    left, right = Spinor("ubar", SR(lb[1])), Spinor("u", SR(lu[1]))
+                    new = []
+                    for c0, o0, cl0 in terms:
+                        for cg, og, clg in _rename_dirac(G, sub).terms:
+                            new.append((c0 * cg, None, cl0 + (Chain(left, og.factors if og is not None else (), right),)))
+                    terms = new
+                Dr = DiracExpr(terms)
+            dirac_total = Dr if dirac_total is None else dirac_total + Dr
     from .qft.operations import contract, dummy_indices
     pref = I if factor_i else 1
     if dirac_total is not None:
+        if any(len(cl) > 1 for c0, o0, cl in dirac_total.terms):
+            return dirac_total * pref                  # marker spinors: no Dirac equation may act on them
         return contract(dirac_total * pref)
     total = (pref * total).expand()
     if dummy_indices(total):

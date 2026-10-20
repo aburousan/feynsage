@@ -127,6 +127,13 @@ cx, _ = process("H -> gamma gamma", model=SM(xi=xs), exclude_fields=light).loop_
 c1, _ = process("H -> gamma gamma", exclude_fields=light).loop_form_factors()
 check("H -> gamma gamma one-loop form factor in R_xi with symbolic xi_W, xi_Z, xi_A = Feynman gauge, exactly",
       bool((SR(cx[-1]) - SR(c1[-1])).simplify_full() == 0))
+# unitary gauge at one loop: no Goldstone or electroweak ghost diagrams, W and Z with -i(g - k k/M^2)/(k^2 - M^2).
+# The physical coefficients (photons p2, p3 = p1 - p2 with eps1.p2 = eps2.p3 = 0): g^{mu nu} and the sum of the two
+# p1^mu1 ... structures, the coefficient of (eps1.p1)(eps2.p2), must be those of Feynman gauge
+cu, Tb_ = process("H -> gamma gamma", exclude_fields=light).loop_form_factors(xi="unitary")
+phys = lambda c: [SR(c[4]), SR(c[0]) + SR(c[1])]
+check("H -> gamma gamma at one loop in unitary gauge: the physical form factors = Feynman gauge, exactly",
+      [str(t) for t in Tb_][4] == "[('g', 1, 2)]" and all(bool((a - b).simplify_full() == 0) for a, b in zip(phys(cu), phys(c1))))
 try:
     process("H -> g g").amplitude(); ok_ = False
 except ValueError as ex:

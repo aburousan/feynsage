@@ -291,8 +291,14 @@ def SM(qcd=True, xi=1):
 
 
 def _xi_values(xi):
-    """{xiA, xiZ, xiW, xiG: value} from one value for all or a dict with keys "A", "Z", "W", "g" (or xiA, ...)."""
+    """{xiA, xiZ, xiW, xiG: value} from one value for all or a dict with keys "A", "Z", "W", "g" (or xiA, ...).
+    "unitary" (or None) for a value, or for xi itself: xi = oo, the unitary gauge of W and Z (the photon and the
+    gluon stay in Feynman gauge)."""
+    from sage.all import Infinity
     names = {'A': 'xiA', 'Z': 'xiZ', 'W': 'xiW', 'g': 'xiG'}
+    unit = lambda v: SR(Infinity) if (isinstance(v, str) and v.lower() == 'unitary') or v is None else SR(v)
+    if isinstance(xi, str) and xi.lower() == 'unitary' or xi is None:
+        return {'xiA': SR(1), 'xiZ': SR(Infinity), 'xiW': SR(Infinity), 'xiG': SR(1)}   # W, Z unitary; A, g Feynman
     if not isinstance(xi, dict):
         return {n: SR(xi) for n in names.values()}
     out = {n: SR(1) for n in names.values()}
@@ -300,5 +306,5 @@ def _xi_values(xi):
         key = names.get(k, k)
         if key not in out:
             raise KeyError("gauge parameter %r: give A, Z, W or g" % k)
-        out[key] = SR(v)
+        out[key] = unit(v)
     return out

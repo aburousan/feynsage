@@ -609,6 +609,8 @@ class Process:
         legs = self._vector_legs()
         loops = self.loop_diagrams()
         idx = diagrams or range(1, len(loops) + 1)
+        from .diagrams import _unitary_drop
+        idx = [k for k in idx if not _unitary_drop(loops[k - 1], _xi_arg(xi))]   # unitary gauge: no G, no EW ghost
         jobs = []
         for k in idx:
             terms, ext, col = _loop_integrand(loops[k - 1], self.p_in, self.p_out, lmom, xi=_xi_arg(xi),

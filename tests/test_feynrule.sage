@@ -111,5 +111,82 @@ for k, label in [("G4", "four-gluon vertex from -F^2/4"), ("HGG", "H g g from -C
     check("%s = %s for every Lorentz index and %d colour choices (%d of %d values non-zero)"
           % (label, ref, len(colour_sets[n]), nonzero, total), ok and nonzero > 0)
 
+# ---------------------------------------------------------------------------- four-fermion terms
+# The vertex of (psibar G psi)(psibar G psi) for one Dirac field, against a direct computation with explicit Grassmann
+# variables: the fourth derivative of L with respect to psi_b1, psi_b2, psibar_a3, psibar_a4 for every value of the
+# Dirac indices (explicit 4x4 matrices), derivatives taken in the order of the legs, as feynman_rule defines its sign.
+from feynsage.qft.objects import DiracExpr
+s0 = identity_matrix(QQbar, 2); Z2 = zero_matrix(QQbar, 2)
+sx, sy, sz = matrix(QQbar, [[0, 1], [1, 0]]), matrix(QQbar, [[0, -I], [I, 0]]), matrix(QQbar, [[1, 0], [0, -1]])
+Gm = [block_matrix([[Z2, s0], [s0, Z2]])] + [block_matrix([[Z2, sx_], [-sx_, Z2]]) for sx_ in (sx, sy, sz)]
+gmet = [1, -1, -1, -1]
+def grassmann_vertex(Gs, gcoef):
+    """d/dpsi_b1 d/dpsi_b2 d/dpsibar_a3 d/dpsibar_a4 of gcoef * sum_A (psibar G_A psi)(psibar G^A psi); generators
+    psibar_i = ('b', i), psi_i = ('p', i); Gs = [(weight, G_A, G^A)]"""
+    L = {}
+    for w, GA, GB in Gs:
+        for al, be, ga, de in itertools.product(range(4), repeat=4):
+            c = w * GA[al, be] * GB[ga, de]
+            if c != 0:
+                key = (('b', al), ('p', be), ('b', ga), ('p', de))
+                L[key] = L.get(key, 0) + gcoef * c
+    def deriv(poly, gen):
+        out = {}
+        for mono, c in poly.items():
+            if gen in mono:
+                j = mono.index(gen)
+                if mono.count(gen) > 1:
+                    continue                           # theta^2 = 0
+                new = mono[:j] + mono[j + 1:]
+                out[new] = out.get(new, 0) + (-1)**j * c
+        return out
+    V = {}
+    for b1, b2, a3, a4 in itertools.product(range(4), repeat=4):
+        poly = {k: v for k, v in L.items() if len(set(k)) == 4}
+        for gen in (('p', b1), ('p', b2), ('b', a3), ('b', a4)):
+            poly = deriv(poly, gen)
+        V[(b1, b2, a3, a4)] = I * sum(poly.values())
+    return V
+def chains_value(r, idx, mu_vals):
+    """value of a feynman_rule result (products of chains between marker spinors) at Dirac indices idx = {momentum
+    name: index}; repeated Lorentz indices summed with the metric"""
+    tot = 0
+    for c, o, cl in r.terms:
+        lor = sorted({str(atom[1]) for ch in cl for F in ch.factors for atom, cc in F.items if atom[0] == 'i'})
+        for vals in itertools.product(range(4), repeat=len(lor)):
+            iv = dict(zip(lor, vals))
+            x = QQbar(SR(c).subs(g=1)) * prod(gmet[v] for v in vals)
+            for ch in cl:
+                M = identity_matrix(QQbar, 4)
+                for F in ch.factors:
+                    Mf = zero_matrix(QQbar, 4)
+                    for atom, cc in F.items:
+                        if atom[0] == 'i': Mf += QQbar(SR(cc)) * Gm[iv[str(atom[1])]]
+                        elif atom[0] == '1': Mf += QQbar(SR(cc)) * identity_matrix(QQbar, 4)
+                        else: raise ValueError(atom)
+                    M = M * Mf
+                x *= M[idx[str(ch.left.p)], idx[str(ch.right.p)]]
+            tot += x
+    return tot
+ok = True
+for label, Lterm, Gs in [("scalar (psibar psi)^2", g*psi.bar()*psi()*psi.bar()*psi(), [(1, identity_matrix(QQbar, 4), identity_matrix(QQbar, 4))]),
+                         ("vector (psibar g^mu psi)(psibar g_mu psi)", g*psi.bar()*gamma(mu)*psi()*psi.bar()*gamma(mu)*psi(),
+                          [(gmet[m], Gm[m], Gm[m]) for m in range(4)])]:
+    r = feynman_rule(Lterm, [(psi, p1), (psi, p2), (psi.bar, p3), (psi.bar, p4)])
+    V = grassmann_vertex(Gs, QQbar(1))
+    signs = set()
+    for (b1, b2, a3, a4), v in V.items():
+        w = chains_value(r, {"p1": b1, "p2": b2, "p3": a3, "p4": a4}, None)
+        if v == 0 and w == 0:
+            continue
+        signs.add("+" if w == v else "-" if w == -v else "x")
+    check("four-fermion %s: = i x the Grassmann derivative of L for all 256 Dirac index values" % label, signs == {"+"})
+nm, mm, ee_, ne = field("numu", "dirac"), field("mu", "dirac"), field("e", "dirac"), field("nue", "dirac")
+GF = var('GF')
+rF = feynman_rule(-GF/sqrt(2)*nm.bar()*gamma(mu)*(1 - gamma5())*mm()*ee_.bar()*gamma(mu)*(1 - gamma5())*ne(),
+                  [(mm, p1), (nm.bar, p2), (ne, p3), (ee_.bar, p4)])
+check("Fermi interaction: one term, -i G_F/sqrt 2 [g^mu (1 - g5)] x [g_mu (1 - g5)]", len(rF.terms) == 1 and
+      bool(SR(rF.terms[0][0]) == -I*GF/sqrt(2)))
+
 print("time %.0f s" % (time.time() - t_start))
 print("ALL FEYNMAN-RULE CHECKS PASS" if not FAIL else "FAILED: %s" % FAIL)

@@ -55,6 +55,8 @@ from .topology import (integral_to_graph, canonical_form, momentum_shift, topolo
                        dimension_raise, cuts, cuttable, NotAGraphError, find_topologies)
 from .tdec import tdec
 from .fierz import fierz, sirlin, clifford_decompose
+from .pauli import pauli_simplify, pauli_trace, cartesian_indices, vectors3, contract3
+from .bmhv import bmhv_trace, bmhv_loop, bmhv_contract, to_d, canon_epsilon
 from .feynrule import field, d as fd, feynman_rule, field_strength, covariant_derivative, Lag
 from .topologies import topologies, Topology
 from .diagrams import insert_fields, conjugate_amplitude, Diagram, DiagramList, vertex_projector

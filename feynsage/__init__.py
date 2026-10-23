@@ -10,6 +10,8 @@ Start here:
     plotting.quick_plot, g.plot()               plots and diagrams in the style of the notes
 Every public function takes explain=True, or call feynsage.info(function), to print what its output means.
 """
+__version__ = "0.2.0"                   # keep equal to pyproject.toml (install.sh checks it)
+
 from .momenta import mom, Kinematics
 from .family import IntegralFamily
 from .laporta import Reducer

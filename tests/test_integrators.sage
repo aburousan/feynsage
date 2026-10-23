@@ -69,6 +69,13 @@ pv2 = principal_value(1/((x - 1)*(x + a)), x, 0, 2, 1)
 forget(a > 0)
 check("PV Int_0^2 dx/((x - 1)(x + a)) = -log((a + 2)/a)/(a + 1) for symbolic a > 0 (checked inside at random a)",
       zero((pv2 + log((a + 2)/a)/(a + 1)).subs(a=7/3)) and zero((pv2 + log((a + 2)/a)/(a + 1)).subs(a=40)))
+# two poles inside: both must be given (this once passed with only c = b, and its check integrated over the other pole)
+bp = var('bp'); assume(bp > 0, bp < 1)
+check("PV Int_-1^1 dx/(b^2 - x^2) with poles [-b, b] = 2 arctanh(b)/b",
+      zero((principal_value(1/(bp^2 - x^2), x, -1, 1, [-bp, bp]) - 2*arctanh(bp)/bp).subs(bp=1/3)))
+check("a pole left out of c is an error, not a wrong number",
+      raises(lambda: principal_value(1/(bp^2 - x^2), x, -1, 1, bp), IntegrationError))
+forget(bp > 0, bp < 1)
 check("integrate_termwise(x + x log x, x, 0, 1) = 1/4", zero(integrate_termwise(x + x*log(x), x, 0, 1) - 1/4))
 
 # exact sector decomposition (this used to stop with Maxima's "limit: direction must be either 'plus' or 'minus'")

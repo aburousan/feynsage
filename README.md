@@ -47,6 +47,11 @@ cd feynsage
 
 macOS, Linux and Windows (WSL). The script finds or installs SageMath and FORM.
 
+To update later, run `./install.sh --update` in the same folder. It gets the latest code with `git pull`,
+removes every older installed copy and checks that Sage now imports exactly this version
+(`import feynsage; feynsage.__version__`). If you change the code yourself, `./install.sh --dev` installs
+the folder in editable mode, so Sage always uses the files as they are, without installing again.
+
 ### Integrals: which integrator is used
 
 Sage's `integrate()` gives the work to one program, Maxima, unless told otherwise, and returns what comes

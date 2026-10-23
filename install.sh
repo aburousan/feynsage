@@ -8,17 +8,21 @@
 #   ./install.sh --with-fricas   also install FriCAS, the strongest free integrator (optional, a long build
 #                                when Sage has to compile it)
 #   ./install.sh --with-wolfram  explain how to add the free Wolfram Engine as an integrator (optional)
+#   ./install.sh --update   first get the latest feynsage (git pull), then install it over any older copy
+#   ./install.sh --dev      editable install: Sage then always uses this folder, no reinstall after a change
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RUN_TESTS=0; DEPS=1; FRICAS=0; WOLFRAM=0
+RUN_TESTS=0; DEPS=1; FRICAS=0; WOLFRAM=0; UPDATE=0; DEV=0
 for a in "$@"; do
   case "$a" in
     --test) RUN_TESTS=1 ;;
     --no-deps) DEPS=0 ;;
     --with-fricas) FRICAS=1 ;;
     --with-wolfram) WOLFRAM=1 ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    --update) UPDATE=1 ;;
+    --dev) DEV=1 ;;
+    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
   esac
 done
 
@@ -34,6 +38,17 @@ case "$OS" in
   *) die "unknown system $OS" ;;
 esac
 say "system: $PLATFORM ($ARCH)"
+
+# ------------------------------------------------------------------ latest code
+if [ "$UPDATE" = 1 ]; then
+  if [ -d "$HERE/.git" ] && command -v git >/dev/null 2>&1; then
+    say "getting the latest feynsage (git pull)"
+    git -C "$HERE" pull --ff-only || die "git pull failed (local changes?); fix that or run without --update"
+  else
+    warn "--update needs a git checkout (git clone https://github.com/aburousan/feynsage); installing this folder as it is"
+  fi
+fi
+WANT_VERSION="$(sed -n 's/^version *= *"\(.*\)"/\1/p' "$HERE/pyproject.toml" | head -1)"
 
 # ------------------------------------------------------------------ SageMath
 find_sage() {
@@ -144,17 +159,50 @@ fi
 
 # ------------------------------------------------------------------ feynsage itself
 say "installing feynsage into Sage's Python"
-PREFIX="$("$SAGE" -python -c 'import sys; print(sys.prefix)')"
+# Sage's own Python (the conda build of Sage 10.9 has no "sage -python" or "sage -pip"; "sage -c" works everywhere)
+SAGE_PY="$("$SAGE" -c 'import sys; print(sys.executable)' | tail -1)"
+[ -x "$SAGE_PY" ] || die "could not find the Python of this Sage ($SAGE_PY)"
+PIP=("$SAGE_PY" -m pip)
+"${PIP[@]}" --version >/dev/null 2>&1 || die "pip is missing in Sage's Python ($SAGE_PY); install it with: $SAGE_PY -m ensurepip"
+PREFIX="$("$SAGE_PY" -c 'import sys; print(sys.prefix)')"
 case "$PREFIX" in
   *.app*|/var/tmp/sage-*|/usr/*|/opt/*) USERFLAG="--user" ;;   # never write into the app bundle or a system prefix
   *) USERFLAG="" ;;                                            # a conda env or a build you own
 esac
-"$SAGE" -pip install $USERFLAG --no-deps "$HERE"
+# an older copy (in Sage's own site-packages or in the user site) would otherwise stay in front: remove all
+for _ in 1 2 3; do
+  ( cd "$HOME" && "${PIP[@]}" show feynsage >/dev/null 2>&1 ) || break
+  say "removing an older installed feynsage"
+  ( cd "$HOME" && "${PIP[@]}" uninstall -y feynsage >/dev/null 2>&1 ) || break
+done
+# pip does not remove what feynsage made after it was installed (csrc/libelim.so, __pycache__); such a leftover
+# folder without __init__.py would be imported as an empty namespace package in front of an editable install
+"$SAGE_PY" -c "
+import site, os, shutil
+for d in set(site.getsitepackages() + [site.getusersitepackages()]):
+    p = os.path.join(d, 'feynsage')
+    if os.path.isdir(p) and not os.path.exists(os.path.join(p, '__init__.py')):
+        shutil.rmtree(p); print('removed the leftover folder', p)
+"
+if [ "$DEV" = 1 ]; then
+  "${PIP[@]}" install $USERFLAG --no-deps --no-cache-dir -e "$HERE"
+else
+  "${PIP[@]}" install $USERFLAG --no-deps --no-cache-dir --upgrade --force-reinstall "$HERE"
+fi
 
 say "checking the installation (this also compiles the C kernel)"
 ( cd "$HOME" && "$SAGE" -c "
-import feynsage, feynsage.ff as ff, shutil
-print('feynsage from', feynsage.__file__)
+import feynsage, feynsage.ff as ff, shutil, os, hashlib, sys
+print('feynsage', feynsage.__version__, 'from', feynsage.__file__)
+if feynsage.__version__ != '$WANT_VERSION':
+    sys.exit('error: Sage imports feynsage %s, but this folder is %s; another copy is in front on sys.path' % (feynsage.__version__, '$WANT_VERSION'))
+src, dst = os.path.join('$HERE', 'feynsage'), os.path.dirname(feynsage.__file__)
+h = lambda f: hashlib.sha256(open(f, 'rb').read()).hexdigest()
+files = sorted(os.path.relpath(os.path.join(r, f), src) for r, _, fs in os.walk(src) for f in fs if f.endswith('.py'))
+old = [f for f in files if not os.path.exists(os.path.join(dst, f)) or h(os.path.join(src, f)) != h(os.path.join(dst, f))]
+if old:
+    sys.exit('error: the installed files differ from this folder: %s' % ', '.join(old))
+print('installed files: the same as this folder')
 print('compiled kernel:', 'yes' if ff._clib() is not None else 'no (pure Python fallback)')
 print('FORM:', feynsage.form.FORM if shutil.which('form') or __import__('os').path.exists(feynsage.form.FORM) else 'not found')
 print('integrators, in the order they are tried:', ', '.join(feynsage.available_integrators()))
